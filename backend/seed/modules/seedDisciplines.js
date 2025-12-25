@@ -1,4 +1,4 @@
-const { Discipline } = require('../../models');
+const { Discipline } = require('../../src/models');
 const logger = require('../utils/logger');
 
 async function seedDisciplines(disciplineNames) {

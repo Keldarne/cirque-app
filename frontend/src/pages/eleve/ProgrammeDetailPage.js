@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Box, Button, Paper, Chip,
@@ -20,12 +20,7 @@ function ProgrammeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [addFiguresDialog, setAddFiguresDialog] = useState({ open: false, discipline: null });
 
-  // Charger le programme
-  useEffect(() => {
-    loadProgramme();
-  }, [id]);
-
-  const loadProgramme = async () => {
+  const loadProgramme = useCallback(async () => {
     try {
       const response = await api.get(`/api/progression/programmes/${id}`);
       const data = await response.json();
@@ -35,7 +30,12 @@ function ProgrammeDetailPage() {
       console.error('Erreur chargement programme:', error);
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  // Charger le programme
+  useEffect(() => {
+    loadProgramme();
+  }, [id, loadProgramme]);
 
   // Regrouper figures par discipline
   const figuresParDiscipline = programme?.ProgrammesFigures?.reduce((acc, pf) => {
@@ -181,13 +181,7 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (open && discipline) {
-      loadFiguresDiscipline();
-    }
-  }, [open, discipline]);
-
-  const loadFiguresDiscipline = async () => {
+  const loadFiguresDiscipline = useCallback(async () => {
     setLoading(true);
     try {
       // Charger toutes les figures
@@ -202,7 +196,13 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
       console.error('Erreur chargement figures:', error);
       setLoading(false);
     }
-  };
+  }, [discipline]);
+
+  useEffect(() => {
+    if (open && discipline) {
+      loadFiguresDiscipline();
+    }
+  }, [open, discipline, loadFiguresDiscipline]);
 
   const handleSubmit = async () => {
     if (selectedIds.length === 0) return;

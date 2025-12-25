@@ -1,4 +1,4 @@
-const { ProgrammeProf, ProgrammeFigure, AssignationProgramme, Utilisateur, Figure, Discipline } = require('../../models');
+const { ProgrammeProf, ProgrammeFigure, AssignationProgramme, Utilisateur, Figure, Discipline } = require('../../src/models');
 const logger = require('../utils/logger');
 
 async function seedProgrammes(profs, figures) {

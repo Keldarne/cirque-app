@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron'); // Import node-cron
-const MemoryDecayService = require('./services/MemoryDecayService'); // Import MemoryDecayService
+const MemoryDecayService = require('./src/services/MemoryDecayService'); // Import MemoryDecayService
 const app = express();
 const PORT = 4000;
 
@@ -19,12 +19,12 @@ app.use(express.json());
 const sequelize = require('./db');
 
 // Import des routes
-const routes = require('./routes');
+const routes = require('./src/routes');
 app.use('/api', routes);
 
 // Synchroniser la base et lancer le serveur
 sequelize.sync().then(() => {
-  console.log("✅ Base de données synchronisée");
+  console.log('✅ Base de données synchronisée');
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
     console.log(`🌐 Accessible sur le réseau via http://<votre-ip>:${PORT}`);
@@ -39,10 +39,10 @@ sequelize.sync().then(() => {
       }
     }, {
       scheduled: true,
-      timezone: "Europe/Paris" // Or your desired timezone
+      timezone: 'Europe/Paris' // Or your desired timezone
     });
     console.log('⏰ Tâche planifiée de mise à jour du déclin mémoriel activée (tous les jours à 2h).');
   });
 }).catch(err => {
-  console.error("❌ Erreur de connexion à la base :", err);
+  console.error('❌ Erreur de connexion à la base :', err);
 });

@@ -1,7 +1,7 @@
 // Modèle DefiUtilisateur
 // Représente la participation d'un utilisateur à un défi
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const DefiUtilisateur = sequelize.define('DefiUtilisateur', {
   utilisateur_id: {

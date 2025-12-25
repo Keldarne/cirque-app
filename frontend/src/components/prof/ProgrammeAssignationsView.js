@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -25,12 +25,7 @@ function ProgrammeAssignationsView({ programmeId, onUpdate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!programmeId) return;
-    loadAssignations();
-  }, [programmeId]);
-
-  const loadAssignations = async () => {
+  const loadAssignations = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -46,7 +41,12 @@ function ProgrammeAssignationsView({ programmeId, onUpdate }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [programmeId]);
+
+  useEffect(() => {
+    if (!programmeId) return;
+    loadAssignations();
+  }, [programmeId, loadAssignations]);
 
   const handleDeleteGroupe = async (groupeId) => {
     if (!window.confirm('Retirer ce groupe du programme? Les élèves garderont leurs assignations individuelles.')) {

@@ -1,7 +1,7 @@
 // Modèle BadgeUtilisateur
 // Représente un badge obtenu par un utilisateur
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const BadgeUtilisateur = sequelize.define('BadgeUtilisateur', {
   utilisateur_id: {

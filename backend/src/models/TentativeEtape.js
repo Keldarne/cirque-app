@@ -1,7 +1,7 @@
 // Modèle TentativeEtape (Refactorisé)
 // Enregistre une tentative (réussie ou échouée) pour une étape de progression.
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const TentativeEtape = sequelize.define('TentativeEtape', {
   progression_etape_id: {

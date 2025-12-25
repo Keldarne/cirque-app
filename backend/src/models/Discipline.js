@@ -5,7 +5,7 @@
 // Relations:
 // - une Discipline a plusieurs Figures (déclaré dans models/index.js)
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const Discipline = sequelize.define('Discipline', {
   nom: {

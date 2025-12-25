@@ -10,14 +10,12 @@ import {
   Card,
   CardContent,
   LinearProgress,
-  Divider,
   CircularProgress,
   Alert
 } from '@mui/material';
 import {
   Person as PersonIcon,
   Email as EmailIcon,
-  Star as StarIcon,
   EmojiEvents as TrophyIcon,
   ExitToApp as LogoutIcon,
   Shield as ShieldIcon,
@@ -25,7 +23,6 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../utils/api';
-import { ProgressBar } from '../../components/common/ProgressBar';
 
 function ProfilPage() {
   const { user, logout, isAuthenticated } = useAuth();

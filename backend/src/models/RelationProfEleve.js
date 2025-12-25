@@ -2,7 +2,7 @@
 // Représente la relation entre un professeur et un élève
 // Gère le système d'invitation et le suivi pédagogique
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const RelationProfEleve = sequelize.define('RelationProfEleve', {
   professeur_id: {

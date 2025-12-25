@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -44,14 +44,7 @@ function AddFiguresDialog({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Charger les figures
-  useEffect(() => {
-    if (open) {
-      loadFigures();
-    }
-  }, [open, disciplineNom, disciplineId]);
-
-  const loadFigures = async () => {
+  const loadFigures = useCallback(async () => {
     setLoading(true);
     try {
       // Charger toutes les figures
@@ -73,7 +66,14 @@ function AddFiguresDialog({
       console.error('Erreur chargement figures:', error);
       setLoading(false);
     }
-  };
+  }, [disciplineId, disciplineNom]);
+
+  // Charger les figures
+  useEffect(() => {
+    if (open) {
+      loadFigures();
+    }
+  }, [open, loadFigures]);
 
   const handleToggle = (figureId) => {
     if (selectedIds.includes(figureId)) {

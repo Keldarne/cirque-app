@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -54,7 +54,7 @@ function MesElevesPage() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedEleveForAssignment, setSelectedEleveForAssignment] = useState(null);
 
-  const chargerEleves = async () => {
+  const chargerEleves = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get('/api/prof/eleves');
@@ -68,19 +68,13 @@ function MesElevesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     chargerEleves();
-  }, [refreshKey]);
+  }, [refreshKey, chargerEleves]);
 
-  useEffect(() => {
-    if (eleveId) {
-      chargerDetailEleve(eleveId);
-    }
-  }, [eleveId, refreshKey]);
-
-  const chargerDetailEleve = async (id) => {
+  const chargerDetailEleve = useCallback(async (id) => {
     try {
       const res = await api.get(`/api/prof/eleves/${id}`);
       if (!res.ok) throw new Error('Erreur chargement détail');
@@ -93,7 +87,13 @@ function MesElevesPage() {
       console.error('Erreur chargement détail élève:', err);
       afficherSnackbar('Erreur lors du chargement des détails', 'error');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (eleveId) {
+      chargerDetailEleve(eleveId);
+    }
+  }, [eleveId, refreshKey, chargerDetailEleve]);
 
   const afficherSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });

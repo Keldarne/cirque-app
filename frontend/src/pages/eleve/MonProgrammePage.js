@@ -38,7 +38,7 @@ function MonProgrammePage() {
   const [addFiguresDialogOpen, setAddFiguresDialogOpen] = useState(false);
 
   // 1. Charger la progression globale de l'élève
-  const { progression, loading: loadingProgression, error: errorProgression, refetch: refetchProgression } = useProgressionEleve(user?.id);
+  const { progression, loading: loadingProgression, error: errorProgression } = useProgressionEleve(user?.id);
 
   // 2. Charger la liste des programmes assignés
   const { programmes: programmesAssignes, loading: loadingProgrammes, refetch: refetchProgrammes } = useProgrammesAssignes();

@@ -1,5 +1,5 @@
 const { authRequest, loginAs, waitForServer } = require('../helpers/auth-helper');
-const { Figure, Utilisateur, EtapeProgression, ProgressionEtape, RelationProfEleve } = require('../../models');
+const { Figure, Utilisateur, EtapeProgression, ProgressionEtape, RelationProfEleve } = require('../../src/models');
 
 describe('📈 Progression', () => {
   let adminToken, professeurToken, eleveToken;
@@ -146,7 +146,7 @@ describe('📈 Progression', () => {
     test('❌ Élève ne peut pas voir les progressions d\'un autre utilisateur', async () => {
       const response = await authRequest.get(`/progression/utilisateur/${eleve2User.id}`, eleveToken);
       expect(response.status).toBe(403); // L'API du routeur doit retourner 403 explicitement
-      expect(response.body.error).toBe("Vous ne pouvez consulter que votre propre progression");
+      expect(response.body.error).toBe('Vous ne pouvez consulter que votre propre progression');
     });
   });
 
@@ -180,7 +180,7 @@ describe('📈 Progression', () => {
     test('❌ Élève ne peut pas voir les progressions d\'un autre utilisateur', async () => {
       const response = await authRequest.get(`/progression/utilisateur/${eleve2User.id}`, eleveToken);
       expect(response.status).toBe(403); // L'API du routeur doit retourner 403 explicitement
-      expect(response.body.error).toBe("Vous ne pouvez consulter que votre propre progression");
+      expect(response.body.error).toBe('Vous ne pouvez consulter que votre propre progression');
     });
   });
 

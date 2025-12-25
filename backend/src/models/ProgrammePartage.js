@@ -7,7 +7,7 @@
  */
 
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const ProgrammePartage = sequelize.define('ProgrammePartage', {
   id: {

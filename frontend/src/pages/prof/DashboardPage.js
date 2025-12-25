@@ -14,7 +14,7 @@ import {
   Paper,
   Divider
 } from '@mui/material';
-import { Person as PersonIcon, School as SchoolIcon } from '@mui/icons-material';
+import { Person as PersonIcon } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../utils/api';
 

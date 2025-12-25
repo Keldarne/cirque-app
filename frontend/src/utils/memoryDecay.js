@@ -117,9 +117,11 @@ export function getDecayFilter(decay) {
   return `grayscale(${grayscalePercent}%)`;
 }
 
-export default {
+const memoryDecayUtils = {
   calculateDecayLevel,
   getDecayStyles,
   getDecayFilter,
   DECAY_CONFIG
 };
+
+export default memoryDecayUtils;

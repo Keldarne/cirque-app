@@ -1,7 +1,7 @@
 // Modèle Badge
 // Représente un badge/récompense déblocable par les utilisateurs
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const Badge = sequelize.define('Badge', {
   nom: {

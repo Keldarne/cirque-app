@@ -1,15 +1,15 @@
 {
-  "name": "cirque-app",
+  "name": "cirque-app-backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "test:security": "jest __tests__/security --verbose",
-    "test:auth": "jest __tests__/security/auth.test.js",
-    "test:figures": "jest __tests__/security/permissions-figures.test.js",
-    "test:disciplines": "jest __tests__/security/permissions-disciplines.test.js",
+    "test:security": "jest test/security --verbose",
+    "test:auth": "jest test/security/auth.test.js",
+    "test:figures": "jest test/security/permissions-figures.test.js",
+    "test:disciplines": "jest test/security/permissions-disciplines.test.js",
     "reset-db": "node scripts/reset-db.js",
     "seed": "node seed/index.js",
     "seed-old": "node utilitaires-seed-data.js",
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "axios": "^1.13.2",
+    "eslint": "^9.39.2",
     "jest": "^30.2.0",
     "node-fetch": "^2.7.0",
     "supertest": "^7.1.4"

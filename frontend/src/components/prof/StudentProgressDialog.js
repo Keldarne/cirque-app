@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -45,14 +45,7 @@ function StudentProgressDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Charger les progressions de tous les élèves
-  useEffect(() => {
-    if (open && figureId) {
-      loadStudentProgressions();
-    }
-  }, [open, figureId]);
-
-  const loadStudentProgressions = async () => {
+  const loadStudentProgressions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -67,7 +60,14 @@ function StudentProgressDialog({
       setError('Impossible de charger les progressions des élèves');
       setLoading(false);
     }
-  };
+  }, [figureId]);
+
+  // Charger les progressions de tous les élèves
+  useEffect(() => {
+    if (open && figureId) {
+      loadStudentProgressions();
+    }
+  }, [open, figureId, loadStudentProgressions]);
 
   // Calculer statistiques globales
   const stats = {

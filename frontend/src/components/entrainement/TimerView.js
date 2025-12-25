@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -33,52 +33,7 @@ function TimerView({ etape, onResult, disabled, mode = 'timer' }) {
   // Référence pour l'intervalle
   const timerRef = useRef(null);
 
-  useEffect(() => {
-    if (isActive && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      // Fin du timer
-      setIsActive(false);
-      clearInterval(timerRef.current);
-      playAlarm(); // Sonnerie (visuelle ou audio)
-      
-      // Si mode combiné, on demande l'évaluation
-      if (mode === 'combined') {
-        setShowEvaluation(true);
-      } else {
-        // Sinon (mode timer simple), on valide directement sans note
-        handleEvaluation(null); 
-      }
-    }
-
-    return () => clearInterval(timerRef.current);
-  }, [isActive, timeLeft, mode]);
-
-  const toggleTimer = () => {
-    setIsActive(!isActive);
-  };
-
-  const resetTimer = () => {
-    setIsActive(false);
-    setTimeLeft(initialDuration);
-  };
-
-  const adjustTime = (seconds) => {
-    const newTime = Math.max(10, initialDuration + seconds);
-    setInitialDuration(newTime);
-    setTimeLeft(newTime);
-  };
-
-  const playAlarm = () => {
-    // Simple vibration pattern si supporté
-    if (navigator.vibrate) {
-      navigator.vibrate([200, 100, 200]);
-    }
-  };
-
-  const handleEvaluation = (success) => {
+  const handleEvaluation = useCallback((success) => {
     // Si success est null (mode timer simple), on considère ça comme une validation de durée uniquement
     // typeSaisie = 'duree'
     if (success === null) {
@@ -104,6 +59,51 @@ function TimerView({ etape, onResult, disabled, mode = 'timer' }) {
       score: finalScore,
       dureeSecondes: initialDuration
     });
+  }, [initialDuration, onResult]);
+
+  useEffect(() => {
+    if (isActive && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      // Fin du timer
+      setIsActive(false);
+      clearInterval(timerRef.current);
+      playAlarm(); // Sonnerie (visuelle ou audio)
+      
+      // Si mode combiné, on demande l'évaluation
+      if (mode === 'combined') {
+        setShowEvaluation(true);
+      } else {
+        // Sinon (mode timer simple), on valide directement sans note
+        handleEvaluation(null); 
+      }
+    }
+
+    return () => clearInterval(timerRef.current);
+  }, [isActive, timeLeft, mode, handleEvaluation]);
+
+  const toggleTimer = () => {
+    setIsActive(!isActive);
+  };
+
+  const resetTimer = () => {
+    setIsActive(false);
+    setTimeLeft(initialDuration);
+  };
+
+  const adjustTime = (seconds) => {
+    const newTime = Math.max(10, initialDuration + seconds);
+    setInitialDuration(newTime);
+    setTimeLeft(newTime);
+  };
+
+  const playAlarm = () => {
+    // Simple vibration pattern si supporté
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200]);
+    }
   };
 
   // Format MM:SS

@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { Utilisateur } = require('../../models');
+const { Utilisateur } = require('../../src/models');
 const logger = require('../utils/logger');
 const scenarioDefinitions = require('../data/scenarios');
 

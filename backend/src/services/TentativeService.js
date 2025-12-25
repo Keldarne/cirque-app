@@ -3,9 +3,7 @@
  * Service pour gérer les tentatives (réussies/échouées) et calculer le Grit Score
  */
 
-const { TentativeEtape, ProgressionEtape, EtapeProgression, Utilisateur, Figure } = require('../models');
-const { Op } = require('sequelize');
-const StatsService = require('./StatsService');
+const { TentativeEtape, ProgressionEtape, EtapeProgression, Figure } = require('../models');
 
 class TentativeService {
   /**

@@ -3,7 +3,7 @@
  * Création des écoles de test pour environnement multi-tenant
  */
 
-const { Ecole } = require('../../models');
+const { Ecole } = require('../../src/models');
 const logger = require('../utils/logger');
 
 /**

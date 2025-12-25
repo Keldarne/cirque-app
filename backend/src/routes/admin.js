@@ -19,8 +19,8 @@ router.get('/ecoles', verifierToken, estAdmin, async (req, res) => {
     const ecoles = await Ecole.findAll({ order: [['nom', 'ASC']] });
     res.json(ecoles);
   } catch (err) {
-    console.error("Erreur GET /admin/ecoles:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /admin/ecoles:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -43,8 +43,8 @@ router.get('/figures', verifierToken, estAdmin, async (req, res) => {
     const figures = await Figure.findAll({ where, include: [Discipline] });
     res.json(figures);
   } catch (err) {
-    console.error("Erreur GET /admin/figures:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /admin/figures:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -66,7 +66,7 @@ router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) =
     const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id } = req.body;
 
     if (!nom || !discipline_id) {
-      return res.status(400).json({ error: "Le nom et la discipline sont requis" });
+      return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
     }
     
     const figureData = {
@@ -84,8 +84,8 @@ router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) =
 
     res.status(201).json(figureComplete);
   } catch (err) {
-    console.error("Erreur POST /admin/figures:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur POST /admin/figures:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -102,7 +102,7 @@ router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigu
     const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id } = req.body;
 
     if (!nom || !discipline_id) {
-      return res.status(400).json({ error: "Le nom et la discipline sont requis" });
+      return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
     }
 
     const updateData = { nom, descriptif, image_url, video_url, discipline_id };
@@ -118,8 +118,8 @@ router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigu
 
     res.json(figureComplete);
   } catch (err) {
-    console.error("Erreur PUT /admin/figures/:id:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur PUT /admin/figures/:id:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -147,10 +147,10 @@ router.delete('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierF
     await EtapeProgression.destroy({ where: { figure_id: figureId } });
     await figure.destroy();
 
-    res.json({ message: "Figure supprimée avec succès" });
+    res.json({ message: 'Figure supprimée avec succès' });
   } catch (err) {
-    console.error("Erreur DELETE /admin/figures/:id:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur DELETE /admin/figures/:id:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 

@@ -1,7 +1,7 @@
 // Modèle ProgressionEtape (Refactorisé)
 // Représente l'état d'une étape pour un utilisateur. C'est la source de vérité.
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const ProgressionEtape = sequelize.define('ProgressionEtape', {
   utilisateur_id: {
@@ -18,7 +18,7 @@ const ProgressionEtape = sequelize.define('ProgressionEtape', {
     type: DataTypes.ENUM('non_commence', 'en_cours', 'valide'),
     defaultValue: 'non_commence',
     allowNull: false,
-    comment: "Statut de la progression de l'utilisateur sur cette étape spécifique."
+    comment: 'Statut de la progression de l\'utilisateur sur cette étape spécifique.'
   },
   date_validation: {
     type: DataTypes.DATE,
@@ -34,7 +34,7 @@ const ProgressionEtape = sequelize.define('ProgressionEtape', {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: { model: 'Utilisateurs', key: 'id' },
-    comment: "ID du professeur qui a validé l'étape."
+    comment: 'ID du professeur qui a validé l\'étape.'
   },
   decay_level: {
     type: DataTypes.ENUM('fresh', 'warning', 'critical', 'forgotten'),

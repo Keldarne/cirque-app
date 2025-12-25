@@ -71,7 +71,7 @@ router.post('/tentatives', verifierToken, async (req, res) => {
     }
 
     // Progression non trouvée (404)
-    if (error.message.includes("n'a pas commencé") || error.message.includes("n'existe pas")) {
+    if (error.message.includes('n\'a pas commencé') || error.message.includes('n\'existe pas')) {
       return res.status(404).json({ error: error.message });
     }
 

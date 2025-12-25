@@ -1,0 +1,24 @@
+{
+  "name": "cirque-app",
+  "version": "1.0.0",
+  "description": "Full-stack application for circus skill training management",
+  "private": true,
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "reset-and-seed": "cd backend && npm run reset-and-seed",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "circus",
+    "training",
+    "multi-tenant"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "globals": "^16.5.0"
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -15,24 +15,16 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Avatar,
-  Badge,
-  IconButton,
-  CardHeader
+  Avatar
 } from '@mui/material';
 import {
   School as SchoolIcon,
   Group as GroupIcon,
-  Mail as MailIcon,
   TrendingUp as TrendingUpIcon,
   EmojiEvents as TrophyIcon,
   Warning as WarningIcon,
-  WbSunny as SunnyIcon,
-  Cloud as CloudIcon,
-  Thunderstorm as StormIcon,
   Refresh as RefreshIcon,
-  AccessTime as AccessTimeIcon,
-  Visibility as VisibilityIcon
+  AccessTime as AccessTimeIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
@@ -53,11 +45,7 @@ function DashboardProfPage() {
   // Hook pour charger les élèves négligés
   const { data: elevesNegliges, loading: negligesLoading } = useElevesNegliges(30);
 
-  useEffect(() => {
-    chargerDonnees();
-  }, []);
-
-  const chargerDonnees = async () => {
+  const chargerDonnees = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -91,7 +79,11 @@ function DashboardProfPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshAnalytics]);
+
+  useEffect(() => {
+    chargerDonnees();
+  }, [chargerDonnees]);
 
   const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
     <Card sx={{ height: '100%' }}>

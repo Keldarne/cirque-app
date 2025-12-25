@@ -1,7 +1,7 @@
 // Modèle TitreUtilisateur
 // Représente un titre obtenu et possiblement équipé par un utilisateur
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const TitreUtilisateur = sequelize.define('TitreUtilisateur', {
   utilisateur_id: {

@@ -1,7 +1,7 @@
 // Modèle Defi
 // Représente un défi disponible (quotidien, hebdomadaire ou événement)
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const Defi = sequelize.define('Defi', {
   titre: {

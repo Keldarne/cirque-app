@@ -13,7 +13,7 @@
 // - defaultScope : exclut le champ mot_de_passe pour les requêtes par défaut
 // - withPassword : inclut mot_de_passe quand on en a besoin (ex: authentification)
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize'); // Import Op
 const { getRequestContext } = require('../utils/requestContext'); // Import getRequestContext

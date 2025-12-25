@@ -8,7 +8,7 @@
 // - config: paramètres personnalisables (branding, notifications)
 // - Stripe IDs: intégration paiement (Phase 2)
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const Ecole = sequelize.define('Ecole', {
   id: {

@@ -1,5 +1,5 @@
 const { Figure, EtapeProgression, Discipline } = require('../models');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 class FigureService {
 

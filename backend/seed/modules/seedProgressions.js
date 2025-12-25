@@ -1,4 +1,4 @@
-const { ProgressionEtape, EtapeProgression } = require('../../models');
+const { ProgressionEtape, EtapeProgression } = require('../../src/models');
 const { generateTimestamps } = require('../utils/timestampGenerator');
 const logger = require('../utils/logger');
 const { Op } = require('sequelize');
@@ -7,7 +7,7 @@ const { Op } = require('sequelize');
 let profs = [];
 const setProfs = (allProfs) => {
   profs = allProfs;
-}
+};
 const getRandomProf = () => profs[Math.floor(Math.random() * profs.length)];
 
 
@@ -75,17 +75,26 @@ async function seedProgressions(students, figuresByDiscipline, scenarioDefinitio
     await ProgressionEtape.bulkCreate(progressionsToCreate);
     totalEtapeProgressions += progressionsToCreate.length;
 
-    // 3. Simuler la validation des étapes en fonction du scénario
-    const distribution = scenarioDef.distribution || { last_7_days: 5, days_8_to_30: 10 }; // Fournir une distribution par défaut
+    // 3. Simuler la validation et progression en cours des étapes
+    const distribution = scenarioDef.distribution || { last_7_days: 5, days_8_to_30: 10 };
     let timestamps = generateTimestamps({
         last7DaysCount: distribution.last_7_days,
         days8to30Count: distribution.days_8_to_30,
     });
 
-    const etapesToValidate = allEtapesForFigures
-      .sort(() => 0.5 - Math.random()) // Mélanger pour valider des étapes au hasard
-      .slice(0, timestamps.length);
+    // Mélanger toutes les étapes
+    const shuffledEtapes = allEtapesForFigures.sort(() => 0.5 - Math.random());
 
+    // Diviser les étapes en 3 groupes:
+    // - Validées (selon timestamps)
+    // - En cours (10-20% des étapes restantes)
+    // - Non commencées (le reste)
+
+    const nbValidees = timestamps.length;
+    const nbEnCours = Math.floor((shuffledEtapes.length - nbValidees) * 0.15); // 15% en cours
+
+    // Étapes validées
+    const etapesToValidate = shuffledEtapes.slice(0, nbValidees);
     for (let i = 0; i < etapesToValidate.length; i++) {
         const etape = etapesToValidate[i];
         const timestamp = timestamps[i];
@@ -108,7 +117,24 @@ async function seedProgressions(students, figuresByDiscipline, scenarioDefinitio
             }
         });
     }
-    logger.info(`  → ${progressionsToCreate.length} progressions d'étapes créées pour ${student.prenom}`);
+
+    // Étapes en cours (pas de date_validation)
+    const etapesEnCours = shuffledEtapes.slice(nbValidees, nbValidees + nbEnCours);
+    for (const etape of etapesEnCours) {
+        await ProgressionEtape.update(
+            { statut: 'en_cours' },
+            {
+                where: {
+                    utilisateur_id: student.id,
+                    etape_id: etape.id
+                }
+            }
+        );
+    }
+
+    logger.info(
+      `  → ${progressionsToCreate.length} progressions créées: ${nbValidees} validées, ${nbEnCours} en cours, ${progressionsToCreate.length - nbValidees - nbEnCours} non commencées`
+    );
   }
 
   logger.success(`${totalEtapeProgressions} progressions d'étapes créées au total`);

@@ -42,8 +42,8 @@ router.get('/', verifierToken, async (req, res) => {
 
     res.json(figures);
   } catch (err) {
-    console.error("Erreur GET /figures:", err);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error('Erreur GET /figures:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
@@ -55,13 +55,13 @@ router.get('/:id', verifierToken, async (req, res) => {
     });
 
     if (!figure) {
-      return res.status(404).json({ error: "Figure non trouvée" });
+      return res.status(404).json({ error: 'Figure non trouvée' });
     }
 
     res.json({ figure });
   } catch (err) {
-    console.error("Erreur GET /figures/:id:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /figures/:id:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -77,8 +77,8 @@ router.get('/:id/etapes', verifierToken, async (req, res) => {
 
     res.json(etapes);
   } catch (err) {
-    console.error("Erreur GET /figures/:id/etapes:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /figures/:id/etapes:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 

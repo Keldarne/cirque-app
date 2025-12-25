@@ -4,7 +4,7 @@
  */
 
 const { AssignationGroupeProgramme, AssignationProgramme, GroupeEleve, Groupe, Utilisateur, ProgrammeProf } = require('../models');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 class GroupeProgrammeService {
   /**

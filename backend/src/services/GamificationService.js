@@ -4,8 +4,6 @@ const {
   Utilisateur,
   Titre,
   TitreUtilisateur,
-  GroupeEleve,
-  Defi,
   DefiUtilisateur,
   Streak,
   sequelize
@@ -15,16 +13,16 @@ const { Op } = require('sequelize');
 class GamificationService {
 
   // ... (méthodes existantes)
-  static async getAllBadges(utilisateurId, filters = {}) { /* ... */ }
-  static async getObtainedBadges(utilisateurId) { /* ... */ }
-  static async setBadgeDisplay(utilisateurId, badgeId, affiche) { /* ... */ }
-  static async getGlobalLeaderboard(currentUser, limit = 100, offset = 0) { /* ... */ }
-  static async getWeeklyLeaderboard(limit = 50) { /* ... */ }
-  static async getGroupLeaderboard(groupeId) { /* ... */ }
-  static async getActiveChallenges(utilisateurId) { /* ... */ }
-  static async getUserChallengeHistory(utilisateurId, statut) { /* ... */ }
-  static async getUserChallengeStats(utilisateurId) { /* ... */ }
-  static async getUserStreakStatus(utilisateurId) { /* ... */ }
+  static async getAllBadges(_utilisateurId, _filters = {}) { /* ... */ }
+  static async getObtainedBadges(_utilisateurId) { /* ... */ }
+  static async setBadgeDisplay(_utilisateurId, _badgeId, _affiche) { /* ... */ }
+  static async getGlobalLeaderboard(currentUser, _limit = 100, _offset = 0) { /* ... */ }
+  static async getWeeklyLeaderboard(_limit = 50) { /* ... */ }
+  static async getGroupLeaderboard(_groupeId) { /* ... */ }
+  static async getActiveChallenges(_utilisateurId) { /* ... */ }
+  static async getUserChallengeHistory(_utilisateurId, _statut) { /* ... */ }
+  static async getUserChallengeStats(_utilisateurId) { /* ... */ }
+  static async getUserStreakStatus(_utilisateurId) { /* ... */ }
     static async getGamificationProfile(user) {
     const userId = user.id;
 

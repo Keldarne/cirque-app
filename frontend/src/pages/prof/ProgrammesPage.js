@@ -18,7 +18,6 @@ import {
 import {
   Add as AddIcon,
   Assignment as AssignmentIcon,
-  ContentCopy as CopyIcon,
   Delete as DeleteIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material';

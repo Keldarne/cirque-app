@@ -3,7 +3,7 @@ const {
   ProgressionEtape,
   EtapeProgression
 } = require('../models');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 class EntrainementService {
 
@@ -35,7 +35,7 @@ class EntrainementService {
       });
 
       if (!progressionEtape) {
-        throw new Error("L'utilisateur n'a pas commencé la progression sur cette figure/étape.");
+        throw new Error('L\'utilisateur n\'a pas commencé la progression sur cette figure/étape.');
       }
 
       // 3. Calculer le booléen reussie basé sur le mode
@@ -68,7 +68,7 @@ class EntrainementService {
 
     } catch (error) {
       await transaction.rollback();
-      console.error("Erreur dans EntrainementService.enregistrerTentative:", error);
+      console.error('Erreur dans EntrainementService.enregistrerTentative:', error);
       throw error;
     }
   }

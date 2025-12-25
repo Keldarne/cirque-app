@@ -1,7 +1,7 @@
 // Modèle Titre
 // Représente un titre déblocable (ex: "Maître de Piste", "Acrobate")
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const Titre = sequelize.define('Titre', {
   nom: {

@@ -7,7 +7,7 @@
 // - createur_id : clé étrangère vers Utilisateur (professeur qui a créé la figure)
 // Relations : définies ensuite dans models/index.js (Figure.belongsTo Discipline, a des EtapeProgression...)
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 const { Op } = require('sequelize'); // Import Op for OR conditions
 const { getRequestContext } = require('../utils/requestContext'); // Import for multi-tenancy context
 

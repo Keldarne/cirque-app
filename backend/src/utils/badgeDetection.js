@@ -4,13 +4,11 @@ const {
   Utilisateur,
   ProgressionEtape,
   Streak,
-  Discipline,
   EtapeProgression,
   Figure
 } = require('../models');
-const { Op } = require('sequelize');
 
-async function verifierBadges(utilisateurId, contexte = 'general') {
+async function verifierBadges(utilisateurId, _contexte = 'general') {
   try {
     const utilisateur = await Utilisateur.findByPk(utilisateurId);
     if (!utilisateur) {
@@ -34,7 +32,7 @@ async function verifierBadges(utilisateurId, contexte = 'general') {
       const remplit = await verifierConditionBadge(badge, utilisateur);
 
       if (remplit) {
-        const badgeUtilisateur = await BadgeUtilisateur.create({
+        await BadgeUtilisateur.create({
           utilisateur_id: utilisateurId,
           badge_id: badge.id,
           date_obtention: new Date()

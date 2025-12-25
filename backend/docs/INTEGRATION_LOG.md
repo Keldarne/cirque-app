@@ -4,6 +4,149 @@ Ce fichier documente les changements backend qui impactent le frontend et permet
 
 ---
 
+## 📅 2025-12-25 - ⚠️ TÂCHE GEMINI: Corrections ESLint Backend
+
+### 👤 Émetteur
+**Développeur**: Claude Backend Agent
+**Status**: 🔴 **ACTION REQUISE** - Corrections ESLint nécessaires
+
+### 📋 Résumé
+Un audit ESLint a été effectué sur le backend. **168 problèmes** détectés, dont **106 erreurs automatiquement fixables**.
+
+### 🔧 Corrections Automatiques (106 erreurs)
+
+**Problème principal**: Utilisation de double quotes au lieu de single quotes dans tout le backend.
+
+**Solution Rapide** (corrige 106/168 problèmes):
+```bash
+cd /Users/josephgremaud/cirque-app
+npx eslint "backend/{db,server,seed,scripts,src}/**/*.js" "backend/*.js" --fix
+```
+
+### 📊 Détail des Erreurs par Fichier
+
+#### Fichiers Critiques (> 20 erreurs chacun)
+1. **`backend/src/routes/progression.js`** - 51 erreurs (quotes)
+2. **`backend/src/routes/utilisateurs.js`** - 33 erreurs (quotes)
+3. **`backend/src/routes/admin.js`** - 19 erreurs (quotes)
+
+#### Tous les Fichiers Affectés
+
+**Routes** (quotes majoritairement):
+- `backend/src/routes/progression.js` - 51 erreurs
+- `backend/src/routes/utilisateurs.js` - 33 erreurs
+- `backend/src/routes/admin.js` - 19 erreurs
+- `backend/src/routes/figures.js` - 7 erreurs
+- `backend/src/routes/entrainement.js` - 2 erreurs
+- `backend/src/routes/prof/eleves.js` - 1 erreur
+
+**Services** (variables inutilisées):
+- `backend/src/services/GamificationService.js` - 17 warnings
+- `backend/src/services/StatsService.js` - 11 warnings
+- `backend/src/services/EntrainementService.js` - 2 erreurs + 1 warning
+- `backend/src/services/TentativeService.js` - 3 warnings
+- `backend/src/services/MemoryDecayService.js` - 2 warnings
+- `backend/src/services/ProfService.js` - 1 warning
+- `backend/src/services/FigureService.js` - 1 warning
+
+**Models** (variables inutilisées):
+- `backend/src/models/ProgressionEtape.js` - 2 erreurs (quotes)
+- `backend/src/models/Figure.js` - 2 warnings
+- `backend/src/models/Groupe.js` - 1 warning
+
+**Middleware**:
+- `backend/src/middleware/auth.js` - 3 warnings (variables inutilisées)
+
+**Scripts**:
+- `backend/scripts/reset-db.js` - 3 erreurs (quotes)
+- `backend/scripts/seed-gamification.js` - 1 warning
+- `backend/scripts/create-admin.js` - 1 warning
+
+**Seed**:
+- `backend/seed/modules/seedProgressions.js` - 1 erreur (missing semicolon ligne 10)
+- `backend/seed/modules/seedRelations.js` - 1 warning
+- `backend/seed/modules/seedTentatives.js` - 2 warnings
+- `backend/seed/modules/seedUtilisateurs.js` - 1 warning
+- `backend/seed/index.js` - 1 warning
+
+**Utilitaires**:
+- `backend/src/utils/badgeDetection.js` - 5 warnings
+
+**Serveur**:
+- `backend/server.js` - 3 erreurs (quotes)
+
+### 🎯 Actions Recommandées pour Gemini
+
+#### Étape 1: Corrections Automatiques (5 minutes)
+```bash
+# Depuis la racine du projet
+cd /Users/josephgremaud/cirque-app
+npx eslint "backend/{db,server,seed,scripts,src}/**/*.js" "backend/*.js" --fix
+```
+
+Cela corrigera automatiquement:
+- ✅ Toutes les erreurs de quotes (double → single)
+- ✅ Ajout de semicolons manquants
+
+#### Étape 2: Corrections Manuelles Variables Inutilisées (20 minutes)
+
+**Fichiers prioritaires**:
+
+1. **`backend/src/services/GamificationService.js`** (17 warnings)
+   - Supprimer les imports inutilisés: `GroupeEleve`, `Defi`
+   - Supprimer les paramètres inutilisés dans les fonctions stub
+
+2. **`backend/src/services/StatsService.js`** (11 warnings)
+   - Supprimer les imports inutilisés: `Utilisateur`, `RelationProfEleve`, `sequelize`
+   - Nettoyer les paramètres destructurés non utilisés
+
+3. **`backend/src/middleware/auth.js`** (3 warnings)
+   - Supprimer imports: `Streak`, `Utilisateur` (ligne 228)
+   - Préfixer le paramètre `error` avec `_` s'il est intentionnellement non utilisé
+
+4. **`backend/src/services/TentativeService.js`** (3 warnings)
+   - Supprimer imports: `Utilisateur`, `Op`, `StatsService`
+
+5. **`backend/src/utils/badgeDetection.js`** (5 warnings)
+   - Supprimer imports: `Discipline`, `Op`
+   - Préfixer `contexte` avec `_contexte` ou supprimer
+
+#### Étape 3: Validation (2 minutes)
+
+Après corrections, vérifier:
+```bash
+# Lancer ESLint pour voir les problèmes restants
+npx eslint "backend/{db,server,seed,scripts,src}/**/*.js" "backend/*.js"
+
+# Vérifier que les tests passent toujours
+cd backend
+npm test
+
+# Vérifier que le serveur démarre
+npm start
+```
+
+### 📝 Configuration ESLint Ajoutée
+
+Un fichier `eslint.config.js` a été créé à la racine avec les règles:
+- ✅ Single quotes obligatoires
+- ✅ Semicolons obligatoires
+- ⚠️ Variables inutilisées = warning (sauf si préfixées par `_`)
+- ✅ Console.log autorisé (backend)
+
+### 🎯 Objectif
+- Réduire de **168 problèmes** à **0 problème**
+- Améliorer la qualité du code backend
+- Préparer le projet pour intégration CI/CD avec lint obligatoire
+
+### ⏱️ Temps Estimé
+- **Automatique**: 5 minutes
+- **Manuel**: 20-30 minutes
+- **Validation**: 2 minutes
+- **TOTAL**: ~35 minutes
+
+---
+
 ## 📅 2025-12-25 - Status Frontend & Besoins
 
 ### 👤 Émetteur

@@ -1,13 +1,10 @@
 const {
-  Utilisateur,
   Figure,
   Discipline,
   ProgressionEtape,
-  EtapeProgression,
-  RelationProfEleve
+  EtapeProgression
 } = require('../models');
 const { Op } = require('sequelize');
-const sequelize = require('../db');
 
 class StatsService {
 
@@ -15,7 +12,7 @@ class StatsService {
 
   // TODO: Re-implement this logic based on new XP model.
   // This KPI is broken because `xp_gagne` was removed from the progression model.
-  async calculerScoreSecurite(utilisateurId) {
+  async calculerScoreSecurite(_utilisateurId) {
     return {
       score: 50,
       xp_renforcement: 0,
@@ -24,7 +21,7 @@ class StatsService {
     };
   }
 
-  _interpreterScoreSecurite(score) {
+  _interpreterScoreSecurite(_score) {
     // ... (logic inchangée)
   }
 
@@ -63,7 +60,7 @@ class StatsService {
     };
   }
 
-  _interpreterDecrochage(ratio, at_risk) {
+  _interpreterDecrochage(_ratio, _at_risk) {
     // ... (logic inchangée)
   }
 
@@ -113,11 +110,11 @@ class StatsService {
   
   // ... (calculerXpDynamique inchangé)
 
-  async calculerStatistiquesProfesseur(professeurId) {
+  async calculerStatistiquesProfesseur(_professeurId) {
     // ... (logic inchangée)
   }
   
-  async _calculerMeteoClasse(eleveIds) {
+  async _calculerMeteoClasse(_eleveIds) {
     // ... (logic inchangée)
   }
 
@@ -180,7 +177,7 @@ class StatsService {
     return result;
   }
 
-  async _trouverElevesARisque(eleveIds) {
+  async _trouverElevesARisque(_eleveIds) {
     // ... (logic inchangée)
   }
 }

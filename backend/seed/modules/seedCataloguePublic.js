@@ -8,7 +8,7 @@
  * - Défis publics
  */
 
-const { Discipline, Figure, Badge, Titre, Defi, EtapeProgression } = require('../../models');
+const { Discipline, Figure, Badge, Titre, Defi, EtapeProgression } = require('../../src/models');
 const logger = require('../utils/logger');
 
 /**

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -30,28 +30,7 @@ function ProgrammeDetailPage() {
   const [progressions, setProgressions] = useState({});
   const [detailsDialog, setDetailsDialog] = useState({ open: false, figure: null, figureProgressions: [] });
 
-  // Charger le programme et les progressions
-  useEffect(() => {
-    loadProgramme();
-  }, [id]);
-
-  const loadProgramme = async () => {
-    try {
-      const response = await api.get(`/api/prof/programmes/${id}`);
-      const data = await response.json();
-      setProgramme(data.programme);
-
-      // Charger les progressions des élèves assignés
-      await loadProgressions(data.programme);
-
-      setLoading(false);
-    } catch (error) {
-      console.error('Erreur chargement programme:', error);
-      setLoading(false);
-    }
-  };
-
-  const loadProgressions = async (prog) => {
+  const loadProgressions = useCallback(async (prog) => {
     if (!prog?.Assignations || prog.Assignations.length === 0) return;
 
     const progressionsMap = {};
@@ -79,7 +58,28 @@ function ProgrammeDetailPage() {
     }
 
     setProgressions(progressionsMap);
-  };
+  }, []);
+
+  const loadProgramme = useCallback(async () => {
+    try {
+      const response = await api.get(`/api/prof/programmes/${id}`);
+      const data = await response.json();
+      setProgramme(data.programme);
+
+      // Charger les progressions des élèves assignés
+      await loadProgressions(data.programme);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur chargement programme:', error);
+      setLoading(false);
+    }
+  }, [id, loadProgressions]);
+
+  // Charger le programme et les progressions
+  useEffect(() => {
+    loadProgramme();
+  }, [id, loadProgramme]);
 
   // Regrouper figures par discipline avec useMemo pour optimisation
   const figuresParDiscipline = useMemo(() => {
@@ -494,13 +494,7 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (open && discipline) {
-      loadFiguresDiscipline();
-    }
-  }, [open, discipline]);
-
-  const loadFiguresDiscipline = async () => {
+  const loadFiguresDiscipline = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/api/figures');
@@ -512,7 +506,13 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
       console.error('Erreur chargement figures:', error);
       setLoading(false);
     }
-  };
+  }, [discipline]);
+
+  useEffect(() => {
+    if (open && discipline) {
+      loadFiguresDiscipline();
+    }
+  }, [open, discipline, loadFiguresDiscipline]);
 
   const handleSubmit = async () => {
     if (selectedIds.length === 0) return;

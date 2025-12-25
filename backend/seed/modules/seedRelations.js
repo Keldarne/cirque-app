@@ -1,4 +1,4 @@
-const { RelationProfEleve, Groupe, GroupeEleve, Utilisateur } = require('../../models');
+const { RelationProfEleve, Groupe, GroupeEleve, Utilisateur } = require('../../src/models');
 const logger = require('../utils/logger');
 
 /**

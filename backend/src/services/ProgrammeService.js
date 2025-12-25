@@ -1,5 +1,5 @@
 const { ProgrammeProf, ProgrammeFigure, AssignationProgramme, Figure, RelationProfEleve, ProgressionEtape, EtapeProgression, Utilisateur, Groupe } = require('../models');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 const { Op } = require('sequelize');
 const GroupeProgrammeService = require('./GroupeProgrammeService');
 

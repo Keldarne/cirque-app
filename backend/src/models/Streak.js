@@ -1,7 +1,7 @@
 // Modèle Streak
 // Représente la série de connexions/activités consécutives d'un utilisateur
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const Streak = sequelize.define('Streak', {
   utilisateur_id: {

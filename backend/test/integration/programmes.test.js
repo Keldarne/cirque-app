@@ -1,5 +1,5 @@
 const { authRequest, loginAs, waitForServer } = require('../helpers/auth-helper');
-const { ProgrammeProf, ProgrammeFigure, AssignationProgramme, Figure } = require('../../models');
+const { ProgrammeProf, ProgrammeFigure, AssignationProgramme, Figure } = require('../../src/models');
 
 describe('📋 Programmes Personnels', () => {
   let adminToken, professeurToken, eleveToken;

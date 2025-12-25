@@ -24,7 +24,7 @@ import { api } from "../../utils/api";
 function FigureDetailPage() {
   const { figureId } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated, setUser, loading: authLoading } = useAuth();
+  const { isAuthenticated, setUser, loading: authLoading } = useAuth();
 
   const [figure, setFigure] = useState(null);
   const [progressionEtapes, setProgressionEtapes] = useState([]);

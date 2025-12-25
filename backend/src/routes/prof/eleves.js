@@ -26,7 +26,7 @@ router.get('/:id', verifierToken, estProfesseurOuAdmin, verifierRelationProfElev
     const details = await ProfService.getEleveDetails(id);
 
     if (!details) {
-      return res.status(404).json({ error: "Détails de l'élève non trouvés." });
+      return res.status(404).json({ error: 'Détails de l\'élève non trouvés.' });
     }
 
     res.json({

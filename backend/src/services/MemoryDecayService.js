@@ -1,6 +1,6 @@
 const { ProgressionEtape } = require('../models');
 const { isAfter, differenceInDays, addDays } = require('date-fns');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 const { Op } = require('sequelize');
 
 class MemoryDecayService {

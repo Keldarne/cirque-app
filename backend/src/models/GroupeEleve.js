@@ -1,7 +1,7 @@
 // Modèle GroupeEleve
 // Représente l'appartenance d'un élève à un groupe
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const GroupeEleve = sequelize.define('GroupeEleve', {
   groupe_id: {

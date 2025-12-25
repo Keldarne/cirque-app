@@ -13,7 +13,7 @@ router.get('/utilisateur/:utilisateurId', verifierToken, async (req, res) => {
     const { utilisateurId } = req.params;
 
     if (req.user.role !== 'admin' && req.user.id !== parseInt(utilisateurId)) {
-      return res.status(403).json({ error: "Vous ne pouvez consulter que votre propre progression" });
+      return res.status(403).json({ error: 'Vous ne pouvez consulter que votre propre progression' });
     }
 
     const progressions = await ProgressionEtape.findAll({
@@ -47,8 +47,8 @@ router.get('/utilisateur/:utilisateurId', verifierToken, async (req, res) => {
 
     res.json(Object.values(progressionsParFigure));
   } catch (err) {
-    console.error("Erreur GET /progression/utilisateur/:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /progression/utilisateur/:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -86,7 +86,7 @@ router.get('/programmes/:programmeId', verifierToken, async (req, res) => {
     });
 
     if (!programme) {
-      return res.status(404).json({ error: "Programme non trouvé" });
+      return res.status(404).json({ error: 'Programme non trouvé' });
     }
 
     // Vérifier que l'utilisateur a accès à ce programme
@@ -103,14 +103,14 @@ router.get('/programmes/:programmeId', verifierToken, async (req, res) => {
       });
 
       if (!assignation) {
-        return res.status(403).json({ error: "Vous n'avez pas accès à ce programme" });
+        return res.status(403).json({ error: 'Vous n\'avez pas accès à ce programme' });
       }
     }
 
     res.json({ programme });
   } catch (err) {
-    console.error("Erreur GET /progression/programmes/:programmeId:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /progression/programmes/:programmeId:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -125,7 +125,7 @@ router.post('/', verifierToken, async (req, res) => {
     const utilisateur_id = req.user.id;
 
     if (!figure_id) {
-      return res.status(400).json({ error: "figure_id est requis" });
+      return res.status(400).json({ error: 'figure_id est requis' });
     }
 
     // 1. Vérifier si une progression existe déjà pour éviter les doublons
@@ -135,7 +135,7 @@ router.post('/', verifierToken, async (req, res) => {
     });
 
     if (etapesDeLaFigure.length === 0) {
-      return res.status(404).json({ error: "La figure demandée n'a aucune étape définie." });
+      return res.status(404).json({ error: 'La figure demandée n\'a aucune étape définie.' });
     }
 
     const etapeIds = etapesDeLaFigure.map(e => e.id);
@@ -149,7 +149,7 @@ router.post('/', verifierToken, async (req, res) => {
 
     if (existingProgressionCount > 0) {
       return res.status(409).json({
-        error: "Vous avez déjà commencé la progression sur cette figure."
+        error: 'Vous avez déjà commencé la progression sur cette figure.'
       });
     }
 
@@ -168,8 +168,8 @@ router.post('/', verifierToken, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Erreur POST /progression:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur POST /progression:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -190,7 +190,7 @@ router.delete('/figure/:figureId', verifierToken, async (req, res) => {
 
     if (etapesDeLaFigure.length === 0) {
       // Pas de progression à supprimer si la figure n'a pas d'étapes
-      return res.json({ message: "Aucune progression à supprimer pour cette figure." });
+      return res.json({ message: 'Aucune progression à supprimer pour cette figure.' });
     }
 
     const etapeIds = etapesDeLaFigure.map(e => e.id);
@@ -203,10 +203,10 @@ router.delete('/figure/:figureId', verifierToken, async (req, res) => {
       }
     });
 
-    res.json({ message: "Progression sur la figure supprimée avec succès", etapesSupprimees: deletedRows });
+    res.json({ message: 'Progression sur la figure supprimée avec succès', etapesSupprimees: deletedRows });
   } catch (err) {
-    console.error("Erreur DELETE /progression/figure/:figureId:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur DELETE /progression/figure/:figureId:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -234,8 +234,8 @@ router.get('/figure/:figureId/etapes', verifierToken, async (req, res) => {
 
     res.json(progressionsEtape);
   } catch (err) {
-    console.error("Erreur GET /progression/figure/:figureId/etapes:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /progression/figure/:figureId/etapes:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -251,11 +251,11 @@ router.post('/etape/:etapeId/valider', verifierToken, async (req, res) => {
 
     // Vérifier que l'utilisateur est un professeur
     if (req.user.role !== 'professeur' && req.user.role !== 'admin') {
-      return res.status(403).json({ error: "Accès réservé aux professeurs et admins" });
+      return res.status(403).json({ error: 'Accès réservé aux professeurs et admins' });
     }
     
     if (!eleveId) {
-      return res.status(400).json({ error: "L'ID de l'élève est requis." });
+      return res.status(400).json({ error: 'L\'ID de l\'élève est requis.' });
     }
 
     // Sécurité: Vérifier que le prof a bien cet élève
@@ -263,7 +263,7 @@ router.post('/etape/:etapeId/valider', verifierToken, async (req, res) => {
       where: { professeur_id, eleve_id: eleveId, statut: 'accepte' }
     });
     if (!relation && req.user.role !== 'admin') {
-      return res.status(403).json({ error: "Cet élève ne fait pas partie de vos élèves." });
+      return res.status(403).json({ error: 'Cet élève ne fait pas partie de vos élèves.' });
     }
 
     // Trouver la progression de l'étape pour l'élève
@@ -275,7 +275,7 @@ router.post('/etape/:etapeId/valider', verifierToken, async (req, res) => {
     });
 
     if (!progressionEtape) {
-      return res.status(404).json({ error: "Aucune progression n'a été démarrée par l'élève pour cette étape." });
+      return res.status(404).json({ error: 'Aucune progression n\'a été démarrée par l\'élève pour cette étape.' });
     }
 
     // Mettre à jour la progression
@@ -289,13 +289,13 @@ router.post('/etape/:etapeId/valider', verifierToken, async (req, res) => {
     await progressionEtape.save();
 
     res.json({
-      message: "Étape validée avec succès par le professeur",
+      message: 'Étape validée avec succès par le professeur',
       progression: progressionEtape
     });
 
   } catch (err) {
-    console.error("Erreur POST /progression/etape/:etapeId/valider:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur POST /progression/etape/:etapeId/valider:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -310,7 +310,7 @@ router.get('/grit-score', verifierToken, async (req, res) => {
 
     // Vérifier les permissions
     if (req.user.role !== 'admin' && req.user.role !== 'professeur' && req.user.id !== utilisateurId) {
-      return res.status(403).json({ error: "Vous ne pouvez consulter que votre propre score ou celui de vos élèves." });
+      return res.status(403).json({ error: 'Vous ne pouvez consulter que votre propre score ou celui de vos élèves.' });
     }
 
     const includeProgressionUtilisateur = {
@@ -336,7 +336,7 @@ router.get('/grit-score', verifierToken, async (req, res) => {
     if (totalTentatives === 0) {
       return res.json({
         grit_score: 0,
-        interpretation: "Aucune tentative enregistrée",
+        interpretation: 'Aucune tentative enregistrée',
         total_echecs: 0,
         total_reussites: 0,
         total_tentatives: 0,
@@ -349,15 +349,15 @@ router.get('/grit-score', verifierToken, async (req, res) => {
 
     let interpretation;
     if (gritScore < 20) {
-      interpretation = "Talent naturel - Très peu d'échecs";
+      interpretation = 'Talent naturel - Très peu d\'échecs';
     } else if (gritScore < 40) {
-      interpretation = "Normal - Progression régulière";
+      interpretation = 'Normal - Progression régulière';
     } else if (gritScore < 60) {
-      interpretation = "Persévérant - Apprend de ses erreurs";
+      interpretation = 'Persévérant - Apprend de ses erreurs';
     } else if (gritScore < 80) {
-      interpretation = "Très persévérant - Grande résilience";
+      interpretation = 'Très persévérant - Grande résilience';
     } else {
-      interpretation = "Extrêmement persévérant - Déterminé malgré les difficultés";
+      interpretation = 'Extrêmement persévérant - Déterminé malgré les difficultés';
     }
 
     res.json({
@@ -370,8 +370,8 @@ router.get('/grit-score', verifierToken, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Erreur GET /progression/grit-score:", err);
-    res.status(500).json({ error: "Erreur serveur", details: err.message });
+    console.error('Erreur GET /progression/grit-score:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });
 
@@ -395,9 +395,9 @@ router.get('/programmes', verifierToken, async (req, res) => {
 
   } catch (err) {
 
-    console.error("Erreur GET /progression/programmes:", err);
+    console.error('Erreur GET /progression/programmes:', err);
 
-    res.status(500).json({ error: "Erreur serveur" });
+    res.status(500).json({ error: 'Erreur serveur' });
 
   }
 
@@ -423,7 +423,7 @@ router.post('/programmes', verifierToken, async (req, res) => {
 
     
 
-    if (!nom) return res.status(400).json({ error: "Le nom est requis" });
+    if (!nom) return res.status(400).json({ error: 'Le nom est requis' });
 
 
 
@@ -445,7 +445,7 @@ router.post('/programmes', verifierToken, async (req, res) => {
 
   } catch (err) {
 
-    console.error("Erreur POST /progression/programmes:", err);
+    console.error('Erreur POST /progression/programmes:', err);
 
     res.status(500).json({ error: err.message });
 
@@ -477,7 +477,7 @@ router.put('/programmes/:id', verifierToken, async (req, res) => {
 
     const programme = await ProgrammeProf.findOne({ where: { id, professeur_id: req.user.id, actif: true } });
 
-    if (!programme) return res.status(404).json({ error: "Programme introuvable ou non autorisé" });
+    if (!programme) return res.status(404).json({ error: 'Programme introuvable ou non autorisé' });
 
 
 
@@ -581,11 +581,11 @@ router.post('/programmes/:id/figures', verifierToken, async (req, res) => {
 
     const programme = await ProgrammeProf.findOne({ where: { id, professeur_id: req.user.id, actif: true } });
 
-    if (!programme) return res.status(404).json({ error: "Programme introuvable" });
+    if (!programme) return res.status(404).json({ error: 'Programme introuvable' });
 
 
 
-    if (!figureIds || !Array.isArray(figureIds)) return res.status(400).json({ error: "figureIds requis" });
+    if (!figureIds || !Array.isArray(figureIds)) return res.status(400).json({ error: 'figureIds requis' });
 
 
 
@@ -641,13 +641,13 @@ router.delete('/programmes/:id/figures/:figureId', verifierToken, async (req, re
 
     const programme = await ProgrammeProf.findOne({ where: { id, professeur_id: req.user.id, actif: true } });
 
-    if (!programme) return res.status(404).json({ error: "Programme introuvable" });
+    if (!programme) return res.status(404).json({ error: 'Programme introuvable' });
 
 
 
     await ProgrammeFigure.destroy({ where: { programme_id: id, figure_id: figureId } });
 
-    res.json({ message: "Figure retirée" });
+    res.json({ message: 'Figure retirée' });
 
   } catch (err) {
 
@@ -679,11 +679,11 @@ router.put('/programmes/:id/reorder', verifierToken, async (req, res) => {
 
     const programme = await ProgrammeProf.findOne({ where: { id, professeur_id: req.user.id, actif: true } });
 
-    if (!programme) return res.status(404).json({ error: "Programme introuvable" });
+    if (!programme) return res.status(404).json({ error: 'Programme introuvable' });
 
 
 
-    if (!figureOrders || !Array.isArray(figureOrders)) return res.status(400).json({ error: "figureOrders requis" });
+    if (!figureOrders || !Array.isArray(figureOrders)) return res.status(400).json({ error: 'figureOrders requis' });
 
 
 
@@ -699,7 +699,7 @@ router.put('/programmes/:id/reorder', verifierToken, async (req, res) => {
 
     }
 
-    res.json({ message: "Ordre mis à jour" });
+    res.json({ message: 'Ordre mis à jour' });
 
   } catch (err) {
 

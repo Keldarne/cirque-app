@@ -7,7 +7,7 @@ module.exports = {
 
   // Pattern pour trouver les fichiers de test
   testMatch: [
-    '**/__tests__/**/*.test.js'
+    '**/test/**/*.test.js'
   ],
 
   // Timeout pour les tests (30 secondes pour les tests API)
@@ -18,14 +18,13 @@ module.exports = {
 
   // Coverage (optionnel)
   collectCoverageFrom: [
-    'routes/**/*.js',
-    'middleware/**/*.js',
+    'src/routes/**/*.js',
+    'src/middleware/**/*.js',
     '!node_modules/**'
   ],
 
   // Ignorer les node_modules
   modulePathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/frontend/'
+    '<rootDir>/node_modules/'
   ]
 };

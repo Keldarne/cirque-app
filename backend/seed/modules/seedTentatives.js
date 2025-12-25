@@ -1,6 +1,6 @@
-const { TentativeEtape, ProgressionEtape } = require('../../models');
+const { TentativeEtape, ProgressionEtape } = require('../../src/models');
 const logger = require('../utils/logger');
-const { subMinutes } = require('date-fns');
+const { subDays, subHours, subMinutes, startOfDay } = require('date-fns');
 const { Op } = require('sequelize');
 
 function randomInt(min, max) {
@@ -14,8 +14,42 @@ function assignScenario() {
   return 'normal';                          // 65% normal
 }
 
+/**
+ * Génère des timestamps réalistes pour les tentatives
+ * Simule des sessions d'entraînement groupées par jour
+ */
+function generateAttemptTimestamps(nbTentatives, daysAgo = 30) {
+  const timestamps = [];
+  const now = new Date();
+
+  // Grouper les tentatives en "sessions d'entraînement" (1-4 sessions)
+  const nbSessions = Math.min(nbTentatives, randomInt(1, Math.min(nbTentatives, 5)));
+  const tentativesPerSession = Math.ceil(nbTentatives / nbSessions);
+
+  for (let session = 0; session < nbSessions; session++) {
+    // Chaque session est à un jour différent dans les X derniers jours
+    const dayOffset = randomInt(0, daysAgo);
+    const sessionDate = subDays(now, dayOffset);
+    const sessionStart = startOfDay(sessionDate);
+
+    // Ajouter un offset aléatoire dans la journée (entre 8h et 22h)
+    const hourOffset = randomInt(8, 22);
+    const baseTime = subHours(sessionStart, -hourOffset);
+
+    // Créer les tentatives de cette session (espacées de quelques minutes)
+    const attemptsThisSession = Math.min(tentativesPerSession, nbTentatives - timestamps.length);
+    for (let i = 0; i < attemptsThisSession; i++) {
+      const minutesOffset = i * randomInt(2, 10); // 2-10 min entre chaque tentative
+      timestamps.push(subMinutes(baseTime, -minutesOffset));
+    }
+  }
+
+  // Trier par ordre chronologique (du plus ancien au plus récent)
+  return timestamps.sort((a, b) => a - b);
+}
+
 async function seedTentatives(students) {
-  logger.section('Création des tentatives enrichies (4 modes)');
+  logger.section('Création des tentatives enrichies (4 modes) - Version Journal Riche');
 
   let totalTentatives = 0;
   const scenarios = { high_grit: 0, talent_naturel: 0, normal: 0 };
@@ -33,44 +67,82 @@ async function seedTentatives(students) {
     let config;
     switch (scenario) {
       case 'high_grit':
-        config = { minTentatives: 5, maxTentatives: 12, tauxEchec: 0.7 };
+        config = {
+          minTentatives: 8,
+          maxTentatives: 20,
+          tauxEchec: 0.6,
+          percentageWithAttempts: 0.8 // 80% des progressions ont des tentatives
+        };
         break;
       case 'talent_naturel':
-        config = { minTentatives: 1, maxTentatives: 3, tauxEchec: 0.2 };
+        config = {
+          minTentatives: 1,
+          maxTentatives: 4,
+          tauxEchec: 0.15,
+          percentageWithAttempts: 0.6
+        };
         break;
       default: // normal
-        config = { minTentatives: 2, maxTentatives: 6, tauxEchec: 0.4 };
+        config = {
+          minTentatives: 3,
+          maxTentatives: 12,
+          tauxEchec: 0.4,
+          percentageWithAttempts: 0.7
+        };
     }
 
-    // Récupérer les progressions d'étapes de l'élève qui sont validées
-    const progressionsValidees = await ProgressionEtape.findAll({
-      where: { utilisateur_id: student.id, statut: 'valide' }
+    // Récupérer TOUTES les progressions de l'élève (validées ET en cours)
+    const toutesProgressions = await ProgressionEtape.findAll({
+      where: {
+        utilisateur_id: student.id,
+        statut: { [Op.in]: ['valide', 'en_cours'] }
+      }
     });
 
-    if (progressionsValidees.length === 0) {
+    if (toutesProgressions.length === 0) {
       continue;
     }
 
     let tentativesEleve = 0;
 
-    // Créer des tentatives pour un sous-ensemble aléatoire des étapes validées
-    const progressionsAvecTentatives = progressionsValidees
+    // Créer des tentatives pour un pourcentage des progressions (selon profil)
+    const nbProgressionsWithAttempts = Math.ceil(
+      toutesProgressions.length * config.percentageWithAttempts
+    );
+
+    const progressionsAvecTentatives = toutesProgressions
       .sort(() => 0.5 - Math.random())
-      .slice(0, randomInt(1, Math.min(progressionsValidees.length, 5)));
+      .slice(0, nbProgressionsWithAttempts);
 
     for (const progressionEtape of progressionsAvecTentatives) {
       const nbTentatives = randomInt(config.minTentatives, config.maxTentatives);
+
+      // Générer des timestamps réalistes pour ces tentatives
+      const daysAgo = progressionEtape.statut === 'valide' ? 30 : 7; // validées: 30j, en cours: 7j
+      const timestamps = generateAttemptTimestamps(nbTentatives, daysAgo);
 
       // Choisir un mode aléatoire pour cette progression
       const modes = ['binaire', 'evaluation', 'duree', 'evaluation_duree'];
       const selectedMode = modes[Math.floor(Math.random() * modes.length)];
 
+      const tentativesToCreate = [];
+
       for (let t = 0; t < nbTentatives; t++) {
         const isLastAttempt = (t === nbTentatives - 1);
-        const shouldSucceed = isLastAttempt || (Math.random() > config.tauxEchec);
+
+        // Pour les progressions validées, la dernière tentative doit être réussie
+        // Pour les en_cours, c'est aléatoire
+        let shouldSucceed;
+        if (progressionEtape.statut === 'valide') {
+          shouldSucceed = isLastAttempt || (Math.random() > config.tauxEchec);
+        } else {
+          shouldSucceed = Math.random() > config.tauxEchec;
+        }
 
         let tentativeData = {
-          progression_etape_id: progressionEtape.id
+          progression_etape_id: progressionEtape.id,
+          createdAt: timestamps[t],
+          updatedAt: timestamps[t]
         };
 
         switch (selectedMode) {
@@ -84,7 +156,9 @@ async function seedTentatives(students) {
             tentativeData.type_saisie = 'evaluation';
             // Score: 1=Échec, 2=Instable, 3=Maîtrisé
             if (shouldSucceed) {
-              tentativeData.score = isLastAttempt ? 3 : randomInt(2, 3);
+              // Progression: commence instable (2), finit maîtrisé (3)
+              const progressRatio = nbTentatives > 1 ? t / (nbTentatives - 1) : 1;
+              tentativeData.score = progressRatio > 0.6 ? 3 : 2;
             } else {
               tentativeData.score = 1; // Échec
             }
@@ -94,45 +168,69 @@ async function seedTentatives(students) {
 
           case 'duree':
             tentativeData.type_saisie = 'duree';
-            tentativeData.duree_secondes = randomInt(30, 300); // 30s à 5min
+            // Durée augmente avec la pratique
+            const progressRatio = nbTentatives > 1 ? t / (nbTentatives - 1) : 1;
+            const baseDuration = 30;
+            const maxDuration = 300;
+            tentativeData.duree_secondes = Math.floor(
+              baseDuration + (maxDuration - baseDuration) * progressRatio + randomInt(-10, 20)
+            );
             tentativeData.reussie = true; // Toute session chrono = succès
             modeDistribution.duree++;
             break;
 
           case 'evaluation_duree':
             tentativeData.type_saisie = 'evaluation_duree';
-            // Combiner score et durée
+            // Combiner score et durée avec progression
+            const ratio = nbTentatives > 1 ? t / (nbTentatives - 1) : 1;
+
             if (shouldSucceed) {
-              tentativeData.score = isLastAttempt ? 3 : randomInt(2, 3);
+              tentativeData.score = ratio > 0.6 ? 3 : 2;
             } else {
               tentativeData.score = 1;
             }
-            tentativeData.duree_secondes = randomInt(60, 240); // 1min à 4min
+
+            // Durée augmente avec la pratique
+            const minDur = 60;
+            const maxDur = 240;
+            tentativeData.duree_secondes = Math.floor(
+              minDur + (maxDur - minDur) * ratio + randomInt(-15, 30)
+            );
+
             tentativeData.reussie = tentativeData.score >= 2;
             modeDistribution.evaluation_duree++;
             break;
         }
 
-        await TentativeEtape.create(tentativeData);
-        totalTentatives++;
-        tentativesEleve++;
+        tentativesToCreate.push(tentativeData);
       }
+
+      // Bulk create pour performance
+      await TentativeEtape.bulkCreate(tentativesToCreate);
+      totalTentatives += tentativesToCreate.length;
+      tentativesEleve += tentativesToCreate.length;
     }
 
     if (tentativesEleve > 0) {
-      logger.info(`${student.prenom} ${student.nom} (${scenario}): ${tentativesEleve} tentatives`);
+      logger.info(
+        `${student.prenom} ${student.nom} (${scenario}): ${tentativesEleve} tentatives sur ${progressionsAvecTentatives.length} progressions`
+      );
     }
   }
 
   logger.success(`✓ Total: ${totalTentatives} tentatives créées`);
-  logger.info(`   - High Grit: ${scenarios.high_grit} élèves`);
-  logger.info(`   - Talent Naturel: ${scenarios.talent_naturel} élèves`);
-  logger.info(`   - Normal: ${scenarios.normal} élèves`);
+  logger.info(`   - High Grit: ${scenarios.high_grit} élèves (8-20 tentatives/étape, 80% progressions)`);
+  logger.info(`   - Talent Naturel: ${scenarios.talent_naturel} élèves (1-4 tentatives/étape, 60% progressions)`);
+  logger.info(`   - Normal: ${scenarios.normal} élèves (3-12 tentatives/étape, 70% progressions)`);
   logger.info(`\n   Distribution des modes:`);
   logger.info(`   - Binaire: ${modeDistribution.binaire}`);
   logger.info(`   - Evaluation: ${modeDistribution.evaluation}`);
   logger.info(`   - Duree: ${modeDistribution.duree}`);
   logger.info(`   - Evaluation + Duree: ${modeDistribution.evaluation_duree}`);
+  logger.info(`\n   ✨ Nouveautés:`);
+  logger.info(`   - Timestamps réalistes (sessions groupées par jour)`);
+  logger.info(`   - Tentatives pour progressions en_cours et validées`);
+  logger.info(`   - Progression visible dans les scores et durées`);
 
   return { totalTentatives, scenarios, modeDistribution };
 }

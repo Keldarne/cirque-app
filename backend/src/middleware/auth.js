@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const Utilisateur = require('../models/Utilisateur');
-const Streak = require('../models/Streak');
 const { localStorage } = require('../utils/requestContext'); // Import localStorage
 
 // Forcer l'utilisation d'une variable d'environnement JWT_SECRET
@@ -33,8 +32,8 @@ const verifierToken = async (req, res, next) => {
     req.user = user;
     store.set('user', user); // Store user in AsyncLocalStorage
     localStorage.run(store, () => next());
-  } catch (error) {
-    console.error('Erreur vérification token:', error);
+  } catch (_error) {
+    console.error('Erreur vérification token:', _error);
     return res.status(401).json({ error: 'Token invalide' });
   }
 };
@@ -57,10 +56,10 @@ const verifierTokenOptionnel = async (req, res, next) => {
         store.set('user', user); // Store user in AsyncLocalStorage
       }
     }
-  } catch (error) {
+  } catch (_error) {
     // En cas d'erreur de token (invalide, expiré), on ne bloque pas la requête
     // On continue simplement sans utilisateur authentifié
-    console.warn('Token optionnel invalide ou expiré, requête continue en anonyme.');
+    console.warn('Token optionnel invalide ou expiré, requête continue en anonyme:', _error.message || _error);
   }
   localStorage.run(store, () => next());
 };
@@ -225,7 +224,6 @@ const authorize = (model, fk_user_id = 'utilisateur_id', additionalWhere = {}) =
 
       // Cas spécifique pour les profs et leurs élèves
       if (req.user.role === 'professeur' && model.name === 'ProgressionEtape') {
-        const Utilisateur = require('../models/Utilisateur'); // Import local pour éviter la dépendance circulaire
         const RelationProfEleve = require('../models/RelationProfEleve');
 
         // Trouver la progression étape pour l'élève en question

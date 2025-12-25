@@ -1,8 +1,8 @@
-const StatsService = require('../../services/StatsService');
-const { Discipline, EtapeProgression, ProgressionEtape, Figure, Op } = require('../../models');
+const StatsService = require('../../src/services/StatsService');
+const { Discipline, EtapeProgression, ProgressionEtape, Figure, Op } = require('../../src/models');
 
 // Mock the models
-jest.mock('../../models', () => ({
+jest.mock('../../src/models', () => ({
   Discipline: {
     findAll: jest.fn()
   },
@@ -10,9 +10,12 @@ jest.mock('../../models', () => ({
     count: jest.fn()
   },
   ProgressionEtape: {
-    count: jest.fn()
+    count: jest.fn(),
+    findAll: jest.fn().mockResolvedValue([])
   },
-  Figure: {}, // Needed for include
+  Figure: {
+    findAll: jest.fn().mockResolvedValue([])
+  },
   Op: {
     in: Symbol('in')
   }

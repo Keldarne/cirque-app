@@ -7,7 +7,7 @@
 // - ordre : position de l'étape dans la séquence
 // Les associations (hasMany/belongsTo) sont définies dans models/index.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 
 const EtapeProgression = sequelize.define('EtapeProgression', {
   figure_id: {

@@ -1,4 +1,4 @@
-const { Figure, EtapeProgression } = require('../../models');
+const { Figure, EtapeProgression } = require('../../src/models');
 const logger = require('../utils/logger');
 
 async function seedFigures(figureDefinitions, disciplineMap, professors) {

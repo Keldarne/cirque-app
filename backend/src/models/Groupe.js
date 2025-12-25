@@ -1,7 +1,7 @@
 // Modèle Groupe
 // Représente une classe ou un groupe d'élèves géré par un professeur
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+const sequelize = require('../../db');
 const { Op } = require('sequelize'); // Import Op
 const { getRequestContext } = require('../utils/requestContext'); // Import getRequestContext
 

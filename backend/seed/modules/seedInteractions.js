@@ -9,7 +9,7 @@
  * - Élèves négligés: 30% des élèves sans interaction depuis 30-90 jours
  */
 
-const { InteractionProfEleve, RelationProfEleve } = require('../../models');
+const { InteractionProfEleve, RelationProfEleve } = require('../../src/models');
 const logger = require('../utils/logger');
 const { subDays } = require('date-fns');
 
