@@ -194,7 +194,7 @@ router.get('/historique/utilisateur/:utilisateurId', verifierToken, async (req, 
   }
 
   try {
-    const { TentativeEtape, ProgressionEtape, Etape, Figure } = require('../models');
+    const { TentativeEtape, ProgressionEtape, EtapeProgression, Figure } = require('../models');
 
     // Construire le filtre
     const whereClauseTentative = {};
@@ -210,7 +210,7 @@ router.get('/historique/utilisateur/:utilisateurId', verifierToken, async (req, 
         required: true,
         where: { utilisateur_id: utilisateurId },
         include: [{
-          model: Etape,
+          model: EtapeProgression,
           required: true,
           attributes: ['id', 'nom', 'ordre', 'figure_id'],
           include: [{
@@ -235,14 +235,14 @@ router.get('/historique/utilisateur/:utilisateurId', verifierToken, async (req, 
       duree_secondes: t.duree_secondes,
       createdAt: t.createdAt,
       etape: {
-        id: t.ProgressionEtape.Etape.id,
-        nom: t.ProgressionEtape.Etape.nom,
-        ordre: t.ProgressionEtape.Etape.ordre
+        id: t.ProgressionEtape.EtapeProgression.id,
+        nom: t.ProgressionEtape.EtapeProgression.nom,
+        ordre: t.ProgressionEtape.EtapeProgression.ordre
       },
       figure: {
-        id: t.ProgressionEtape.Etape.Figure.id,
-        nom: t.ProgressionEtape.Etape.Figure.nom,
-        image_url: t.ProgressionEtape.Etape.Figure.image_url
+        id: t.ProgressionEtape.EtapeProgression.Figure.id,
+        nom: t.ProgressionEtape.EtapeProgression.Figure.nom,
+        image_url: t.ProgressionEtape.EtapeProgression.Figure.image_url
       }
     }));
 

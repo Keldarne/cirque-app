@@ -49,6 +49,18 @@ const ProgressionEtape = sequelize.define('ProgressionEtape', {
       unique: true,
       fields: ['utilisateur_id', 'etape_id'],
       name: 'unique_user_etape'
+    },
+    {
+      name: 'idx_utilisateur_statut',
+      fields: ['utilisateur_id', 'statut']
+    },
+    {
+      name: 'idx_statut_validation',
+      fields: ['statut', 'date_validation']
+    },
+    {
+      name: 'idx_decay_level',
+      fields: ['decay_level']
     }
   ]
 });

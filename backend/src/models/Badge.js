@@ -68,7 +68,17 @@ const Badge = sequelize.define('Badge', {
   }
 }, {
   tableName: 'Badges',
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    {
+      name: 'idx_ecole',
+      fields: ['ecole_id']
+    },
+    {
+      name: 'idx_categorie',
+      fields: ['categorie']
+    }
+  ]
 });
 
 module.exports = Badge;

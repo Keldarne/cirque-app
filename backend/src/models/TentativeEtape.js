@@ -69,7 +69,17 @@ const TentativeEtape = sequelize.define('TentativeEtape', {
         }
       }
     }
-  }
+  },
+  indexes: [
+    {
+      name: 'idx_progression_reussie',
+      fields: ['progression_etape_id', 'reussie']
+    },
+    {
+      name: 'idx_progression_created',
+      fields: ['progression_etape_id', 'createdAt']
+    }
+  ]
 });
 
 module.exports = TentativeEtape;

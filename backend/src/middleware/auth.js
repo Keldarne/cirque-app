@@ -39,32 +39,6 @@ const verifierToken = async (req, res, next) => {
 };
 
 /**
- * Middleware qui vérifie le token JWT s'il est présent, mais ne renvoie pas
- * d'erreur s'il est absent.
- */
-const verifierTokenOptionnel = async (req, res, next) => {
-  const store = new Map();
-  try {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET);
-      // Use unscoped() to bypass beforeFind hook during authentication
-      const user = await Utilisateur.unscoped().findByPk(decoded.id);
-      if (user) {
-        req.user = user; // Attacher l'utilisateur seulement s'il est trouvé
-        store.set('user', user); // Store user in AsyncLocalStorage
-      }
-    }
-  } catch (_error) {
-    // En cas d'erreur de token (invalide, expiré), on ne bloque pas la requête
-    // On continue simplement sans utilisateur authentifié
-    console.warn('Token optionnel invalide ou expiré, requête continue en anonyme:', _error.message || _error);
-  }
-  localStorage.run(store, () => next());
-};
-
-/**
  * Middleware pour vérifier que l'utilisateur est un professeur ou admin
  */
 const estProfesseurOuAdmin = (req, res, next) => {
@@ -86,22 +60,6 @@ const estAdmin = (req, res, next) => {
   }
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Accès refusé - Réservé aux admins' });
-  }
-  next();
-};
-
-/**
- * Middleware pour vérifier que l'utilisateur est un admin d'école
- */
-const estSchoolAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Non authentifié' });
-  }
-  if (req.user.role !== 'school_admin') {
-    return res.status(403).json({ error: 'Accès refusé - Réservé aux administrateurs d\'école' });
-  }
-  if (!req.user.ecole_id) {
-    return res.status(403).json({ error: 'Accès refusé - Aucun ID d\'école associé à ce compte' });
   }
   next();
 };
@@ -253,20 +211,12 @@ const authorize = (model, fk_user_id = 'utilisateur_id', additionalWhere = {}) =
   };
 };
 
-const verifierStreak = async (req, res, next) => {
-  // ... (inchangé)
-  next();
-};
-
 module.exports = {
   verifierToken,
-  verifierTokenOptionnel,
   estProfesseurOuAdmin,
   estAdmin,
-  estSchoolAdmin,
   estAdminOuSchoolAdmin,
   estPersonnelAutorise,
   peutModifierFigure,
-  authorize, // Added the new authorize middleware
-  verifierStreak
+  authorize // Added the new authorize middleware
 };

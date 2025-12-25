@@ -79,27 +79,16 @@ const Figure = sequelize.define('Figure', {
 }, {
   tableName: 'Figures',
   timestamps: true,
-  hooks: {
-    // temporarily commented out to debug figure.etapes include issue
-    // beforeFind: (options) => {
-    //   const user = getRequestContext();
-    //   if (user && user.role !== 'admin') { // Admins can see all figures
-    //     options.where = {
-    //       ...options.where,
-    //       [Op.or]: [
-    //         { ecole_id: user.ecole_id }, // Figures de l'école de l'utilisateur
-    //         { ecole_id: null }             // Figures publiques
-    //       ]
-    //     };
-    //   } else if (!user) { // No user (public route), only show public figures
-    //     options.where = {
-    //       ...options.where,
-    //       ecole_id: null
-    //     };
-    //   }
-    //   // If user is admin, no additional where clause is added
-    // }
-  }
+  indexes: [
+    {
+      name: 'idx_discipline_ecole_visibilite',
+      fields: ['discipline_id', 'ecole_id', 'visibilite']
+    },
+    {
+      name: 'idx_createur',
+      fields: ['createur_id']
+    }
+  ]
 });
 
 module.exports = Figure;

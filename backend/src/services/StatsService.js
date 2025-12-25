@@ -65,47 +65,36 @@ class StatsService {
   }
 
   async calculerRadarPolyvalence(utilisateurId) {
-    const disciplines = await Discipline.findAll();
-    const radar = [];
+    // Optimisation: une seule requête SQL avec JOIN et GROUP BY au lieu de N*2 requêtes
+    const { QueryTypes } = require('sequelize');
+    const sequelize = require('../../db');
 
-    for (const discipline of disciplines) {
-      // Compter le nombre total d'étapes définies pour la discipline
-      const etapes_totales = await EtapeProgression.count({
-        include: [{
-          model: Figure,
-          where: { discipline_id: discipline.id },
-          attributes: []
-        }]
-      });
+    const results = await sequelize.query(`
+      SELECT
+        d.id,
+        d.nom,
+        COUNT(DISTINCT ep.id) as total_etapes,
+        COUNT(DISTINCT CASE WHEN pe.statut = 'valide' THEN pe.id END) as etapes_validees
+      FROM Disciplines d
+      LEFT JOIN Figures f ON f.discipline_id = d.id
+      LEFT JOIN EtapeProgressions ep ON ep.figure_id = f.id
+      LEFT JOIN ProgressionEtapes pe ON pe.etape_id = ep.id AND pe.utilisateur_id = :userId
+      GROUP BY d.id, d.nom
+      ORDER BY d.nom
+    `, {
+      replacements: { userId: utilisateurId },
+      type: QueryTypes.SELECT
+    });
 
-      // Compter le nombre d'étapes validées par l'utilisateur dans cette discipline
-      const etapes_validees = await ProgressionEtape.count({
-        where: {
-          utilisateur_id: utilisateurId,
-          statut: 'valide'
-        },
-        include: [{
-          model: EtapeProgression,
-          as: 'etape',
-          required: true,
-          attributes: [],
-          include: [{
-            model: Figure,
-            where: { discipline_id: discipline.id },
-            attributes: []
-          }]
-        }]
-      });
-
-      const completion = etapes_totales > 0 ? (etapes_validees / etapes_totales) * 100 : 0;
-      radar.push({
-        discipline: discipline.nom,
+    return results.map(r => {
+      const completion = r.total_etapes > 0 ? (r.etapes_validees / r.total_etapes * 100) : 0;
+      return {
+        discipline: r.nom,
         completion: Math.round(completion),
-        etapes_validees,
-        etapes_totales
-      });
-    }
-    return radar;
+        etapes_validees: parseInt(r.etapes_validees),
+        etapes_totales: parseInt(r.total_etapes)
+      };
+    });
   }
   
   // ... (calculerXpDynamique inchangé)

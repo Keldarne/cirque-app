@@ -52,6 +52,14 @@ const EtapeProgression = sequelize.define('EtapeProgression', {
     defaultValue: 5,
     comment: 'Nombre d\'échecs consécutifs avant alerte prof (configurable par figure)'
   }
+}, {
+  tableName: 'EtapeProgressions',
+  indexes: [
+    {
+      name: 'idx_figure_ordre',
+      fields: ['figure_id', 'ordre']
+    }
+  ]
 });
 
 module.exports = EtapeProgression;

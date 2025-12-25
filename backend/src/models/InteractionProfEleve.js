@@ -66,6 +66,10 @@ const InteractionProfEleve = sequelize.define('InteractionProfEleve', {
     {
       fields: ['eleve_id', 'date_interaction'],
       name: 'idx_interactions_eleve_date'
+    },
+    {
+      name: 'idx_type',
+      fields: ['type_interaction']
     }
   ]
 });

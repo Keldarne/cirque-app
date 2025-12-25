@@ -46,7 +46,13 @@ const Titre = sequelize.define('Titre', {
   }
 }, {
   tableName: 'Titres',
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    {
+      name: 'idx_ecole',
+      fields: ['ecole_id']
+    }
+  ]
 });
 
 module.exports = Titre;

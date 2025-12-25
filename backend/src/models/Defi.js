@@ -59,7 +59,17 @@ const Defi = sequelize.define('Defi', {
   }
 }, {
   tableName: 'Defis',
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    {
+      name: 'idx_ecole',
+      fields: ['ecole_id']
+    },
+    {
+      name: 'idx_actif_dates',
+      fields: ['actif', 'date_debut', 'date_fin']
+    }
+  ]
 });
 
 module.exports = Defi;
