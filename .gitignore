@@ -46,6 +46,10 @@ coverage/
 *.sqlite
 *.sqlite3
 *.db
+*.sql.gz
+*.dump
+mysql_dumps/
+backups/
 
 # Temporary files
 tmp/
@@ -70,6 +74,25 @@ pnpm-lock.yaml
 # Debug
 .vscode/launch.json
 debug.log
+
+# PM2 process manager
+.pm2/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# SSL certificates (if stored locally)
+*.pem
+*.key
+*.crt
+*.cert
+ssl/
+certs/
+
+# Sequelize CLI
+.sequelizerc.local
+database.json.local
 
 # Backup files
 *.bak
@@ -127,4 +150,11 @@ sftp-config.json
 .yarn/install-state.gz
 .pnp.*
 node_modules/
-frontend/
+
+# Frontend - ignorer seulement node_modules et build
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local

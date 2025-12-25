@@ -1,0 +1,1040 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ * CIRQUE APP - STYLES CENTRALISÉS
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ * Ce fichier contient tous les styles CSS de l'application organisés
+ * par composant pour faciliter la maintenance et la cohérence visuelle.
+ *
+ * Structure:
+ * 1. Variables globales
+ * 2. Styles de layout (NavigationBar, App)
+ * 3. Styles des pages
+ * 4. Styles des composants réutilisables
+ */
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. VARIABLES GLOBALES
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Espacements standards */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.4s ease;
+
+  /* Z-index */
+  --z-dropdown: 1000;
+  --z-modal: 1300;
+  --z-tooltip: 1500;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. NAVIGATION BAR
+   ═══════════════════════════════════════════════════════════════════ */
+
+.navbar-title {
+  flex-grow: 1;
+}
+
+/* Menu hamburger - visible uniquement sur mobile */
+.navbar-mobile-menu-button {
+  display: none;
+  margin-right: var(--spacing-md);
+}
+
+@media (max-width: 900px) {
+  .navbar-mobile-menu-button {
+    display: inline-flex;
+  }
+}
+
+/* Menu desktop - caché sur mobile */
+.navbar-links-container {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .navbar-links-container {
+    display: none;
+  }
+}
+
+.navbar-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.navbar-user-level {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. AUTH PAGE (Connexion / Inscription)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.auth-container {
+  margin-top: var(--spacing-xxl);
+}
+
+.auth-paper {
+  padding: var(--spacing-xl);
+}
+
+.auth-tabs {
+  margin-bottom: var(--spacing-lg);
+}
+
+.auth-alert {
+  margin-bottom: var(--spacing-md);
+}
+
+.auth-submit-button {
+  margin-top: var(--spacing-lg);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. PROFIL PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.profil-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.profil-header {
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.profil-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profil-header-user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.profil-icon {
+  font-size: 60px;
+}
+
+.profil-email-icon {
+  font-size: 16px;
+  vertical-align: middle;
+  margin-right: var(--spacing-xs);
+}
+
+/* Stats cards */
+.profil-stats-grid {
+  margin-bottom: var(--spacing-lg);
+}
+
+.profil-stat-card {
+  height: 100%;
+  min-height: 180px;
+}
+
+.profil-stat-card-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.profil-stat-icon-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.profil-stat-icon {
+  font-size: 30px;
+}
+
+.profil-figures-container {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.profil-figure-stat-box {
+  text-align: center;
+}
+
+.profil-figure-stat-caption {
+  white-space: nowrap;
+}
+
+/* Progress bar */
+.profil-progress-paper {
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.profil-progress-bar-container {
+  margin-top: var(--spacing-md);
+}
+
+.profil-progress-bar {
+  height: 10px;
+  border-radius: var(--radius-full);
+}
+
+.profil-progress-text {
+  margin-top: var(--spacing-sm);
+}
+
+/* Account info */
+.profil-account-info-paper {
+  padding: var(--spacing-lg);
+}
+
+.profil-account-divider {
+  margin: var(--spacing-md) 0;
+}
+
+.profil-account-grid {
+  margin-top: var(--spacing-lg);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. LISTE DISCIPLINES PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.disciplines-container {
+  padding: 20px;
+}
+
+.disciplines-card {
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.disciplines-card:hover {
+  transform: scale(1.05);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. FIGURES PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.figures-container {
+  padding: 20px;
+}
+
+.figures-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.figures-card {
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.figures-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.figures-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+}
+
+.figures-video {
+  width: 100%;
+  border-radius: var(--radius-md);
+  margin-top: 10px;
+}
+
+.figures-button {
+  margin-top: var(--spacing-md);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. MON PROGRAMME PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.programme-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.programme-title {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Progression globale */
+.programme-global-progress {
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.programme-global-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.programme-global-icon {
+  font-size: 40px;
+}
+
+.programme-global-content {
+  flex-grow: 1;
+}
+
+.programme-global-percentage {
+  font-weight: bold;
+}
+
+.programme-global-progress-bar {
+  height: 10px;
+  border-radius: var(--radius-full);
+  background-color: rgba(255,255,255,0.3);
+}
+
+/* Disciplines */
+.programme-discipline-box {
+  margin-bottom: var(--spacing-xxl);
+}
+
+.programme-discipline-paper {
+  padding: var(--spacing-lg);
+}
+
+.programme-discipline-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.programme-discipline-title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.programme-discipline-title {
+  flex-grow: 1;
+}
+
+.programme-discipline-chip {
+  font-size: 1rem;
+  padding: 20px 10px;
+  margin-right: var(--spacing-md);
+}
+
+.programme-discipline-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.programme-discipline-progress-bar {
+  flex-grow: 1;
+  height: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.programme-divider {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Figures cards */
+.programme-figures-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+}
+
+.programme-figure-card {
+  width: calc(33.333% - 16px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.programme-figure-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.programme-figure-image {
+  cursor: pointer;
+}
+
+.programme-figure-content {
+  flex-grow: 1;
+  cursor: pointer;
+  padding-bottom: var(--spacing-sm);
+  padding-top: var(--spacing-md);
+}
+
+.programme-figure-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+  gap: var(--spacing-sm);
+}
+
+.programme-figure-title {
+  flex-grow: 1;
+  margin-bottom: 0;
+}
+
+.programme-figure-description {
+  margin-bottom: var(--spacing-md);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; /* stylelint-disable-line property-no-vendor-prefix */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.programme-figure-footer {
+  padding: var(--spacing-md);
+  padding-top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.programme-delete-button {
+  min-width: auto;
+  padding: 6px;
+}
+
+.programme-delete-button:hover {
+  opacity: 0.8;
+}
+
+/* Empty state */
+.programme-empty-container {
+  margin-top: var(--spacing-xl);
+}
+
+.programme-empty-paper {
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+/* Loading */
+.programme-loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+/* Dialog */
+.programme-dialog-warning {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .programme-figure-card {
+    width: calc(50% - 12px);
+  }
+}
+
+@media (max-width: 600px) {
+  .programme-figure-card {
+    width: 100%;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. FIGURE DETAIL PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.figure-detail-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.figure-detail-back-button {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Container invisible pour la grille principale */
+.figure-detail-grid-wrapper {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-lg);
+}
+
+/* Container figure et progression (9 colonnes sur desktop) */
+.figure-detail-main-content {
+  grid-column: span 12;
+}
+
+@media (min-width: 900px) {
+  .figure-detail-main-content {
+    grid-column: span 9;
+  }
+}
+
+/* Card de la figure */
+.figure-detail-figure-card {
+  margin-bottom: var(--spacing-lg);
+}
+
+.figure-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.figure-detail-title {
+  flex-grow: 1;
+}
+
+.figure-detail-image {
+  height: 400px;
+}
+
+.figure-detail-video-section {
+  margin-top: var(--spacing-lg);
+}
+
+.figure-detail-video {
+  width: 100%;
+  border-radius: var(--radius-md);
+  margin-top: 10px;
+}
+
+/* Progression panel (3 colonnes sur desktop, toujours à droite) */
+.figure-detail-progress-panel-wrapper {
+  grid-column: span 12;
+}
+
+@media (min-width: 900px) {
+  .figure-detail-progress-panel-wrapper {
+    grid-column: span 3;
+    grid-row: 1;
+  }
+}
+
+.figure-detail-progress-panel {
+  padding: var(--spacing-lg);
+  position: sticky;
+  top: 20px;
+}
+
+.figure-detail-progress-stat {
+  margin-top: var(--spacing-lg);
+}
+
+.figure-detail-validated-banner {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.figure-detail-validated-date {
+  margin-top: var(--spacing-sm);
+  opacity: 0.9;
+}
+
+/* Container des étapes (12 colonnes, pleine largeur) */
+.figure-detail-etapes-wrapper {
+  grid-column: span 12;
+}
+
+.figure-detail-etapes-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.figure-detail-etape-card {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-left: 4px solid;
+}
+
+.figure-detail-etape-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.figure-detail-etape-title {
+  flex-grow: 1;
+}
+
+.figure-detail-etape-description {
+  margin-top: var(--spacing-sm);
+}
+
+.figure-detail-etape-video-container {
+  margin-top: var(--spacing-md);
+}
+
+.figure-detail-etape-video {
+  width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-sm);
+}
+
+.figure-detail-validate-button {
+  margin-top: var(--spacing-md);
+}
+
+.figure-detail-validated-message {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+.figure-detail-total-xp {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  border-radius: var(--spacing-sm);
+}
+
+/* Loading */
+.figure-detail-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   9. ADMIN PAGE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.admin-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.admin-icon {
+  font-size: 40px;
+}
+
+.admin-tabs-paper {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Forms */
+.admin-section-paper {
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.admin-divider {
+  margin-bottom: var(--spacing-lg);
+}
+
+.admin-form-button {
+  height: 56px;
+}
+
+/* Disciplines - modification */
+.admin-discipline-modify-container {
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  width: fit-content;
+  min-width: 400px;
+}
+
+.admin-discipline-modify-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Étapes editor */
+.admin-etapes-container {
+  margin-top: var(--spacing-xl);
+}
+
+.admin-etapes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.admin-etape-card {
+  margin-bottom: var(--spacing-md);
+}
+
+.admin-etape-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.admin-save-button-container {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Delete section */
+.admin-delete-filter {
+  margin-bottom: var(--spacing-lg);
+  min-width: 300px;
+}
+
+.admin-delete-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-delete-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
+}
+
+/* Loading */
+.admin-loading-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   10. TITRES PAGE (Gamification)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.titres-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.titres-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Titre équipé - section en haut */
+.titres-equipped-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Statistiques - section */
+.titres-stats-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Grille principale des titres - CSS Grid responsive */
+.titres-grid-wrapper {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-lg);
+}
+
+/* Carte de titre - responsive */
+.titres-card-item {
+  grid-column: span 12; /* Mobile: 1 carte par ligne (100%) */
+}
+
+@media (min-width: 600px) {
+  .titres-card-item {
+    grid-column: span 6; /* Tablet: 2 cartes par ligne (50%) */
+  }
+}
+
+@media (min-width: 900px) {
+  .titres-card-item {
+    grid-column: span 3; /* Desktop: 4 cartes par ligne (25%) */
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   11. BADGES PAGE (Gamification)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.badges-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.badges-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Progression globale - section */
+.badges-progress-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Filtres - section */
+.badges-filters-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.badges-categories-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Grille principale des badges - CSS Grid responsive */
+.badges-grid-wrapper {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-lg);
+}
+
+/* Carte de badge - responsive */
+.badges-card-item {
+  grid-column: span 12; /* Mobile: 1 carte par ligne (100%) */
+}
+
+@media (min-width: 600px) {
+  .badges-card-item {
+    grid-column: span 6; /* Tablet: 2 cartes par ligne (50%) */
+  }
+}
+
+@media (min-width: 900px) {
+  .badges-card-item {
+    grid-column: span 3; /* Desktop: 4 cartes par ligne (25%) */
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   12. DEFIS PAGE (Gamification)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.defis-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.defis-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Statistiques - section */
+.defis-stats-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Grille principale des défis - CSS Grid responsive */
+.defis-grid-wrapper {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-lg);
+}
+
+/* Carte de défi - responsive */
+.defis-card-item {
+  grid-column: span 12; /* Mobile: 1 carte par ligne (100%) */
+}
+
+@media (min-width: 600px) {
+  .defis-card-item {
+    grid-column: span 6; /* Tablet: 2 cartes par ligne (50%) */
+  }
+}
+
+@media (min-width: 900px) {
+  .defis-card-item {
+    grid-column: span 3; /* Desktop: 4 cartes par ligne (25%) */
+  }
+}
+
+/* Note informative */
+.defis-info-note {
+  margin-top: var(--spacing-xl);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   13. DASHBOARD PROFESSEUR
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dashboard-prof-container {
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-prof-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Grille des statistiques - 4 cartes par ligne */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-stat-card {
+  grid-column: span 12; /* Mobile: 1 carte par ligne */
+}
+
+@media (min-width: 600px) {
+  .dashboard-stat-card {
+    grid-column: span 6; /* Tablet: 2 cartes par ligne */
+  }
+}
+
+@media (min-width: 900px) {
+  .dashboard-stat-card {
+    grid-column: span 3; /* Desktop: 4 cartes par ligne */
+  }
+}
+
+/* Grille XP et Actions - 2 cartes par ligne desktop */
+.dashboard-xp-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-xp-actions-card {
+  grid-column: span 12; /* Mobile & Tablet: 1 carte par ligne */
+}
+
+@media (min-width: 900px) {
+  .dashboard-xp-actions-card {
+    grid-column: span 6; /* Desktop: 2 cartes par ligne */
+  }
+}
+
+/* Section onglets */
+.dashboard-tabs-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Grille des élèves et groupes - 3 cartes par ligne */
+.dashboard-items-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-md);
+}
+
+.dashboard-item-card {
+  grid-column: span 12; /* Mobile: 1 carte par ligne */
+}
+
+@media (min-width: 600px) {
+  .dashboard-item-card {
+    grid-column: span 6; /* Tablet: 2 cartes par ligne */
+  }
+}
+
+@media (min-width: 900px) {
+  .dashboard-item-card {
+    grid-column: span 4; /* Desktop: 3 cartes par ligne */
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   14. COMPOSANTS RÉUTILISABLES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Snackbar */
+.snackbar-alert {
+  width: 100%;
+}
+
+/* Loading spinner */
+.loading-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   11. UTILITAIRES
+   ═══════════════════════════════════════════════════════════════════ */
+
+.text-center {
+  text-align: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.no-select {
+  user-select: none;
+}
