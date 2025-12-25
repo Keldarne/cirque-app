@@ -126,3 +126,5 @@ sftp-config.json
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+node_modules/
+frontend/
