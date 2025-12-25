@@ -1,0 +1,35 @@
+# EditorConfig - Configuration des éditeurs de code
+# https://editorconfig.org
+
+root = true
+
+# Configuration par défaut pour tous les fichiers
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Fichiers JavaScript/TypeScript
+[*.{js,jsx,ts,tsx}]
+indent_size = 2
+max_line_length = 100
+
+# Fichiers JSON
+[*.json]
+indent_size = 2
+
+# Fichiers Markdown (garder espaces en fin de ligne pour formatage)
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Fichiers de config
+[{package.json,.prettierrc,.eslintrc}]
+indent_size = 2
+
+# Fichiers Shell
+[*.sh]
+indent_size = 2

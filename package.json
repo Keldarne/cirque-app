@@ -1,0 +1,43 @@
+{
+  "name": "cirque-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:security": "jest __tests__/security --verbose",
+    "test:auth": "jest __tests__/security/auth.test.js",
+    "test:figures": "jest __tests__/security/permissions-figures.test.js",
+    "test:disciplines": "jest __tests__/security/permissions-disciplines.test.js",
+    "reset-db": "node scripts/reset-db.js",
+    "seed": "node seed/index.js",
+    "seed-old": "node utilitaires-seed-data.js",
+    "reset-and-seed": "node scripts/reset-db.js && node seed/index.js",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.15.3",
+    "node-cron": "^4.2.1",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "axios": "^1.13.2",
+    "jest": "^30.2.0",
+    "node-fetch": "^2.7.0",
+    "supertest": "^7.1.4"
+  }
+}
