@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ Important File Organization Rule
+
+**DO NOT create files at the project root unless absolutely necessary or explicitly requested by the user.**
+
+When creating new files, always organize them in the appropriate subdirectory:
+- **Documentation** → `docs/` (or `docs/archives/` for historical docs)
+- **Scripts/utilities** → `scripts/` (or `backend/scripts/` for backend-specific)
+- **Tests** → `backend/test/` or `frontend/src/`
+- **Configuration** → Keep at root ONLY if required by the tool (e.g., `.gitignore`, `package.json`, `docker-compose.yml`)
+
+**Exceptions** (files that MUST remain at root):
+- `.gitignore`, `.dockerignore`, `.editorconfig`, `.env.docker`
+- `package.json`, `package-lock.json`
+- `docker-compose.yml`, `Makefile`
+- `eslint.config.js`
+- `README.md`, `CLAUDE.md`, `GEMINI.md` (primary documentation)
+
 ## Project Overview
 
 **Cirque App** - Full-stack application for circus skill training management with progression tracking, multi-tenant architecture, and gamification features.
@@ -10,49 +27,195 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Frontend**: React + Material-UI (Port 3000)
 - **Database**: MySQL with Sequelize ORM
 - **Auth**: JWT-based authentication
+- **Architecture**: Monorepo (backend/ and frontend/ folders)
+
+## Quick Start
+
+### Option 1: Docker (Recommandé pour PC ↔ Mac)
+
+```bash
+# Démarrer tout (DB + Backend + Frontend)
+docker-compose up -d
+
+# Voir les logs
+docker-compose logs -f
+
+# Accès:
+# - Frontend: http://localhost:3000
+# - Backend: http://localhost:4000
+```
+
+**Voir [docs/DOCKER.md](docs/DOCKER.md) pour le guide complet Docker.**
+
+### Option 2: Installation Locale
+
+```bash
+# 1. Install dependencies
+npm run install:all
+
+# 2. Configure environment (create backend/.env from backend/.env.example)
+cd backend
+cp .env.example .env
+# Edit .env with your MySQL credentials
+
+# 3. Initialize database
+npm run reset-and-seed
+
+# 4. Start development (run from root in separate terminals)
+npm run start:backend   # Terminal 1: Backend on port 4000
+npm run start:frontend  # Terminal 2: Frontend on port 3000
+```
+
+**Test Accounts** (see [docs/COMPTES_TEST.md](docs/COMPTES_TEST.md)):
+- Admin: `admin1@example.com` / `admin123`
+- Teacher: `prof1@example.com` / `prof123`
+- Student: `user1@example.com` / `user123`
 
 ---
 
 ## Essential Commands
 
-### Database Management
+### Monorepo Structure
+
+This is a **monorepo** with `backend/` and `frontend/` folders. Commands can be run from root or within each folder.
+
+### Initial Setup
 ```bash
-# Reset database and reseed (REQUIRED before tests)
-npm run reset-and-seed
-
-# Reset only
-npm run reset-db
-
-# Seed only
-npm run seed
+# Install all dependencies (root + backend + frontend)
+npm run install:all
 ```
 
-### Testing
+### Database Management
 ```bash
-# All tests with coverage
-npm test
+# From root:
+npm run reset-and-seed
 
-# Security tests only
-npm run test:security
-
-# Watch mode
-npm run test:watch
-
-# Specific test suites
-npm run test:auth
-npm run test:figures
-npm run test:disciplines
+# From backend/:
+npm run reset-and-seed   # Reset database and reseed (REQUIRED before tests)
+npm run reset-db         # Reset only
+npm run seed             # Seed only
 ```
 
 **IMPORTANT**: Always run `npm run reset-and-seed` before running tests to ensure clean data state.
 
+### Testing
+```bash
+# From root:
+npm run test:backend     # Run all backend tests
+npm run test:frontend    # Run frontend tests
+
+# From backend/:
+npm test                 # All tests with coverage
+npm run test:security    # Security tests only
+npm run test:watch       # Watch mode
+npm run test:auth        # Auth tests
+npm run test:figures     # Figure permission tests
+npm run test:disciplines # Discipline permission tests
+```
+
 ### Development
 ```bash
-# Start backend (port 4000)
-npm start
+# From root (recommended for parallel development):
+npm run start:backend    # Start backend on port 4000
+npm run start:frontend   # Start frontend on port 3000
 
-# Start frontend (port 3000)
+# Or from each folder:
+cd backend && npm start
 cd frontend && npm start
+```
+
+### Docker Commands (Complete Setup)
+```bash
+# Démarrer tous les services (DB + Backend + Frontend)
+docker-compose up -d
+
+# Voir les logs en temps réel
+docker-compose logs -f
+
+# Arrêter tous les services
+docker-compose down
+
+# Reset complet (DB incluse)
+docker-compose down -v
+docker-compose up -d --build
+
+# Rebuild après modification package.json
+docker-compose up -d --build
+
+# Accéder au shell backend
+docker-compose exec backend sh
+
+# Exécuter les tests dans le container
+docker-compose exec backend npm test
+
+# Reset et reseed la DB dans Docker
+docker-compose exec backend npm run reset-and-seed
+```
+
+**Voir [docs/DOCKER.md](docs/DOCKER.md) pour le guide complet et le troubleshooting.**
+
+### Code Quality
+```bash
+# Run ESLint on backend (from root)
+npx eslint "backend/**/*.js" --fix
+```
+
+---
+
+## Project Structure
+
+```
+cirque-app/                    # Monorepo root
+├── backend/                   # Node.js + Express backend
+│   ├── src/
+│   │   ├── models/           # Sequelize models
+│   │   ├── routes/           # Express routes (modular, role-based)
+│   │   ├── services/         # Business logic layer
+│   │   ├── middleware/       # Auth, multi-tenant, permissions
+│   │   └── utils/            # Helper functions
+│   ├── seed/                 # Database seeding system
+│   │   ├── modules/          # Modular seed scripts
+│   │   └── data/             # Figure definitions
+│   ├── scripts/              # DB management scripts
+│   ├── test/                 # Jest tests
+│   │   ├── security/         # Security & permission tests
+│   │   ├── integration/      # Integration tests
+│   │   └── helpers/          # Test utilities
+│   ├── docs/                 # Backend-specific docs
+│   │   ├── API_DOCUMENTATION.md
+│   │   └── INTEGRATION_LOG.md
+│   ├── server.js             # Entry point
+│   ├── db.js                 # Sequelize config
+│   └── Dockerfile            # Backend containerization
+├── frontend/                  # React + Material-UI frontend
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   ├── pages/            # Page components
+│   │   ├── contexts/         # React contexts (Auth, etc.)
+│   │   ├── hooks/            # Custom hooks
+│   │   └── utils/            # Frontend utilities
+│   ├── public/               # Static assets
+│   └── Dockerfile            # Frontend containerization
+├── docs/                      # Project documentation
+│   ├── PLAN.md               # Development roadmap
+│   ├── FEATURES.md           # Feature specifications
+│   ├── SECURITY.md           # Security guidelines
+│   ├── TESTING.md            # Testing strategy
+│   ├── STRUCTURE.md          # Architecture details
+│   ├── COMPTES_TEST.md       # Test account credentials
+│   ├── DOCKER.md             # Docker complete guide
+│   ├── DOCKER-QUICKSTART.md  # Docker quick start
+│   ├── DOCKER-SETUP-SUMMARY.md # Docker setup summary
+│   ├── MISE_A_JOUR_DOCS_TODO.md # Documentation updates TODO
+│   ├── TESTS_MANUELS.md      # Manual testing guide
+│   └── archives/             # Historical documentation
+├── scripts/                   # Utility scripts
+│   ├── docker-helper.sh      # Docker helper (Mac/Linux/Git Bash)
+│   └── docker-helper.ps1     # Docker helper (Windows PowerShell)
+├── eslint.config.js          # ESLint config (root level)
+├── CLAUDE.md                 # This file
+├── GEMINI.md                 # Gemini AI context (frontend focus)
+└── README.md                 # Project overview
 ```
 
 ---
@@ -63,8 +226,8 @@ cd frontend && npm start
 
 The application supports multiple schools (écoles) with data isolation:
 
-- **École Model** (`models/Ecole.js`): Each school has subscription type (basic/premium/trial)
-- **Automatic Filtering**: Middleware `contexteEcole.js` automatically filters data by school
+- **École Model** ([backend/src/models/Ecole.js](backend/src/models/Ecole.js)): Each school has subscription type (basic/premium/trial)
+- **Automatic Filtering**: Middleware ([backend/src/middleware/contexteEcole.js](backend/src/middleware/contexteEcole.js)) automatically filters data by school
 - **Public Catalog**: Figures and disciplines can be public (null ecole_id) or school-specific
 - **User Visibility**: Users see public content + their school's private content
 
@@ -75,13 +238,13 @@ The application supports multiple schools (écoles) with data isolation:
 - Single-table approach
 
 **Current Architecture** (refactored):
-- **`ProgressionEtape`** (`models/ProgressionEtape.js`): Tracks user progress per step
+- **`ProgressionEtape`** ([backend/src/models/ProgressionEtape.js](backend/src/models/ProgressionEtape.js)): Tracks user progress per step
   - Fields: `utilisateur_id`, `etape_id`, `statut` (non_commence/en_cours/valide)
   - Replaces old `EtapeUtilisateur` model
-- **`TentativeEtape`** (`models/TentativeEtape.js`): Records all training attempts
+- **`TentativeEtape`** ([backend/src/models/TentativeEtape.js](backend/src/models/TentativeEtape.js)): Records all training attempts
   - Supports 4 training modes (see below)
   - Enables "Grit Score" calculation from attempts history
-- **`EtapeProgression`** (`models/EtapeProgression.js`): Defines steps within figures
+- **`EtapeProgression`** ([backend/src/models/EtapeProgression.js](backend/src/models/EtapeProgression.js)): Defines steps within figures
   - Linked to `Figure` model
   - Contains step metadata (nom, ordre, description)
 
@@ -112,8 +275,8 @@ The application supports rich training data capture through 4 modes:
    - Auto-mapped: score ≥ 2 → `reussie = true`
 
 **Implementation**:
-- Model validation: `models/TentativeEtape.js` (lines 52-72)
-- Service validation: `services/EntrainementService.js` (`_validateTentativeData`, `_calculateReussie`)
+- Model validation: [backend/src/models/TentativeEtape.js](backend/src/models/TentativeEtape.js) (lines 52-72)
+- Service validation: [backend/src/services/EntrainementService.js](backend/src/services/EntrainementService.js) (`_validateTentativeData`, `_calculateReussie`)
 - API endpoint: `POST /api/entrainement/tentatives`
 
 The `reussie` boolean is automatically calculated to maintain compatibility with Grit Score system.
@@ -133,10 +296,10 @@ Business logic is centralized in service files (`services/`):
 
 ### Route Organization
 
-Routes are modular and role-based:
+Routes are modular and role-based in [backend/src/routes/](backend/src/routes/):
 
 ```
-routes/
+backend/src/routes/
 ├── index.js              # Main router, mounts all sub-routes
 ├── utilisateurs.js       # Public: registration, login
 ├── figures.js            # Public + auth: list, details
@@ -168,16 +331,16 @@ routes/
 
 ## Data Seeding Strategy
 
-Seed system (`seed/`) creates realistic multi-tenant test data:
+Seed system ([backend/seed/](backend/seed/)) creates realistic multi-tenant test data:
 
 ### Seed Modules
 ```
-seed/
+backend/seed/
 ├── index.js              # Orchestrator
 ├── modules/
 │   ├── seedEcoles.js     # Schools (2: basic + premium trial)
 │   ├── seedCatalogue.js  # Public catalog (disciplines, figures, badges)
-│   ├── seedUsers.js      # Users (1 admin, 4 teachers, 20 students, 3 solo)
+│   ├── seedUtilisateurs.js # Users (1 admin, 4 teachers, 20 students, 3 solo)
 │   ├── seedRelations.js  # Teacher-student relationships + groups
 │   ├── seedProgressions.js # User progression on steps
 │   ├── seedInteractions.js # Teacher-student interaction history
@@ -233,13 +396,13 @@ Default limit: 20, max: 100. See `INTEGRATION_LOG.md` for frontend integration d
 Automated skill decay calculation runs daily at 2 AM (Europe/Paris):
 
 ```javascript
-// server.js
+// backend/server.js
 cron.schedule('0 2 * * *', async () => {
   await MemoryDecayService.updateAllDecayLevels();
 });
 ```
 
-Updates `ProgressionEtape` records based on time since last validation.
+Updates `ProgressionEtape` records based on time since last validation. See [backend/src/services/MemoryDecayService.js](backend/src/services/MemoryDecayService.js).
 
 ---
 
@@ -247,23 +410,29 @@ Updates `ProgressionEtape` records based on time since last validation.
 
 ### Test Organization
 ```
-__tests__/
+backend/test/
 ├── helpers/
 │   └── auth-helper.js      # Shared authentication utilities
 ├── integration/
 │   └── progression.test.js # Integration tests
 └── security/
     ├── auth.test.js         # JWT, registration, login
-    ├── permissions-figures.js
-    └── permissions-disciplines.js
+    ├── permissions-figures.test.js
+    └── permissions-disciplines.test.js
 ```
 
 ### Testing Requirements
 
-- Always reseed before tests: `npm run reset-and-seed`
-- 48 tests total covering auth, permissions, multi-tenant isolation
+- **Always reseed before tests**: `npm run reset-and-seed` (from root or backend/)
+- **48 tests total** covering auth, permissions, multi-tenant isolation
 - Tests use predefined seed data (admin, teachers, students)
 - Security tests verify double protection (frontend filtering + backend authorization)
+- Run specific test suites: `npm run test:auth`, `npm run test:figures`, `npm run test:disciplines`
+
+### Frontend Testing
+- Location: [frontend/src/](frontend/src/)
+- Command: `npm run test:frontend` (from root) or `npm test` (from frontend/)
+- Framework: React Testing Library + Jest
 
 ---
 
@@ -294,24 +463,52 @@ __tests__/
 
 ---
 
-## API Documentation
+## Documentation Reference
 
-See `API_DOCUMENTATION.md` for complete endpoint reference.
+### API & Integration
+- **[backend/docs/API_DOCUMENTATION.md](backend/docs/API_DOCUMENTATION.md)**: Complete API endpoint reference
+- **[backend/docs/INTEGRATION_LOG.md](backend/docs/INTEGRATION_LOG.md)**: Backend changes impacting frontend (check before frontend work)
 
-**Recent Changes**: Check `INTEGRATION_LOG.md` for latest backend updates that impact frontend integration.
+### Project Documentation
+- **[README.md](README.md)**: Project overview, installation, test accounts
+- **[docs/PLAN.md](docs/PLAN.md)**: Development roadmap and milestones
+- **[docs/FEATURES.md](docs/FEATURES.md)**: Feature specifications
+- **[docs/SECURITY.md](docs/SECURITY.md)**: Security architecture and guidelines
+- **[docs/TESTING.md](docs/TESTING.md)**: Comprehensive testing strategy
+- **[docs/STRUCTURE.md](docs/STRUCTURE.md)**: Detailed architecture documentation
+- **[docs/COMPTES_TEST.md](docs/COMPTES_TEST.md)**: Test account credentials
+
+### AI Agent Context
+- **[CLAUDE.md](CLAUDE.md)**: This file - guidance for Claude Code
+- **[GEMINI.md](GEMINI.md)**: Frontend-focused context for Gemini AI
 
 ---
 
 ## Development Guidelines
+
+### Backend vs Frontend Work
+
+**When working on Backend** ([backend/](backend/)):
+- Modify routes, services, models, middleware
+- Follow the Backend Changes Protocol below
+- Update API documentation
+- Run backend tests before committing
+
+**When working on Frontend** ([frontend/](frontend/)):
+- Consult [GEMINI.md](GEMINI.md) for frontend-specific context
+- Check [backend/docs/INTEGRATION_LOG.md](backend/docs/INTEGRATION_LOG.md) for recent backend changes
+- Never modify backend code - read it for understanding only
+- Frontend proxies API requests to backend via `proxy: "http://localhost:4000"` in package.json
 
 ### Backend Changes Protocol
 
 When making backend modifications:
 
 1. **Validate with seeds**: `npm run reset-and-seed` to verify logic
-2. **Run tests**: `npm test` to catch regressions
-3. **Update INTEGRATION_LOG.md**: Document changes for frontend team
-4. **Update API_DOCUMENTATION.md**: Keep endpoint docs current
+2. **Run tests**: `npm test` (from backend/) to catch regressions
+3. **Update INTEGRATION_LOG.md**: Document changes for frontend team in [backend/docs/INTEGRATION_LOG.md](backend/docs/INTEGRATION_LOG.md)
+4. **Update API_DOCUMENTATION.md**: Keep endpoint docs current in [backend/docs/API_DOCUMENTATION.md](backend/docs/API_DOCUMENTATION.md)
+5. **Run ESLint**: `npx eslint "backend/**/*.js" --fix` to ensure code quality
 
 ### Security Principles
 
@@ -323,10 +520,17 @@ When making backend modifications:
 
 ### Code Organization
 
-- Routes: HTTP handling only (validation, error responses)
-- Services: Business logic, database transactions
-- Models: Sequelize definitions, validations, associations
-- Middleware: Cross-cutting concerns (auth, multi-tenant, permissions)
+- **Routes** ([backend/src/routes/](backend/src/routes/)): HTTP handling only (validation, error responses)
+- **Services** ([backend/src/services/](backend/src/services/)): Business logic, database transactions
+- **Models** ([backend/src/models/](backend/src/models/)): Sequelize definitions, validations, associations
+- **Middleware** ([backend/src/middleware/](backend/src/middleware/)): Cross-cutting concerns (auth, multi-tenant, permissions)
+
+### Code Quality
+
+- **ESLint**: Configured at root level ([eslint.config.js](eslint.config.js))
+- **Style Guide**: Single quotes, semicolons required, CommonJS modules
+- **Before Commits**: Run `npx eslint "backend/**/*.js" --fix` to auto-fix formatting issues
+- Check [backend/docs/INTEGRATION_LOG.md](backend/docs/INTEGRATION_LOG.md) for any pending ESLint issues
 
 ---
 
@@ -373,8 +577,34 @@ See `.env.example` for complete reference.
 
 ## Port Configuration
 
-- **Backend**: 4000 (configured in `server.js`)
+- **Backend**: 4000 (configured in [backend/server.js](backend/server.js))
 - **Frontend**: 3000 (React dev server default)
-- **CORS**: Configured for `http://localhost:3000` in development
+- **Frontend Proxy**: Frontend proxies API requests to `http://localhost:4000` (configured in [frontend/package.json](frontend/package.json))
+- **CORS**: Configured for `http://localhost:3000` in development ([backend/server.js](backend/server.js))
 
-Production deployments may use different ports - update CORS configuration accordingly.
+Production deployments may use different ports - update CORS and proxy configuration accordingly.
+
+---
+
+## Key Files to Know
+
+### Backend Entry Points
+- **[backend/server.js](backend/server.js)**: Main server, CORS, cron jobs
+- **[backend/db.js](backend/db.js)**: Sequelize database connection
+- **[backend/src/routes/index.js](backend/src/routes/index.js)**: Main router that mounts all routes
+
+### Configuration Files
+- **[backend/.env](backend/.env)**: Database credentials and secrets (not in git)
+- **[backend/.env.example](backend/.env.example)**: Template for .env
+- **[backend/jest.config.js](backend/jest.config.js)**: Jest test configuration
+- **[eslint.config.js](eslint.config.js)**: ESLint rules (root level)
+
+### Database Scripts
+- **[backend/scripts/reset-db.js](backend/scripts/reset-db.js)**: Drop and recreate all tables
+- **[backend/seed/index.js](backend/seed/index.js)**: Main seed orchestrator
+- **[backend/seed/data/figures-data.js](backend/seed/data/figures-data.js)**: Figure definitions for seeding
+
+### Frontend Entry Points
+- **[frontend/src/index.js](frontend/src/index.js)**: React app entry
+- **[frontend/src/App.js](frontend/src/App.js)**: Main app component with routing
+- **[frontend/package.json](frontend/package.json)**: Frontend deps + proxy config

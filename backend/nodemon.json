@@ -1,0 +1,20 @@
+{
+  "watch": [
+    "server.js",
+    "db.js",
+    "src/**/*.js",
+    "seed/**/*.js",
+    "scripts/**/*.js"
+  ],
+  "ignore": [
+    "node_modules/**",
+    "test/**",
+    "coverage/**",
+    "*.test.js"
+  ],
+  "ext": "js,json",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 1000
+}

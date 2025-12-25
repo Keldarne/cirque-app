@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL
+  db:
+    image: mysql:8.0
+    container_name: cirque-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: cirque_root_2024
+      MYSQL_DATABASE: cirque_app
+      MYSQL_USER: cirque_user
+      MYSQL_PASSWORD: cirque_pass_2024
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - cirque-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pcirque_root_2024"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Backend Node.js
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cirque-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      DB_HOST: db
+      DB_USER: cirque_user
+      DB_PASSWORD: cirque_pass_2024
+      DB_NAME: cirque_app
+      JWT_SECRET: your_jwt_secret_key_change_in_production_2024
+      NODE_ENV: development
+      TZ: Europe/Paris
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cirque-network
+    command: sh -c "npm run reset-and-seed && npm run dev"
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cirque-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:4000
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - cirque-network
+    stdin_open: true
+    tty: true
+
+networks:
+  cirque-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
