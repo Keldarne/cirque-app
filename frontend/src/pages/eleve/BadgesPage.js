@@ -22,10 +22,10 @@ import {
 import { api } from '../../utils/api';
 
 const RARETE_COLORS = {
-  commun: { bg: '#9E9E9E', text: 'Commun' },
-  rare: { bg: '#2196F3', text: 'Rare' },
-  epique: { bg: '#9C27B0', text: 'Épique' },
-  legendaire: { bg: '#FF6B00', text: 'Légendaire' }
+  commun: { bg: '#b0bbcf', text: 'Commun' }, // Gris bleuté
+  rare: { bg: '#42a5f5', text: 'Rare' }, // Bleu plus vibrant
+  epique: { bg: '#ab47bc', text: 'Épique' }, // Violet mystique
+  legendaire: { bg: '#fcdab7', text: 'Légendaire' } // Or sablé (Secondaire)
 };
 
 const CATEGORIES = {
@@ -180,8 +180,8 @@ function BadgesPage() {
 
             {/* XP Bonus */}
             <Box display="flex" alignItems="center" justifyContent="center" mt={1}>
-              <TrophyIcon sx={{ fontSize: 16, color: '#FFD700', mr: 0.5 }} />
-              <Typography variant="body2" sx={{ color: '#FFD700', fontWeight: 'bold' }}>
+              <TrophyIcon sx={{ fontSize: 16, color: '#fcdab7', mr: 0.5 }} />
+              <Typography variant="body2" sx={{ color: '#fcdab7', fontWeight: 'bold' }}>
                 +{badge.xp_bonus} XP
               </Typography>
             </Box>

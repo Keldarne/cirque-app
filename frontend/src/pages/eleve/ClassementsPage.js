@@ -25,8 +25,8 @@ import { api } from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 const PODIUM_COLORS = {
-  1: { bg: '#FFD700', medal: '🥇', text: 'Or' },
-  2: { bg: '#C0C0C0', medal: '🥈', text: 'Argent' },
+  1: { bg: '#fcdab7', medal: '🥇', text: 'Or' },
+  2: { bg: '#e0e0e0', medal: '🥈', text: 'Argent' },
   3: { bg: '#CD7F32', medal: '🥉', text: 'Bronze' }
 };
 
@@ -119,7 +119,7 @@ function ClassementsPage() {
 
           {/* XP */}
           <Box display="flex" alignItems="center" justifyContent="center" mt={2}>
-            <TrophyIcon sx={{ color: '#FFD700', mr: 1 }} />
+            <TrophyIcon sx={{ color: '#fcdab7', mr: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 'bold', color: podiumInfo.bg }}>
               {(joueur.xp_total || 0).toLocaleString()} XP
             </Typography>
@@ -141,10 +141,10 @@ function ClassementsPage() {
     return (
       <ListItem
         sx={{
-          bgcolor: isMe ? '#E3F2FD' : 'transparent',
+          bgcolor: isMe ? 'rgba(41, 121, 255, 0.15)' : 'transparent',
           borderRadius: 2,
           mb: 1,
-          border: isMe ? '2px solid #2196F3' : '1px solid #E0E0E0'
+          border: isMe ? '2px solid #2979ff' : '1px solid rgba(0, 0, 0, 0.12)'
         }}
       >
         {/* Rang */}
@@ -160,7 +160,7 @@ function ClassementsPage() {
               {PODIUM_COLORS[position].medal}
             </Typography>
           ) : (
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#9E9E9E' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>
               #{position}
             </Typography>
           )}
@@ -208,8 +208,8 @@ function ClassementsPage() {
         {/* XP */}
         <Box textAlign="right">
           <Box display="flex" alignItems="center" justifyContent="flex-end">
-            <TrophyIcon sx={{ color: '#FFD700', mr: 0.5, fontSize: 20 }} />
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: isPodium ? PODIUM_COLORS[position].bg : '#2196F3' }}>
+            <TrophyIcon sx={{ color: '#fcdab7', mr: 0.5, fontSize: 20 }} />
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: isPodium ? PODIUM_COLORS[position].bg : '#2979ff' }}>
               {(joueur.xp_total || 0).toLocaleString()}
             </Typography>
           </Box>

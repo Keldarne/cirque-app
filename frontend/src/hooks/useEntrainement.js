@@ -83,7 +83,10 @@ export function useEntrainement() {
       });
 
       if (!response.ok) {
-        throw new Error("La réponse de l'API n'est pas OK");
+        const errorData = await response.json().catch(() => ({}));
+        const error = new Error(errorData.error || "La réponse de l'API n'est pas OK");
+        error.type = errorData.type;
+        throw error;
       }
       
       const updatedProgression = await response.json();
@@ -129,7 +132,15 @@ export function useEntrainement() {
       };
     } catch (err) {
       console.error('Erreur enregistrement tentative:', err);
-      setError('Impossible d\'enregistrer la tentative. ' + err.message);
+      let message = err.message;
+      
+      if (err.type === 'ETAPE_NOT_FOUND') {
+        message = "Cette étape n'existe plus ou a été modifiée.";
+      } else if (err.type === 'VALIDATION_ERROR') {
+        message = "Données invalides: " + err.message;
+      }
+      
+      setError(message);
       return { success: false };
     }
   }, [session, currentEtapeIndex, refreshUser]);

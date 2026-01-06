@@ -8,9 +8,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: cirque_root_2024
-      MYSQL_DATABASE: cirque_app
+      MYSQL_DATABASE: cirque_app_dev
       MYSQL_USER: cirque_user
-      MYSQL_PASSWORD: cirque_pass_2024
+      MYSQL_PASSWORD: motdepassefort
     ports:
       - "3306:3306"
     volumes:
@@ -36,11 +36,12 @@ services:
     environment:
       DB_HOST: db
       DB_USER: cirque_user
-      DB_PASSWORD: cirque_pass_2024
-      DB_NAME: cirque_app
-      JWT_SECRET: your_jwt_secret_key_change_in_production_2024
+      DB_PASSWORD: motdepassefort
+      DB_NAME: cirque_app_dev
+      JWT_SECRET: dev_jwt_secret_changez_moi_en_production
       NODE_ENV: development
       TZ: Europe/Paris
+      PORT: 4000
     volumes:
       - ./backend:/app
       - /app/node_modules

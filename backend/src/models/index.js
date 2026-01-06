@@ -21,6 +21,8 @@ const ProgrammeFigure = require('./ProgrammeFigure');
 const AssignationProgramme = require('./AssignationProgramme');
 const AssignationGroupeProgramme = require('./AssignationGroupeProgramme');
 const ProgrammePartage = require('./ProgrammePartage');
+const ExerciceFigure = require('./ExerciceFigure');
+const SuggestionFigure = require('./SuggestionFigure');
 
 // ═══════════════════════════════════════════════════════════════════
 // Relations
@@ -36,6 +38,33 @@ Discipline.hasMany(Figure, { foreignKey: 'discipline_id' });
 Figure.belongsTo(Discipline, { foreignKey: 'discipline_id' });
 Utilisateur.hasMany(Figure, { foreignKey: 'createur_id', as: 'figuresCreees' });
 Figure.belongsTo(Utilisateur, { foreignKey: 'createur_id', as: 'createur' });
+
+// ──────────────────────────────────────────────────────────────────
+// EXERCICES DÉCOMPOSÉS (Relations Récursives)
+// ──────────────────────────────────────────────────────────────────
+
+// Relation récursive: Figure a plusieurs exercices (qui sont des Figures)
+Figure.belongsToMany(Figure, {
+  through: ExerciceFigure,
+  as: 'exercices',
+  foreignKey: 'figure_id',
+  otherKey: 'exercice_figure_id'
+});
+
+// Relation inverse: Figure est exercice de plusieurs Figures parentes
+Figure.belongsToMany(Figure, {
+  through: ExerciceFigure,
+  as: 'figuresParentes',
+  foreignKey: 'exercice_figure_id',
+  otherKey: 'figure_id'
+});
+
+// Associations directes pour inclusions avec alias
+ExerciceFigure.belongsTo(Figure, { as: 'figure', foreignKey: 'figure_id' });
+ExerciceFigure.belongsTo(Figure, { as: 'exerciceFigure', foreignKey: 'exercice_figure_id' });
+
+// Relation 1:N pour accéder à la table de junction directement (fix conflit alias)
+Figure.hasMany(ExerciceFigure, { foreignKey: 'figure_id', as: 'relationsExercices' });
 
 // ──────────────────────────────────────────────────────────────────
 // STRUCTURE DE PROGRESSION (REFACTORISÉE)
@@ -135,6 +164,22 @@ DefiUtilisateur.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 Utilisateur.hasOne(Streak, { foreignKey: 'utilisateur_id', as: 'streak' });
 Streak.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
+// ──────────────────────────────────────────────────────────────────
+// SUGGESTIONS (Cache de recommandations)
+// ──────────────────────────────────────────────────────────────────
+
+// Suggestions pour les utilisateurs
+SuggestionFigure.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id', as: 'utilisateur' });
+Utilisateur.hasMany(SuggestionFigure, { foreignKey: 'utilisateur_id', as: 'suggestions' });
+
+// Suggestions pour les groupes
+SuggestionFigure.belongsTo(Groupe, { foreignKey: 'groupe_id', as: 'groupe' });
+Groupe.hasMany(SuggestionFigure, { foreignKey: 'groupe_id', as: 'suggestions' });
+
+// Figures suggérées
+SuggestionFigure.belongsTo(Figure, { foreignKey: 'figure_id', as: 'figure' });
+Figure.hasMany(SuggestionFigure, { foreignKey: 'figure_id', as: 'suggestionsPour' });
+
 // ... (autres relations inchangées)
 
 module.exports = {
@@ -160,5 +205,7 @@ module.exports = {
   ProgrammeFigure,
   AssignationProgramme,
   AssignationGroupeProgramme,
-  ProgrammePartage
+  ProgrammePartage,
+  ExerciceFigure,
+  SuggestionFigure
 };

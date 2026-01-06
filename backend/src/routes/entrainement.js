@@ -53,31 +53,82 @@ router.post('/tentatives', verifierToken, async (req, res) => {
       tentativeData
     );
 
-    res.status(201).json({
-      message: 'Tentative enregistrée avec succès',
+    // Idempotence check: return 200 instead of 201 if returning existing attempt
+    const statusCode = result.idempotent ? 200 : 201;
+    const message = result.idempotent
+      ? 'Tentative identique déjà enregistrée (idempotence)'
+      : 'Tentative enregistrée avec succès';
+
+    res.status(statusCode).json({
+      message,
       progressionEtape: result.progressionEtape,
-      tentative: result.tentative
+      tentative: result.tentative,
+      idempotent: result.idempotent
     });
 
   } catch (error) {
-    console.error(`Erreur sur POST /api/entrainement/tentatives: ${error.message}`);
+    console.error(`[POST /api/entrainement/tentatives] Erreur: ${error.message}`);
 
-    // Erreurs de validation (400)
+    // Catégorie 1: Erreurs de validation (400)
     if (error.message.includes('requis') ||
         error.message.includes('doit être') ||
         error.message.includes('invalide') ||
         error.message.includes('ne peut')) {
-      return res.status(400).json({ error: error.message });
+      return res.status(400).json({
+        error: error.message,
+        type: 'VALIDATION_ERROR'
+      });
     }
 
-    // Progression non trouvée (404)
-    if (error.message.includes('n\'a pas commencé') || error.message.includes('n\'existe pas')) {
-      return res.status(404).json({ error: error.message });
+    // Catégorie 2: Étape non trouvée (404)
+    if (error.name === 'EtapeNotFoundError') {
+      return res.status(404).json({
+        error: error.message,
+        type: 'ETAPE_NOT_FOUND'
+      });
     }
 
-    // Autres erreurs (500)
+    // Catégorie 3: Sequelize Validation Errors (400)
+    if (error.name === 'SequelizeValidationError') {
+      const messages = error.errors.map(e => e.message).join(', ');
+      return res.status(400).json({
+        error: `Erreur de validation: ${messages}`,
+        type: 'MODEL_VALIDATION_ERROR',
+        details: error.errors
+      });
+    }
+
+    // Catégorie 4: Sequelize Unique Constraint (409)
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({
+        error: 'Une tentative identique existe déjà',
+        type: 'DUPLICATE_ATTEMPT'
+      });
+    }
+
+    // Catégorie 5: Sequelize Foreign Key Constraint (500 - should never happen)
+    if (error.name === 'SequelizeForeignKeyConstraintError') {
+      console.error('[CRITICAL] FK constraint violation after validation:', error);
+      return res.status(500).json({
+        error: 'Erreur de contrainte de base de données',
+        type: 'DATABASE_CONSTRAINT_ERROR'
+      });
+    }
+
+    // Catégorie 6: Sequelize Database Errors (500)
+    if (error.name === 'SequelizeDatabaseError') {
+      console.error('[ERROR] Database error:', error);
+      return res.status(500).json({
+        error: 'Erreur de base de données',
+        type: 'DATABASE_ERROR'
+      });
+    }
+
+    // Catégorie 7: Autres erreurs inconnues (500)
+    console.error('[ERROR] Unexpected error:', error);
     res.status(500).json({
-      error: 'Une erreur est survenue lors de l\'enregistrement de la tentative.'
+      error: 'Une erreur inattendue est survenue lors de l\'enregistrement de la tentative.',
+      type: 'UNKNOWN_ERROR'
     });
   }
 });
@@ -211,8 +262,9 @@ router.get('/historique/utilisateur/:utilisateurId', verifierToken, async (req, 
         where: { utilisateur_id: utilisateurId },
         include: [{
           model: EtapeProgression,
+          as: 'etape',
           required: true,
-          attributes: ['id', 'nom', 'ordre', 'figure_id'],
+          attributes: ['id', 'titre', 'ordre', 'figure_id'],
           include: [{
             model: Figure,
             required: true,
@@ -235,14 +287,14 @@ router.get('/historique/utilisateur/:utilisateurId', verifierToken, async (req, 
       duree_secondes: t.duree_secondes,
       createdAt: t.createdAt,
       etape: {
-        id: t.ProgressionEtape.EtapeProgression.id,
-        nom: t.ProgressionEtape.EtapeProgression.nom,
-        ordre: t.ProgressionEtape.EtapeProgression.ordre
+        id: t.ProgressionEtape.etape.id,
+        titre: t.ProgressionEtape.etape.titre,
+        ordre: t.ProgressionEtape.etape.ordre
       },
       figure: {
-        id: t.ProgressionEtape.EtapeProgression.Figure.id,
-        nom: t.ProgressionEtape.EtapeProgression.Figure.nom,
-        image_url: t.ProgressionEtape.EtapeProgression.Figure.image_url
+        id: t.ProgressionEtape.etape.Figure.id,
+        nom: t.ProgressionEtape.etape.Figure.nom,
+        image_url: t.ProgressionEtape.etape.Figure.image_url
       }
     }));
 

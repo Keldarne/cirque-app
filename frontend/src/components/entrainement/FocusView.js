@@ -15,7 +15,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle'; // Pour "Moyen"
 import { motion } from 'framer-motion';
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 function FocusView({ etape, onResult, disabled, duration = null }) {
   // Gestion des clics

@@ -65,8 +65,8 @@ class ProfService {
     return eleves.map(eleve => {
       const eleveData = eleve.toJSON();
       // Extraire les groupes de ce prof
-      const groupesDuProf = eleveData.groupes
-        ? eleveData.groupes
+      const groupesDuProf = eleveData.GroupeEleves
+        ? eleveData.GroupeEleves
             .filter(ge => ge.Groupe)
             .map(ge => ({
               id: ge.Groupe.id,
@@ -75,7 +75,7 @@ class ProfService {
             }))
         : [];
 
-      delete eleveData.groupes; // Nettoyer
+      delete eleveData.GroupeEleves; // Nettoyer
 
       return {
         ...eleveData,

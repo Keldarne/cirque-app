@@ -26,7 +26,7 @@ function StateBadge({
     },
     en_cours: {
       label: 'En cours',
-      color: 'primary',
+      color: 'secondary',
       icon: <HourglassIcon fontSize={size} />
     },
     non_commence: {

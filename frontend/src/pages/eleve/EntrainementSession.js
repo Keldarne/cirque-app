@@ -55,6 +55,7 @@ function EntrainementSession() {
   } = useEntrainement();
 
   const [processing, setProcessing] = useState(false);
+  const [protectionDelay, setProtectionDelay] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [sessionSummary, setSessionSummary] = useState(null);
 
@@ -67,9 +68,13 @@ function EntrainementSession() {
 
   // Gérer le résultat d'une étape (pour tous les modes)
   const handleResult = async (resultData) => {
-    if (processing) return;
+    if (processing || protectionDelay) return;
 
     setProcessing(true);
+    setProtectionDelay(true);
+    
+    // Désactiver temporairement les inputs pour éviter double-clic
+    setTimeout(() => setProtectionDelay(false), 1000);
     
     // Normalisation des données reçues des composants
     // FocusView et TimerView renvoient maintenant un objet complet { reussie, typeSaisie, score, dureeSecondes }
@@ -88,6 +93,15 @@ function EntrainementSession() {
     if (!result.success) {
       setProcessing(false);
       return;
+    }
+
+    // Gestion de l'idempotence (si le backend le signale)
+    if (result.updatedProgression?.idempotent) {
+        console.log("Tentative ignorée (doublon détecté)");
+        // On ne joue pas l'animation ni ne passe à la suite si c'est un doublon strict
+        // Mais on débloque l'interface
+        setProcessing(false);
+        return; 
     }
 
     // Animation de célébration si réussite
@@ -220,7 +234,7 @@ function EntrainementSession() {
                   key={currentEtape.id}
                   etape={currentEtape}
                   onResult={handleResult}
-                  disabled={processing}
+                  disabled={processing || protectionDelay}
                   mode={mode} // Pass 'timer' or 'combined'
                 />
               ) : (
@@ -228,7 +242,7 @@ function EntrainementSession() {
                   key={currentEtape.id}
                   etape={currentEtape}
                   onResult={handleResult}
-                  disabled={processing}
+                  disabled={processing || protectionDelay}
                 />
               )}
             </Box>

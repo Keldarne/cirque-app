@@ -4,6 +4,7 @@ const {
   EtapeProgression
 } = require('../models');
 const sequelize = require('../../db');
+const { Op } = require('sequelize');
 
 class EntrainementService {
 
@@ -25,23 +26,50 @@ class EntrainementService {
       // 1. Validation des données d'entrée
       const validatedData = this._validateTentativeData(tentativeData);
 
-      // 2. Trouver la progression de l'utilisateur sur cette étape spécifique
-      const progressionEtape = await ProgressionEtape.findOne({
+      // 2. Valider que l'étape existe dans EtapeProgressions
+      await this._validateEtapeExists(etapeId, transaction);
+
+      // 3. Auto-créer la progression si elle n'existe pas (pattern from ProgrammeService)
+      const [progressionEtape, created] = await ProgressionEtape.findOrCreate({
         where: {
           utilisateur_id: utilisateurId,
-          etape_id: etapeId,
+          etape_id: etapeId
+        },
+        defaults: {
+          statut: 'non_commence'
         },
         transaction
       });
 
-      if (!progressionEtape) {
-        throw new Error('L\'utilisateur n\'a pas commencé la progression sur cette figure/étape.');
+      // Log auto-creation for monitoring
+      if (created) {
+        console.log(`[EntrainementService] Auto-créé progression pour user=${utilisateurId}, etape=${etapeId}`);
       }
 
-      // 3. Calculer le booléen reussie basé sur le mode
+      // 4. Calculer le booléen reussie basé sur le mode
       const reussie = this._calculateReussie(validatedData);
 
-      // 4. Créer la nouvelle tentative avec les données enrichies
+      // 5. Vérifier idempotence (protection double-clic)
+      const existingTentative = await this._checkIdempotency(
+        progressionEtape.id,
+        validatedData,
+        reussie,
+        transaction
+      );
+
+      if (existingTentative) {
+        // Tentative identique trouvée récemment, retourner l'existante
+        await transaction.commit();
+        console.log(`[EntrainementService] Idempotence: tentative existante retournée (ID: ${existingTentative.id})`);
+
+        return {
+          progressionEtape,
+          tentative: existingTentative,
+          idempotent: true
+        };
+      }
+
+      // 6. Créer la nouvelle tentative avec les données enrichies
       const tentative = await TentativeEtape.create({
         progression_etape_id: progressionEtape.id,
         type_saisie: validatedData.typeSaisie,
@@ -50,7 +78,7 @@ class EntrainementService {
         duree_secondes: validatedData.dureeSecondes || null
       }, { transaction });
 
-      // 5. Mettre à jour le statut de progression selon la réussite
+      // 7. Mettre à jour le statut de progression selon la réussite
       if (reussie && progressionEtape.statut !== 'valide') {
         progressionEtape.statut = 'valide';
         progressionEtape.date_validation = new Date();
@@ -63,12 +91,13 @@ class EntrainementService {
 
       return {
         progressionEtape,
-        tentative
+        tentative,
+        idempotent: false
       };
 
     } catch (error) {
       await transaction.rollback();
-      console.error('Erreur dans EntrainementService.enregistrerTentative:', error);
+      console.error('[EntrainementService.enregistrerTentative] Erreur:', error);
       throw error;
     }
   }
@@ -168,6 +197,50 @@ class EntrainementService {
       default:
         return false;
     }
+  }
+
+  /**
+   * Valide que l'étape existe dans EtapeProgressions.
+   * @private
+   * @throws {Error} Si l'étape n'existe pas
+   */
+  static async _validateEtapeExists(etapeId, transaction) {
+    const etape = await EtapeProgression.findByPk(etapeId, {
+      attributes: ['id'],
+      transaction
+    });
+
+    if (!etape) {
+      const error = new Error(`Étape non trouvée (ID: ${etapeId})`);
+      error.name = 'EtapeNotFoundError';
+      throw error;
+    }
+
+    return etape;
+  }
+
+  /**
+   * Vérifie si une tentative identique existe déjà dans les dernières secondes.
+   * Protection contre les double-clics.
+   * @private
+   * @returns {Object|null} La tentative existante ou null
+   */
+  static async _checkIdempotency(progressionEtapeId, tentativeData, reussie, transaction) {
+    const IDEMPOTENCY_WINDOW_SECONDS = 3;
+    const cutoffTime = new Date(Date.now() - IDEMPOTENCY_WINDOW_SECONDS * 1000);
+
+    const existing = await TentativeEtape.findOne({
+      where: {
+        progression_etape_id: progressionEtapeId,
+        type_saisie: tentativeData.typeSaisie,
+        reussie: reussie,
+        createdAt: { [Op.gte]: cutoffTime }
+      },
+      order: [['createdAt', 'DESC']],
+      transaction
+    });
+
+    return existing;
   }
 }
 

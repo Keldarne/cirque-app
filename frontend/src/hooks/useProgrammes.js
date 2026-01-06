@@ -129,7 +129,7 @@ export const useProgrammeDetails = (programmeId) => {
     fetchDetails();
   }, [fetchDetails]);
 
-  return { programme, loading, error };
+  return { programme, loading, error, refetch: fetchDetails };
 };
 
 

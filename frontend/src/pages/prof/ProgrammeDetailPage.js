@@ -93,6 +93,11 @@ function ProgrammeDetailPage() {
     }, {}) || {};
   }, [programme?.ProgrammesFigures]);
 
+  // Calculer les IDs existants pour griser dans la modale
+  const existingFigureIds = useMemo(() => {
+    return programme?.ProgrammesFigures?.map(pf => pf.figure_id) || [];
+  }, [programme]);
+
   // Activer automatiquement le mode édition si le programme est vide
   useEffect(() => {
     if (programme && Object.entries(figuresParDiscipline).length === 0) {
@@ -409,6 +414,7 @@ function ProgrammeDetailPage() {
         open={addFiguresDialog.open}
         discipline={addFiguresDialog.discipline}
         programmeId={id}
+        existingFigureIds={existingFigureIds}
         onClose={() => setAddFiguresDialog({ open: false, discipline: null })}
         onSuccess={loadProgramme}
       />
@@ -489,7 +495,7 @@ function ModifierProgrammeDialog({ open, programme, onClose, onSuccess, programm
   );
 }
 
-function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSuccess }) {
+function AjouterFiguresDialog({ open, discipline, programmeId, existingFigureIds = [], onClose, onSuccess }) {
   const [figures, setFigures] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -530,6 +536,8 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
   };
 
   const handleToggleFigure = (figureId) => {
+    if (existingFigureIds.includes(figureId)) return; // Empêcher toggle si déjà présent
+
     if (selectedIds.includes(figureId)) {
       setSelectedIds(selectedIds.filter(id => id !== figureId));
     } else {
@@ -547,16 +555,27 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
           </Box>
         ) : (
           <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-            {figures.map(figure => (
-              <ListItem
-                key={figure.id}
-                button
-                onClick={() => handleToggleFigure(figure.id)}
-              >
-                <Checkbox checked={selectedIds.includes(figure.id)} />
-                <ListItemText primary={figure.nom} />
-              </ListItem>
-            ))}
+            {figures.map(figure => {
+              const isAlreadyIn = existingFigureIds.includes(figure.id);
+              return (
+                <ListItem
+                  key={figure.id}
+                  button={!isAlreadyIn}
+                  disabled={isAlreadyIn}
+                  onClick={() => !isAlreadyIn && handleToggleFigure(figure.id)}
+                  sx={{ opacity: isAlreadyIn ? 0.6 : 1 }}
+                >
+                  <Checkbox 
+                    checked={selectedIds.includes(figure.id) || isAlreadyIn} 
+                    disabled={isAlreadyIn}
+                  />
+                  <ListItemText 
+                    primary={figure.nom} 
+                    secondary={isAlreadyIn ? "Déjà ajouté" : null}
+                  />
+                </ListItem>
+              );
+            })}
           </List>
         )}
       </DialogContent>

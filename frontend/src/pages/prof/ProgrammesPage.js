@@ -23,7 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useProgrammesProf, useDeleteProgramme } from '../../hooks/useProgrammes';
 import CreateProgrammeDialog from '../../components/prof/CreateProgrammeDialog';
-import AssignProgramModalV2 from '../../components/prof/AssignProgramModalV2';
+import AssignProgramModalV2 from '../../components/prof/AssignProgramModal';
 
 function ProgrammesPage() {
   const { programmes, loading, error, refetch } = useProgrammesProf();

@@ -166,5 +166,9 @@ router.delete('/disciplines/:id', verifierToken, estAdmin, async (req, res) => {
     // ...
 });
 
+// ═══════════════════════════════════════════════════════════════════
+// Routes Exercices Décomposés (Suggestions System)
+// ═══════════════════════════════════════════════════════════════════
+router.use('/exercices', require('./admin/exercices'));
 
 module.exports = router;

@@ -18,10 +18,9 @@ import EntrainementSession from "./pages/eleve/EntrainementSession";
 import BadgesPage from "./pages/eleve/BadgesPage";
 import TitresPage from "./pages/eleve/TitresPage";
 import DefisPage from "./pages/eleve/DefisPage";
-import ClassementsPage from "./pages/eleve/ClassementsPage";
 
 // Pages professeur
-import DashboardProfPage from "./pages/prof/DashboardProfPage";
+import TeacherDashboardPage from "./pages/prof/AdvancedDashboardPage";
 import MesElevesPage from "./pages/prof/MesElevesPage";
 import GroupesPage from "./pages/prof/GroupesPage";
 import ProgrammesPage from "./pages/prof/ProgrammesPage";
@@ -33,16 +32,21 @@ import NavigationBar from "./NavigationBar";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RefreshProvider } from "./contexts/RefreshContext";
 
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import theme from "./theme/branding";
+
 function App() {
   return (
     // Le provider Auth fournit `useAuth()` aux composants enfants
     <AuthProvider>
       <RefreshProvider>
-        {/* Barre de navigation commune */}
-        <NavigationBar />
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          {/* Barre de navigation commune */}
+          <NavigationBar />
 
-        {/* Définition des routes principales */}
-        <Routes>
+          {/* Définition des routes principales */}
+          <Routes>
           <Route path="/" element={<ListeDisciplinesPage />} />
           <Route path="/discipline/:id" element={<FiguresPage />} />
           <Route path="/auth" element={<AuthPage />} />
@@ -57,7 +61,7 @@ function App() {
           <Route path="/entrainement/session/:figureId" element={<EntrainementSession />} />
 
           {/* Routes Professeur */}
-          <Route path="/prof/dashboard" element={<DashboardProfPage />} />
+          <Route path="/prof/dashboard" element={<TeacherDashboardPage />} />
           <Route path="/prof/eleves" element={<MesElevesPage />} />
           <Route path="/prof/eleves/:eleveId" element={<MesElevesPage />} />
           <Route path="/prof/groupes" element={<GroupesPage />} />
@@ -69,8 +73,8 @@ function App() {
           <Route path="/badges" element={<BadgesPage />} />
           <Route path="/titres" element={<TitresPage />} />
           <Route path="/defis" element={<DefisPage />} />
-          <Route path="/classements" element={<ClassementsPage />} />
         </Routes>
+        </ThemeProvider>
       </RefreshProvider>
     </AuthProvider>
   );

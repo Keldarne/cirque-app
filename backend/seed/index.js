@@ -17,11 +17,14 @@ const seedProgressions = require('./modules/seedProgressions');
 const seedInteractions = require('./modules/seedInteractions');
 const seedTentatives = require('./modules/seedTentatives');
 const seedProgrammes = require('./modules/seedProgrammes');
+const seedExercicesDecomposes = require('./modules/seedExercicesDecomposes');
 
 const logger = require('./utils/logger');
 const scenarioDefinitions = require('./data/scenarios');
 
 async function displaySummary(ecoles, catalogue, users) {
+  const { ExerciceFigure } = require('../src/models');
+
   logger.header('SEED SUMMARY - Multi-Tenant Architecture');
 
   console.log('🏫 ÉCOLES:');
@@ -34,7 +37,15 @@ async function displaySummary(ecoles, catalogue, users) {
   console.log(`  - ${catalogue.figures.length} figures publiques`);
   console.log(`  - ${catalogue.badges.length} badges`);
   console.log(`  - ${catalogue.titres.length} titres`);
-  console.log(`  - ${catalogue.defis.length} défis\n`);
+  console.log(`  - ${catalogue.defis.length} défis`);
+
+  // Statistiques exercices décomposés
+  const totalRelations = await ExerciceFigure.count();
+  const figuresAvecExercices = await ExerciceFigure.count({
+    distinct: true,
+    col: 'figure_id'
+  });
+  console.log(`  - ${totalRelations} relations exercices-figures (${figuresAvecExercices} figures avec prérequis)\n`);
 
   console.log('👥 UTILISATEURS:');
   console.log(`  - 1 admin global`);
@@ -43,7 +54,8 @@ async function displaySummary(ecoles, catalogue, users) {
   console.log(`  - ${users.solo.length} utilisateurs solo\n`);
 
   console.log('✅ DATABASE READY TO USE!');
-  console.log('   → Vous pouvez maintenant vous connecter sur le frontend\n');
+  console.log('   → Vous pouvez maintenant vous connecter sur le frontend');
+  console.log('   → Système de suggestions intelligent activé\n');
 }
 
 async function runSeed() {
@@ -92,6 +104,9 @@ async function runSeed() {
       [...users.voltige.professeurs, ...users.academie.professeurs],
       catalogue.figures
     );
+
+    // Step 9: Créer exercices décomposés (relations récursives figure → exercices)
+    await seedExercicesDecomposes();
 
     // Display summary
     console.log('');

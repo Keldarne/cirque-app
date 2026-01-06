@@ -11,13 +11,40 @@ const { Op } = require('sequelize');
 router.get('/utilisateur/:utilisateurId', verifierToken, async (req, res) => {
   try {
     const { utilisateurId } = req.params;
+    const userId = parseInt(utilisateurId);
 
-    if (req.user.role !== 'admin' && req.user.id !== parseInt(utilisateurId)) {
-      return res.status(403).json({ error: 'Vous ne pouvez consulter que votre propre progression' });
+    // Autorisation : admin, l'utilisateur lui-même, ou son professeur
+    if (req.user.role !== 'admin' && req.user.id !== userId) {
+      // Si c'est un professeur, vérifier soit qu'il a une relation, soit qu'ils sont dans la même école
+      if (req.user.role === 'professeur') {
+        // Vérifier si le professeur a une relation directe avec l'élève
+        const relation = await RelationProfEleve.findOne({
+          where: {
+            professeur_id: req.user.id,
+            eleve_id: userId
+          }
+        });
+
+        // Si pas de relation, vérifier s'ils sont dans la même école
+        if (!relation) {
+          const professeur = await Utilisateur.findByPk(req.user.id, { attributes: ['ecole_id'] });
+          const eleve = await Utilisateur.findByPk(userId, { attributes: ['ecole_id', 'role'] });
+
+          // Autoriser si même école ET l'utilisateur cible est bien un élève
+          if (!professeur || !eleve ||
+              !professeur.ecole_id ||
+              professeur.ecole_id !== eleve.ecole_id ||
+              !['eleve', 'standard'].includes(eleve.role)) {
+            return res.status(403).json({ error: 'Vous ne pouvez consulter que la progression des élèves de votre école' });
+          }
+        }
+      } else {
+        return res.status(403).json({ error: 'Vous ne pouvez consulter que votre propre progression' });
+      }
     }
 
     const progressions = await ProgressionEtape.findAll({
-      where: { utilisateur_id: utilisateurId },
+      where: { utilisateur_id: userId },
       include: [{
         model: EtapeProgression,
         as: 'etape',

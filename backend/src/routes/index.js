@@ -11,6 +11,7 @@ const profRoutes = require('./prof');
 const gamificationRoutes = require('./gamification');
 const statistiquesRoutes = require('./statistiques');
 const entrainementRoutes = require('./entrainement');
+const suggestionsRoutes = require('./suggestions');
 
 
 // Montage des routes
@@ -23,6 +24,7 @@ router.use('/prof', profRoutes);
 router.use('/statistiques', statistiquesRoutes);
 router.use('/gamification', gamificationRoutes);
 router.use('/entrainement', entrainementRoutes);
+router.use('/suggestions', suggestionsRoutes);
 
 
 // Export du router principal

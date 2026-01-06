@@ -35,6 +35,7 @@ function AddFiguresDialog({
   disciplineNom,
   disciplineId = null,
   programmeId,
+  existingFigureIds = [], // Liste des IDs déjà présents
   onClose,
   onSuccess,
   apiUrl
@@ -76,6 +77,9 @@ function AddFiguresDialog({
   }, [open, loadFigures]);
 
   const handleToggle = (figureId) => {
+    // Ne rien faire si la figure est déjà dans le programme (disabled)
+    if (existingFigureIds.includes(figureId)) return;
+
     if (selectedIds.includes(figureId)) {
       setSelectedIds(selectedIds.filter(id => id !== figureId));
     } else {
@@ -137,37 +141,44 @@ function AddFiguresDialog({
           </Typography>
         ) : (
           <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-            {figures.map(figure => (
-              <ListItem
-                key={figure.id}
-                button
-                onClick={() => handleToggle(figure.id)}
-                sx={{
-                  borderRadius: 1,
-                  mb: 0.5,
-                  '&:hover': {
-                    bgcolor: 'action.hover'
-                  }
-                }}
-              >
-                <Checkbox
-                  checked={selectedIds.includes(figure.id)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      {figure.nom}
-                      {!disciplineNom && !disciplineId && figure.Discipline && (
-                        <Chip label={figure.Discipline.nom} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem' }} />
-                      )}
-                    </Box>
-                  }
-                  secondary={figure.descriptif?.substring(0, 80) + '...'}
-                />
-              </ListItem>
-            ))}
+            {figures.map(figure => {
+              const isAlreadyIn = existingFigureIds.includes(figure.id);
+              return (
+                <ListItem
+                  key={figure.id}
+                  button={!isAlreadyIn}
+                  onClick={() => !isAlreadyIn && handleToggle(figure.id)}
+                  disabled={isAlreadyIn}
+                  sx={{
+                    borderRadius: 1,
+                    mb: 0.5,
+                    opacity: isAlreadyIn ? 0.6 : 1,
+                    '&:hover': {
+                      bgcolor: isAlreadyIn ? 'transparent' : 'action.hover'
+                    }
+                  }}
+                >
+                  <Checkbox
+                    checked={selectedIds.includes(figure.id) || isAlreadyIn}
+                    disabled={isAlreadyIn}
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                  <ListItemText
+                    primary={
+                      <Box display="flex" alignItems="center" gap={1}>
+                        {figure.nom}
+                        {isAlreadyIn && <Chip label="Déjà ajouté" size="small" sx={{ height: 20, fontSize: '0.7rem' }} />}
+                        {!disciplineNom && !disciplineId && figure.Discipline && (
+                          <Chip label={figure.Discipline.nom} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem' }} />
+                        )}
+                      </Box>
+                    }
+                    secondary={figure.descriptif?.substring(0, 80) + '...'}
+                  />
+                </ListItem>
+              );
+            })}
           </List>
         )}
       </DialogContent>

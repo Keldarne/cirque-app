@@ -1,15 +1,20 @@
 const { Sequelize } = require('sequelize');
 
-// ⚠️ Remplace par tes infos Infomaniak
+// Charger dotenv uniquement si DB_HOST n'est pas déjà défini (développement local)
+if (!process.env.DB_HOST) {
+  require('dotenv').config();
+}
+
+// Configuration depuis les variables d'environnement
 const sequelize = new Sequelize(
-    'cirque_app_dev',     // nom de la base
-  'cirque_user',        // utilisateur
-  'motdepassefort',    // mot de passe
+  process.env.DB_NAME || 'cirque_app_dev',
+  process.env.DB_USER || 'cirque_user',
+  process.env.DB_PASSWORD || 'motdepassefort',
   {
-    host: 'localhost', // ou l'adresse du serveur Infomaniak
+    host: process.env.DB_HOST || 'localhost',
     dialect: 'mysql',
-    port: 3306,
-    logging: false
+    port: parseInt(process.env.DB_PORT) || 3306,
+    logging: process.env.NODE_ENV === 'development' ? console.log : false
   }
 );
 

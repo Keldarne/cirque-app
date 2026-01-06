@@ -44,7 +44,7 @@ function NavigationBar() {
 
   return (
     <>
-      <AppBar position="static">
+      <AppBar position="sticky" sx={{ top: 0, zIndex: 1100 }}>
         <Toolbar>
           {/* Bouton hamburger - visible uniquement sur mobile */}
           <IconButton
@@ -56,10 +56,37 @@ function NavigationBar() {
             <MenuIcon />
           </IconButton>
 
-          {/* Titre / logo de l'app */}
-          <Typography variant="h6" className="navbar-title">
-            Cirque App
-          </Typography>
+                    {/* Titre / logo de l'app */}          <Typography 
+
+                      variant="h5" 
+
+                      className="navbar-title" 
+
+                      sx={{ 
+
+                        fontWeight: 800, 
+
+                        background: 'linear-gradient(45deg, #2979ff, #0056b3)',
+
+                        backgroundClip: 'text',
+
+                        textFillColor: 'transparent',
+
+                        WebkitBackgroundClip: 'text',
+
+                        WebkitTextFillColor: 'transparent',
+
+                        mr: 4,
+
+                        letterSpacing: '0.05em'
+
+                      }}
+
+                    >
+
+                      CIRQUE APP
+
+                    </Typography>
 
           {/* Menu desktop - caché sur mobile */}
           <Box className="navbar-links-container">
@@ -73,20 +100,6 @@ function NavigationBar() {
               >
                 Mon Programme
               </Button>
-            )}
-
-            {/* Liens Gamification */}
-            {isAuthenticated && (
-              <>
-                <Button
-                  color="inherit"
-                  component={Link}
-                  to="/classements"
-                  startIcon={<LeaderboardIcon />}
-                >
-                  Classements
-                </Button>
-              </>
             )}
 
             {/* Lien Dashboard Professeur (accessible aux professeurs et admins) */}
@@ -224,16 +237,6 @@ function NavigationBar() {
                   <FlagIcon />
                 </ListItemIcon>
                 <ListItemText primary="Défis" />
-              </ListItemButton>
-            )}
-
-            {/* Classements */}
-            {isAuthenticated && (
-              <ListItemButton component={Link} to="/classements">
-                <ListItemIcon>
-                  <LeaderboardIcon />
-                </ListItemIcon>
-                <ListItemText primary="Classements" />
               </ListItemButton>
             )}
 

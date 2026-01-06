@@ -387,6 +387,10 @@ Authorization: Bearer <token>
 **Accès**: Élève
 **Description**: Enregistrer une tentative sur une étape avec 4 modes supportés
 
+**🆕 Auto-création de Progression**: Si l'utilisateur n'a pas encore commencé la progression sur cette étape, le système crée automatiquement un enregistrement `ProgressionEtape` avec statut `non_commence`. Cela permet l'exploration libre du catalogue sans nécessiter `POST /api/progression`.
+
+**🆕 Protection Idempotence**: Le système vérifie si une tentative identique (même étape, type et résultat) a été enregistrée dans les **3 dernières secondes**. Si oui, la tentative existante est retournée avec status **200 OK** au lieu de créer un doublon.
+
 **Note**: Le champ `typeSaisie` est **requis**
 
 **Body - Mode Binaire**:
@@ -429,7 +433,7 @@ Authorization: Bearer <token>
 ```
 *Exemple: 3 minutes de pratique instable*
 
-**Réponse 201**:
+**Réponse 201 Created** (nouvelle tentative):
 ```json
 {
   "message": "Tentative enregistrée avec succès",
@@ -447,7 +451,37 @@ Authorization: Bearer <token>
     "score": 2,
     "duree_secondes": 180,
     "createdAt": "2025-12-25T15:30:00.000Z"
-  }
+  },
+  "idempotent": false
+}
+```
+
+**Réponse 200 OK** (tentative existante retournée - idempotence):
+```json
+{
+  "message": "Tentative identique déjà enregistrée (idempotence)",
+  "progressionEtape": { ... },
+  "tentative": { ... },
+  "idempotent": true
+}
+```
+
+**🆕 Erreurs Possibles**:
+| Code | Type | Description |
+|------|------|-------------|
+| 400 | `VALIDATION_ERROR` | Données invalides selon mode (ex: score manquant en mode evaluation) |
+| 400 | `MODEL_VALIDATION_ERROR` | Validation Sequelize échouée (détails inclus) |
+| 404 | `ETAPE_NOT_FOUND` | L'etapeId n'existe pas dans EtapeProgressions |
+| 409 | `DUPLICATE_ATTEMPT` | Contrainte d'unicité violée |
+| 500 | `DATABASE_ERROR` | Erreur de connexion/requête DB |
+| 500 | `DATABASE_CONSTRAINT_ERROR` | Violation de contrainte FK |
+| 500 | `UNKNOWN_ERROR` | Erreur inattendue |
+
+**Exemple d'erreur 404**:
+```json
+{
+  "error": "Étape non trouvée (ID: 999)",
+  "type": "ETAPE_NOT_FOUND"
 }
 ```
 
