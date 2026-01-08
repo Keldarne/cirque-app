@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   LineChart,
   Line,
@@ -13,6 +14,7 @@ import {
 import { Paper, Typography, Box } from '@mui/material';
 
 const SentimentChart = ({ data }) => {
+  const theme = useTheme();
   // data expected format: [{ date: 'YYYY-MM-DD', score_moyen: 2.5 }]
 
   const getSentimentLabel = (score) => {
@@ -51,8 +53,8 @@ const SentimentChart = ({ data }) => {
             />
             <Tooltip formatter={(val) => [val.toFixed(1), 'Score Moyen']} labelFormatter={(label) => `Date : ${label}`} />
             <Legend />
-            <ReferenceLine y={2} stroke="red" strokeDasharray="3 3" label="Zone Neutre" />
-            <Line type="monotone" dataKey="score_moyen" stroke="#ff7300" activeDot={{ r: 8 }} name="Confiance Moyenne" />
+            <ReferenceLine y={2} stroke={theme.palette.error.main} strokeDasharray="3 3" label="Zone Neutre" />
+            <Line type="monotone" dataKey="score_moyen" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Confiance Moyenne" />
           </LineChart>
         </ResponsiveContainer>
       </Box>

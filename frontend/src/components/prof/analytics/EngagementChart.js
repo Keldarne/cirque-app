@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   BarChart,
   Bar,
@@ -12,6 +13,7 @@ import {
 import { Paper, Typography, Box } from '@mui/material';
 
 const EngagementChart = ({ data }) => {
+  const theme = useTheme();
   // data expected format: [{ date: 'YYYY-MM-DD', tentatives: 12, reussites: 8 }]
 
   return (
@@ -35,8 +37,8 @@ const EngagementChart = ({ data }) => {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="tentatives" name="Total Tentatives" fill="#fcdab7" />
-            <Bar dataKey="reussites" name="Réussites" fill="#2979ff" />
+            <Bar dataKey="tentatives" name="Total Tentatives" fill={theme.palette.secondary.main} />
+            <Bar dataKey="reussites" name="Réussites" fill={theme.palette.primary.main} />
           </BarChart>
         </ResponsiveContainer>
       </Box>

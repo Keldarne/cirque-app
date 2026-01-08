@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   Dialog,
   DialogTitle,
@@ -40,6 +41,7 @@ import VolumeChart from './VolumeChart';
 import SentimentChart from './SentimentChart';
 
 const StudentAnalyticsModal = ({ open, onClose, student }) => {
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [historyData, setHistoryData] = useState([]);
@@ -256,7 +258,7 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
                           <PolarGrid />
                           <PolarAngleAxis dataKey="discipline" tick={{fontSize: 10}} />
                           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                          <Radar name="Élève" dataKey="completion" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                          <Radar name="Élève" dataKey="completion" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.6} />
                         </RadarChart>
                       </ResponsiveContainer>
                     </Paper>

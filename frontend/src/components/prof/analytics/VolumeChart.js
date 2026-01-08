@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   AreaChart,
   Area,
@@ -11,6 +12,7 @@ import {
 import { Paper, Typography, Box } from '@mui/material';
 
 const VolumeChart = ({ data }) => {
+  const theme = useTheme();
   // data expected format: [{ date: 'YYYY-MM-DD', minutes: 45 }]
 
   const formatDuration = (minutes) => {
@@ -39,7 +41,7 @@ const VolumeChart = ({ data }) => {
             <XAxis dataKey="date" />
             <YAxis tickFormatter={(val) => `${Math.round(val/60)}h`} />
             <Tooltip formatter={(val) => [formatDuration(val), 'Temps passé']} />
-            <Area type="monotone" dataKey="minutes" stroke="#2979ff" fill="#2979ff" fillOpacity={0.6} />
+            <Area type="monotone" dataKey="minutes" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.6} />
           </AreaChart>
         </ResponsiveContainer>
       </Box>
