@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ShieldIcon from '@mui/icons-material/Shield';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -80,8 +81,16 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
       const progressionsData = await progressionsRes.json();
       const statsData = await statsRes.json();
       
+      // Trier les étapes de chaque figure par ordre
+      const sortedProgressions = Array.isArray(progressionsData) ? progressionsData.map(figure => ({
+        ...figure,
+        etapes: Array.isArray(figure.etapes) 
+          ? [...figure.etapes].sort((a, b) => (a.etape?.ordre || a.ordre || 0) - (b.etape?.ordre || b.ordre || 0))
+          : []
+      })) : [];
+      
       setHistoryData(historyData);
-      setProgressions(progressionsData);
+      setProgressions(sortedProgressions);
       setStudentStats(statsData);
       processData(historyData);
     } catch (err) {
@@ -122,12 +131,19 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
   };
 
   const handleFigureClick = (progression) => {
+    // Trier les étapes par ordre avant de les afficher
+    const sortedEtapes = [...progression.etapes].sort((a, b) => {
+      const ordreA = a.etape?.ordre || a.ordre || 0;
+      const ordreB = b.etape?.ordre || b.ordre || 0;
+      return ordreA - ordreB;
+    });
+
     const figureHistory = historyData.filter(h => 
       progression.etapes.some(e => e.etape_id === h.progression_etape_id)
     );
     
     setSelectedFigureDetails({
-      progression,
+      progression: { ...progression, etapes: sortedEtapes },
       history: figureHistory
     });
   };
@@ -393,15 +409,18 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
 
                     <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>Progression des Étapes</Typography>
                     <List dense>
-                      {selectedFigureDetails.progression.etapes.map((etape, idx) => (
-                        <ListItem key={etape.etape_id}>
-                          <ListItemText 
-                            primary={`Étape ${idx + 1}`}
-                            secondary={etape.statut === 'valide' ? `Validé le ${new Date(etape.date_validation).toLocaleDateString()}` : 'En cours'}
-                          />
-                          {etape.statut === 'valide' ? <CheckCircleIcon color="success" /> : <CircularProgress size={20} variant="determinate" value={0} sx={{ color: 'text.disabled' }} />}
-                        </ListItem>
-                      ))}
+                      {selectedFigureDetails.progression.etapes.map((etape, idx) => {
+                        const title = etape.etape?.titre || etape.etape?.nom || etape.titre || etape.nom || `Étape ${idx + 1}`;
+                        return (
+                          <ListItem key={etape.etape_id}>
+                            <ListItemText 
+                              primary={title}
+                              secondary={etape.statut === 'valide' ? `Validé le ${new Date(etape.date_validation).toLocaleDateString()}` : 'En cours'}
+                            />
+                            {etape.statut === 'valide' ? <VerifiedIcon color="success" /> : <CircularProgress size={20} variant="determinate" value={0} sx={{ color: 'text.disabled' }} />}
+                          </ListItem>
+                        );
+                      })}
                     </List>
 
                     <Typography variant="subtitle2" gutterBottom sx={{ mt: 3 }}>Historique des Tentatives sur cette Figure</Typography>
