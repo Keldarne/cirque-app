@@ -136,10 +136,33 @@ const GroupProgressMatrix = ({ students, figures, selectedGroup }) => {
                 Élève
               </TableCell>
               {figures.map((fig) => (
-                <TableCell key={fig.id} align="center" sx={{ minWidth: 100 }}>
-                  <Tooltip title={fig.nom}>
-                    <span>{fig.nom.substring(0, 10)}{fig.nom.length > 10 ? '...' : ''}</span>
-                  </Tooltip>
+                <TableCell 
+                  key={fig.id} 
+                  align="center" 
+                  sx={{ 
+                    minWidth: 50,
+                    height: 150,
+                    verticalAlign: 'bottom',
+                    p: 1
+                  }}
+                >
+                  <Box
+                    sx={{
+                      writingMode: 'vertical-rl',
+                      transform: 'rotate(180deg)',
+                      textAlign: 'left',
+                      whiteSpace: 'nowrap',
+                      fontWeight: 'bold',
+                      fontSize: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      maxHeight: 140,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {fig.nom}
+                  </Box>
                 </TableCell>
               ))}
             </TableRow>
