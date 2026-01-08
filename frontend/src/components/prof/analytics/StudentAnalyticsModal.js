@@ -24,6 +24,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ShieldIcon from '@mui/icons-material/Shield';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 import {
   Radar,
@@ -133,6 +136,31 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
     setSelectedFigureDetails(null);
   };
 
+  const calculateFigureStats = (history) => {
+    if (!history || history.length === 0) return null;
+
+    const totalAttempts = history.length;
+    const successfulAttempts = history.filter(h => h.reussie).length;
+    const successRate = Math.round((successfulAttempts / totalAttempts) * 100);
+
+    const attemptsWithDuration = history.filter(h => h.duree_secondes > 0);
+    const avgDuration = attemptsWithDuration.length > 0
+      ? Math.round(attemptsWithDuration.reduce((sum, h) => sum + h.duree_secondes, 0) / attemptsWithDuration.length)
+      : null;
+
+    const attemptsWithScore = history.filter(h => h.score !== null && h.score !== undefined);
+    const avgScore = attemptsWithScore.length > 0
+      ? (attemptsWithScore.reduce((sum, h) => sum + h.score, 0) / attemptsWithScore.length).toFixed(1)
+      : null;
+
+    return {
+      totalAttempts,
+      successRate,
+      avgDuration,
+      avgScore
+    };
+  };
+
   const processData = (data) => {
     const formatDate = (isoString) => {
       return new Date(isoString).toISOString().split('T')[0];
@@ -189,6 +217,9 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
   };
 
   if (!student) return null;
+
+  // Calcul des stats pour la figure sélectionnée (si disponible)
+  const figureStats = selectedFigureDetails ? calculateFigureStats(selectedFigureDetails.history) : null;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -302,6 +333,63 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
                         <Chip label="Maîtrisé" color="success" icon={<CheckCircleIcon />} />
                       )}
                     </Box>
+
+                    {figureStats && (
+                      <Paper sx={{ p: 2, mb: 3, bgcolor: 'background.default' }} variant="outlined">
+                        <Grid container spacing={2} justifyContent="space-around">
+                          {figureStats.avgDuration !== null && (
+                            <Grid item>
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <AccessTimeIcon color="primary" />
+                                <Box>
+                                  <Typography variant="caption" color="textSecondary">Temps Moyen</Typography>
+                                  <Typography variant="subtitle1" fontWeight="bold">
+                                    {figureStats.avgDuration}s
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Grid>
+                          )}
+                          {figureStats.avgScore !== null && (
+                            <Grid item>
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <EmojiEventsIcon sx={{ color: '#FFD700' }} />
+                                <Box>
+                                  <Typography variant="caption" color="textSecondary">Score Moyen</Typography>
+                                  <Typography variant="subtitle1" fontWeight="bold">
+                                    {figureStats.avgScore}/3
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Grid>
+                          )}
+                          <Grid item>
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <TrendingUpIcon color="success" />
+                              <Box>
+                                <Typography variant="caption" color="textSecondary">Réussite</Typography>
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                  {figureStats.successRate}%
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </Grid>
+                          <Grid item>
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <Box sx={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'action.selected', borderRadius: '50%' }}>
+                                <Typography variant="caption" fontWeight="bold">#</Typography>
+                              </Box>
+                              <Box>
+                                <Typography variant="caption" color="textSecondary">Tentatives</Typography>
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                  {figureStats.totalAttempts}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </Grid>
+                        </Grid>
+                      </Paper>
+                    )}
 
                     <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>Progression des Étapes</Typography>
                     <List dense>
