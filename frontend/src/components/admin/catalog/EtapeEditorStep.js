@@ -41,10 +41,16 @@ const SortableEtapeItem = ({ etape, index, onChange, onRemove }) => {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: etape.id || `etape-${index}` });
+  } = useSortable({
+    id: etape.id || `etape-${index}`,
+    transition: {
+      duration: 150, // Plus rapide (réactif)
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
+  });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
     marginBottom: '16px', // replaced sx mb: 2
     zIndex: isDragging ? 999 : 'auto',
