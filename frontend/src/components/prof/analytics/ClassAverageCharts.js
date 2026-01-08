@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   Radar,
   RadarChart,
@@ -16,6 +17,8 @@ import {
 import { Paper, Typography, Grid, Box, CircularProgress } from '@mui/material';
 
 const ClassAverageCharts = ({ data, loading }) => {
+  const theme = useTheme();
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
@@ -45,8 +48,8 @@ const ClassAverageCharts = ({ data, loading }) => {
                   <Radar
                     name="Classe"
                     dataKey="score_moyen"
-                    stroke="#2979ff"
-                    fill="#2979ff"
+                    stroke={theme.palette.primary.main}
+                    fill={theme.palette.primary.main}
                     fillOpacity={0.6}
                   />
                 </RadarChart>
@@ -72,7 +75,7 @@ const ClassAverageCharts = ({ data, loading }) => {
                   <XAxis dataKey="jour" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="tentatives" name="Total Tentatives" fill="#fcdab7" />
+                  <Bar dataKey="tentatives" name="Total Tentatives" fill={theme.palette.secondary.main} />
                 </BarChart>
               ) : (
                 <Box display="flex" justifyContent="center" alignItems="center" height="100%">
