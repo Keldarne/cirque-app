@@ -18,6 +18,7 @@ const seedInteractions = require('./modules/seedInteractions');
 const seedTentatives = require('./modules/seedTentatives');
 const seedProgrammes = require('./modules/seedProgrammes');
 const seedExercicesDecomposes = require('./modules/seedExercicesDecomposes');
+const seedDisciplineAvailability = require('./modules/seedDisciplineAvailability');
 
 const logger = require('./utils/logger');
 const scenarioDefinitions = require('./data/scenarios');
@@ -67,6 +68,9 @@ async function runSeed() {
 
     // Step 2: Créer le catalogue public (partagé par tous)
     const catalogue = await seedCataloguePublic();
+
+    // Step 2.5: Configurer disponibilité des disciplines par école (opt-in)
+    await seedDisciplineAvailability();
 
     // Step 3: Créer les utilisateurs (admin, profs, élèves, solo)
     const users = await seedUtilisateurs(ecoles);

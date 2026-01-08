@@ -8,6 +8,7 @@ const router = express.Router();
 const { Discipline, Figure, EtapeProgression, ProgressionEtape, Ecole } = require('../models');
 const { verifierToken, estAdmin, estAdminOuSchoolAdmin, estPersonnelAutorise, peutModifierFigure } = require('../middleware/auth');
 const FigureService = require('../services/FigureService'); // Import FigureService
+const DisciplineAvailabilityService = require('../services/DisciplineAvailabilityService');
 
 /**
  * GET /admin/ecoles
@@ -165,6 +166,104 @@ router.put('/disciplines/:id', verifierToken, estAdmin, async (req, res) => {
 router.delete('/disciplines/:id', verifierToken, estAdmin, async (req, res) => {
     // ...
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// Routes Discipline Availability (Per-School Configuration)
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * GET /admin/ecoles/:ecoleId/disciplines
+ * Liste les disciplines configurées pour une école
+ * Permissions: master admin ou school admin de l'école concernée
+ */
+router.get('/ecoles/:ecoleId/disciplines',
+  verifierToken,
+  estAdminOuSchoolAdmin,
+  async (req, res) => {
+    try {
+      const { ecoleId } = req.params;
+      const includeInactive = req.query.includeInactive === 'true';
+
+      // Vérifier permission (master admin ou school admin de cette école)
+      if (req.user.role !== 'admin' && req.user.ecole_id !== parseInt(ecoleId)) {
+        return res.status(403).json({ message: 'Accès interdit' });
+      }
+
+      const disciplines = await DisciplineAvailabilityService
+        .getDisciplinesForEcole(ecoleId, includeInactive);
+
+      res.json(disciplines);
+    } catch (error) {
+      console.error('Erreur get disciplines école:', error);
+      res.status(500).json({ message: 'Erreur serveur', details: error.message });
+    }
+  }
+);
+
+/**
+ * POST /admin/ecoles/:ecoleId/disciplines
+ * Activer/désactiver une discipline pour une école
+ * Permissions: master admin ou school admin de l'école concernée
+ */
+router.post('/ecoles/:ecoleId/disciplines',
+  verifierToken,
+  estAdminOuSchoolAdmin,
+  async (req, res) => {
+    try {
+      const { ecoleId } = req.params;
+      const { discipline_id, actif } = req.body;
+
+      if (!discipline_id || actif === undefined) {
+        return res.status(400).json({ message: 'discipline_id et actif sont requis' });
+      }
+
+      // Vérifier permission
+      if (req.user.role !== 'admin' && req.user.ecole_id !== parseInt(ecoleId)) {
+        return res.status(403).json({ message: 'Accès interdit' });
+      }
+
+      const record = await DisciplineAvailabilityService
+        .toggleDiscipline(ecoleId, discipline_id, actif);
+
+      res.json(record);
+    } catch (error) {
+      console.error('Erreur toggle discipline:', error);
+      res.status(500).json({ message: 'Erreur serveur', details: error.message });
+    }
+  }
+);
+
+/**
+ * PUT /admin/ecoles/:ecoleId/disciplines/bulk
+ * Mise à jour en masse des disciplines d'une école
+ * Permissions: master admin ou school admin de l'école concernée
+ */
+router.put('/ecoles/:ecoleId/disciplines/bulk',
+  verifierToken,
+  estAdminOuSchoolAdmin,
+  async (req, res) => {
+    try {
+      const { ecoleId } = req.params;
+      const { disciplines } = req.body; // [{ discipline_id, actif, ordre }]
+
+      if (!Array.isArray(disciplines)) {
+        return res.status(400).json({ message: 'disciplines doit être un tableau' });
+      }
+
+      // Vérifier permission
+      if (req.user.role !== 'admin' && req.user.ecole_id !== parseInt(ecoleId)) {
+        return res.status(403).json({ message: 'Accès interdit' });
+      }
+
+      await DisciplineAvailabilityService.bulkUpdateDisciplines(ecoleId, disciplines);
+
+      res.json({ message: 'Disciplines mises à jour' });
+    } catch (error) {
+      console.error('Erreur bulk update disciplines:', error);
+      res.status(500).json({ message: 'Erreur serveur', details: error.message });
+    }
+  }
+);
 
 // ═══════════════════════════════════════════════════════════════════
 // Routes Exercices Décomposés (Suggestions System)

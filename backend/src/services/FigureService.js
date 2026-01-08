@@ -1,5 +1,6 @@
 const { Figure, EtapeProgression, Discipline } = require('../models');
 const sequelize = require('../../db');
+const { Op } = require('sequelize');
 
 class FigureService {
 
@@ -83,6 +84,78 @@ class FigureService {
       figure.etapes = etapesFound;
 
       return figure;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  /**
+   * Met à jour les étapes d'une figure de manière granulaire.
+   * Si une étape a un id, elle est mise à jour. Sinon, elle est créée.
+   * Les étapes non présentes dans etapesData sont supprimées.
+   * @param {number} figureId - ID de la figure
+   * @param {Array<Object>} etapesData - Données des étapes [{ id?, titre, description, ordre, xp, video_url, type }]
+   * @returns {Promise<Array>} Les étapes mises à jour
+   */
+  static async updateEtapes(figureId, etapesData) {
+    const transaction = await sequelize.transaction();
+    try {
+      const figure = await Figure.findByPk(figureId);
+      if (!figure) {
+        throw new Error('Figure non trouvée');
+      }
+
+      // Récupérer étapes existantes
+      const existingEtapes = await EtapeProgression.findAll({
+        where: { figure_id: figureId }
+      });
+      const existingIds = existingEtapes.map(e => e.id);
+      const receivedIds = etapesData.filter(e => e.id).map(e => e.id);
+
+      // Supprimer étapes non envoyées
+      const toDelete = existingIds.filter(id => !receivedIds.includes(id));
+      if (toDelete.length > 0) {
+        await EtapeProgression.destroy({
+          where: { id: { [Op.in]: toDelete } },
+          transaction
+        });
+      }
+
+      // Créer ou mettre à jour étapes
+      const results = await Promise.all(
+        etapesData.map(async (etapeData) => {
+          if (etapeData.id) {
+            // UPDATE
+            const etape = await EtapeProgression.findByPk(etapeData.id, { transaction });
+            if (etape) {
+              await etape.update({
+                titre: etapeData.titre,
+                description: etapeData.description,
+                type: etapeData.type || 'pratique',
+                xp: etapeData.xp || 10,
+                video_url: etapeData.video_url,
+                ordre: etapeData.ordre
+              }, { transaction });
+              return etape;
+            }
+          } else {
+            // CREATE
+            return await EtapeProgression.create({
+              figure_id: figureId,
+              titre: etapeData.titre,
+              description: etapeData.description,
+              type: etapeData.type || 'pratique',
+              xp: etapeData.xp || 10,
+              video_url: etapeData.video_url,
+              ordre: etapeData.ordre
+            }, { transaction });
+          }
+        })
+      );
+
+      await transaction.commit();
+      return results.filter(Boolean); // Filter out any null values
     } catch (error) {
       await transaction.rollback();
       throw error;

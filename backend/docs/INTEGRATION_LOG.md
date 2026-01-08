@@ -4,6 +4,312 @@ Ce fichier documente les changements backend qui impactent le frontend et permet
 
 ---
 
+## 📅 2026-01-09 - 🆕 NOUVEAU: Discipline Availability + FigureService Enhancements
+
+### 👤 Émetteur
+**Développeur**: Claude Backend Agent
+**Status**: ✅ **IMPLÉMENTÉ** - Backend prêt pour intégration frontend
+
+### 📋 Résumé des Changements
+
+Deux améliorations majeures pour l'administration du catalogue:
+
+1. **Système de disponibilité des disciplines par école** (opt-in)
+2. **Méthode granulaire de mise à jour des étapes** (`FigureService.updateEtapes`)
+
+---
+
+### 🆕 1. Discipline Availability (Opt-In System)
+
+**Objectif**: Permettre aux écoles d'activer/désactiver des disciplines selon leur équipement disponible.
+
+#### Nouveau Modèle: `DisciplineAvailability`
+
+**Fichier**: `backend/src/models/DisciplineAvailability.js`
+
+**Schéma**:
+```javascript
+{
+  id: INTEGER,
+  ecole_id: INTEGER (FK vers Ecoles),
+  discipline_id: INTEGER (FK vers Disciplines),
+  actif: BOOLEAN (default: false), // OPT-IN
+  ordre: INTEGER (default: 0), // Ordre d'affichage personnalisé
+  config: JSON // Configuration future
+}
+```
+
+**Associations**:
+- `Ecole.hasMany(DisciplineAvailability, { as: 'disciplinesDisponibles' })`
+- `Discipline.hasMany(DisciplineAvailability, { as: 'disponibilitesEcoles' })`
+
+#### Nouveau Service: `DisciplineAvailabilityService`
+
+**Fichier**: `backend/src/services/DisciplineAvailabilityService.js`
+
+**Méthodes**:
+```javascript
+// Obtenir disciplines actives/inactives pour une école
+static async getDisciplinesForEcole(ecoleId, includeInactive = false)
+
+// Activer/désactiver une discipline
+static async toggleDiscipline(ecoleId, disciplineId, actif)
+
+// Mise à jour en masse
+static async bulkUpdateDisciplines(ecoleId, disciplineConfigs)
+
+// Réordonner disciplines
+static async reorderDisciplines(ecoleId, orderedDisciplineIds)
+```
+
+#### Nouvelles Routes Admin
+
+**Fichier**: `backend/src/routes/admin.js`
+
+| Méthode | Endpoint | Permissions | Description |
+|---------|----------|-------------|-------------|
+| GET | `/api/admin/ecoles/:ecoleId/disciplines` | Master admin OU school admin de l'école | Liste disciplines configurées (opt-in) |
+| POST | `/api/admin/ecoles/:ecoleId/disciplines` | Master admin OU school admin de l'école | Activer/désactiver une discipline |
+| PUT | `/api/admin/ecoles/:ecoleId/disciplines/bulk` | Master admin OU school admin de l'école | Mise à jour en masse |
+
+**Query Parameter**:
+- `includeInactive` (boolean): Inclure disciplines désactivées (défaut: false)
+
+**Body POST** (Toggle discipline):
+```json
+{
+  "discipline_id": 1,
+  "actif": true
+}
+```
+
+**Body PUT** (Bulk update):
+```json
+{
+  "disciplines": [
+    { "discipline_id": 1, "actif": true, "ordre": 0 },
+    { "discipline_id": 2, "actif": true, "ordre": 1 }
+  ]
+}
+```
+
+**Response GET**:
+```json
+[
+  {
+    "id": 1,
+    "ecole_id": 1,
+    "discipline_id": 1,
+    "actif": true,
+    "ordre": 0,
+    "config": null,
+    "discipline": {
+      "id": 1,
+      "nom": "Jonglage",
+      "description": "...",
+      "image_url": "..."
+    }
+  }
+]
+```
+
+#### Seed Data
+
+**Fichier**: `backend/seed/modules/seedDisciplineAvailability.js`
+- École 1 (Voltige): 3 premières disciplines actives (Jonglage, Acrobatie, Aérien)
+- École 2 (Académie): 3 disciplines différentes actives (Acrobatie, Équilibre, Manipulation)
+- Autres écoles: Toutes disciplines désactivées par défaut (opt-in)
+
+---
+
+### 🆕 2. FigureService Enhancement: Granular Etapes Updates
+
+**Objectif**: Permettre la mise à jour granulaire des étapes (create/update/delete individuels au lieu de replace all).
+
+#### Nouvelle Méthode: `FigureService.updateEtapes()`
+
+**Fichier**: `backend/src/services/FigureService.js`
+
+**Signature**:
+```javascript
+static async updateEtapes(figureId, etapesData)
+```
+
+**Paramètres**:
+```javascript
+etapesData: [
+  {
+    id?: number,        // Si présent: UPDATE, sinon: CREATE
+    titre: string,
+    description: string,
+    ordre: number,
+    xp: number,
+    video_url: string,
+    type: 'theorique' | 'pratique'
+  }
+]
+```
+
+**Logique**:
+1. Récupère étapes existantes de la figure
+2. Supprime étapes absentes de `etapesData`
+3. UPDATE étapes avec `id` présent
+4. CREATE étapes sans `id`
+5. Transaction atomique pour garantir la cohérence
+
+**Exemple d'utilisation**:
+```javascript
+// Modifier ordre + ajouter nouvelle étape + supprimer étape 2
+await FigureService.updateEtapes(figureId, [
+  { id: 1, titre: "Étape 1", ordre: 0, xp: 10, type: 'theorique' }, // UPDATE
+  { id: 3, titre: "Étape 3 renommée", ordre: 1, xp: 15, type: 'pratique' }, // UPDATE
+  { titre: "Nouvelle étape 4", ordre: 2, xp: 20, type: 'pratique' } // CREATE
+  // Étape 2 absente → DELETE
+]);
+```
+
+---
+
+### 📦 Fichiers Modifiés
+
+**Backend Models**:
+- ✅ `backend/src/models/DisciplineAvailability.js` (NOUVEAU)
+- ✅ `backend/src/models/index.js` (associations ajoutées)
+
+**Backend Services**:
+- ✅ `backend/src/services/DisciplineAvailabilityService.js` (NOUVEAU)
+- ✅ `backend/src/services/FigureService.js` (méthode `updateEtapes` ajoutée)
+
+**Backend Routes**:
+- ✅ `backend/src/routes/admin.js` (3 nouvelles routes discipline availability)
+
+**Backend Seed**:
+- ✅ `backend/seed/modules/seedDisciplineAvailability.js` (NOUVEAU)
+- ✅ `backend/seed/index.js` (intégré)
+
+**Documentation**:
+- ✅ `backend/docs/API_DOCUMENTATION.md` (nouvelles routes documentées)
+- ✅ `backend/docs/INTEGRATION_LOG.md` (cette entrée)
+
+---
+
+### ⚠️ Impact Frontend
+
+#### Pour l'intégration frontend (Gemini):
+
+**1. Page d'Administration Catalogue**
+- Créer `CatalogAdminPage` avec onglets: Figures | Disciplines | Settings
+- Scope selector pour master admin (choix école)
+- Tab "Disciplines Disponibles" avec toggles opt-in
+
+**2. DisciplineManager Component**
+- Liste toutes disciplines avec switch ON/OFF
+- Badge compteur disciplines actives
+- Appeler `GET /api/admin/ecoles/:ecoleId/disciplines?includeInactive=true`
+- Appeler `POST /api/admin/ecoles/:ecoleId/disciplines` pour toggle
+
+**3. FigureWizard Component** (Multi-Step Wizard)
+- Step 1: Infos générales (nom, discipline, difficulté)
+- Step 2: Étapes de progression (drag-and-drop avec react-beautiful-dnd)
+- Step 3: Exercices décomposés (autocomplete simple)
+- Step 4: Récapitulatif
+- Utiliser `FigureService.updateEtapes` pour sauvegarder les étapes
+
+**4. EtapeEditor Component** (Drag-and-Drop)
+- Installer `npm install react-beautiful-dnd` dans frontend/
+- Permettre réordonnement visuel des étapes
+- Gérer ordre automatiquement lors du drag-and-drop
+- Envoyer `etapes` avec champ `id` pour UPDATE, sans `id` pour CREATE
+
+**5. Permissions**
+- Master admin: Accès toutes écoles via scope selector
+- School admin: Accès automatique à son école (pas de selector)
+- Vérifier `req.user.role === 'admin'` pour afficher scope selector
+
+---
+
+### ✅ Tests Effectués
+
+**Database Reset & Seed**: ✅ Passé
+```bash
+npm run reset-and-seed
+```
+
+**Résultats**:
+- 6 enregistrements `DisciplineAvailability` créés (3 par école)
+- École Voltige: Jonglage, Acrobatie, Aérien actifs
+- École Académie: Acrobatie, Équilibre, Manipulation actifs
+- Associations Sequelize fonctionnent (include 'discipline', 'ecole')
+
+**Query de vérification**:
+```javascript
+const { DisciplineAvailability } = require('./src/models');
+await DisciplineAvailability.findAll({ include: ['discipline', 'ecole'] });
+// → Retourne 6 records avec données complètes
+```
+
+---
+
+### 🔄 Breaking Changes
+
+**AUCUN** - Les changements sont additionnels uniquement:
+- Nouveau modèle `DisciplineAvailability` (table `discipline_availability`)
+- Nouvelles routes sous `/api/admin/ecoles/:ecoleId/disciplines`
+- Nouvelle méthode `FigureService.updateEtapes` (optionnelle, ne remplace pas les existantes)
+
+Les routes existantes continuent de fonctionner sans modification.
+
+---
+
+### 📝 Notes Importantes
+
+**Système Opt-In**:
+- Par défaut, **toutes disciplines sont désactivées** pour une nouvelle école
+- L'école doit activement choisir les disciplines selon son équipement
+- Cela évite de montrer du contenu inaccessible aux élèves
+
+**Ordre d'affichage**:
+- Le champ `ordre` permet une personnalisation par école
+- Exemple: École A met "Jonglage" en premier, École B met "Aérien" en premier
+
+**Future Extension**:
+- Le champ `config` (JSON) permet d'ajouter des paramètres spécifiques
+- Exemple futur: seuils de niveau max, restrictions par badge, etc.
+
+---
+
+### 🚀 Prochaines Étapes pour Frontend
+
+**1. Installation Dépendances**:
+```bash
+cd frontend
+npm install react-beautiful-dnd
+```
+
+**2. Création Composants** (voir plan détaillé dans `C:\Users\Joseph\.claude\plans\mossy-inventing-thacker.md`):
+- `CatalogAdminPage.js`
+- `FigureManager.js`
+- `DisciplineManager.js`
+- `FigureWizard.js` (avec 4 steps)
+- `EtapeEditorStep.js` (drag-and-drop)
+- `ExerciceSelectionStep.js` (autocomplete)
+- `FigureInfoStep.js`
+- `ReviewStep.js`
+
+**3. Routing**:
+```jsx
+// frontend/src/App.js
+import CatalogAdminPage from './pages/admin/CatalogAdminPage';
+<Route path="/admin/catalog" element={<CatalogAdminPage />} />
+```
+
+**4. Thème Material-UI** (déjà configuré):
+- Primary: `#2979ff` (Blue Royal)
+- Secondary: `#ffab00` (Amber Gold)
+- Pattern: Stepper, Tabs, Drag-and-Drop
+
+---
+
 ## 📅 2025-12-29 - ✅ RÉSOLU: Erreur 500 API Suggestions (Conflit Alias)
 
 ### 👤 Émetteur

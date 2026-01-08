@@ -23,6 +23,7 @@ const AssignationGroupeProgramme = require('./AssignationGroupeProgramme');
 const ProgrammePartage = require('./ProgrammePartage');
 const ExerciceFigure = require('./ExerciceFigure');
 const SuggestionFigure = require('./SuggestionFigure');
+const DisciplineAvailability = require('./DisciplineAvailability');
 
 // ═══════════════════════════════════════════════════════════════════
 // Relations
@@ -38,6 +39,12 @@ Discipline.hasMany(Figure, { foreignKey: 'discipline_id' });
 Figure.belongsTo(Discipline, { foreignKey: 'discipline_id' });
 Utilisateur.hasMany(Figure, { foreignKey: 'createur_id', as: 'figuresCreees' });
 Figure.belongsTo(Utilisateur, { foreignKey: 'createur_id', as: 'createur' });
+
+// Discipline Availability (Per-School Configuration)
+Ecole.hasMany(DisciplineAvailability, { foreignKey: 'ecole_id', as: 'disciplinesDisponibles' });
+DisciplineAvailability.belongsTo(Ecole, { foreignKey: 'ecole_id', as: 'ecole' });
+Discipline.hasMany(DisciplineAvailability, { foreignKey: 'discipline_id', as: 'disponibilitesEcoles' });
+DisciplineAvailability.belongsTo(Discipline, { foreignKey: 'discipline_id', as: 'discipline' });
 
 // ──────────────────────────────────────────────────────────────────
 // EXERCICES DÉCOMPOSÉS (Relations Récursives)
@@ -207,5 +214,6 @@ module.exports = {
   AssignationGroupeProgramme,
   ProgrammePartage,
   ExerciceFigure,
-  SuggestionFigure
+  SuggestionFigure,
+  DisciplineAvailability
 };

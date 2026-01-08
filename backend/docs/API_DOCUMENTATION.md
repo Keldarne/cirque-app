@@ -1092,6 +1092,105 @@ Authorization: Bearer <token>
 
 ---
 
+### Discipline Availability (Per-School Configuration)
+
+#### GET `/api/admin/ecoles/:ecoleId/disciplines`
+**Accès**: Master admin ou school admin de l'école concernée
+**Description**: Liste les disciplines configurées pour une école (opt-in system)
+
+**Query Parameters**:
+- `includeInactive` (boolean, optional): Inclure les disciplines désactivées. Défaut: false
+
+**Réponse 200**:
+```json
+[
+  {
+    "id": 1,
+    "ecole_id": 1,
+    "discipline_id": 1,
+    "actif": true,
+    "ordre": 0,
+    "config": null,
+    "createdAt": "2026-01-08T23:14:24.000Z",
+    "updatedAt": "2026-01-08T23:14:24.000Z",
+    "discipline": {
+      "id": 1,
+      "nom": "Jonglage",
+      "description": "Art de manipuler des objets...",
+      "image_url": "https://..."
+    }
+  }
+]
+```
+
+**Notes**:
+- **Système opt-in**: Par défaut, toutes les disciplines sont désactivées pour une école
+- Les écoles activent uniquement les disciplines pour lesquelles elles disposent du matériel
+- `ordre`: Ordre d'affichage personnalisé pour cette école
+
+---
+
+#### POST `/api/admin/ecoles/:ecoleId/disciplines`
+**Accès**: Master admin ou school admin de l'école concernée
+**Description**: Activer ou désactiver une discipline pour une école
+
+**Body**:
+```json
+{
+  "discipline_id": 1,
+  "actif": true
+}
+```
+
+**Réponse 200**:
+```json
+{
+  "id": 1,
+  "ecole_id": 1,
+  "discipline_id": 1,
+  "actif": true,
+  "ordre": 0,
+  "config": null,
+  "createdAt": "2026-01-08T23:14:24.000Z",
+  "updatedAt": "2026-01-08T23:14:24.000Z"
+}
+```
+
+**Notes**:
+- Crée automatiquement un enregistrement si inexistant (`findOrCreate`)
+- Met à jour le statut `actif` si l'enregistrement existe déjà
+
+---
+
+#### PUT `/api/admin/ecoles/:ecoleId/disciplines/bulk`
+**Accès**: Master admin ou school admin de l'école concernée
+**Description**: Mise à jour en masse des disciplines d'une école
+
+**Body**:
+```json
+{
+  "disciplines": [
+    { "discipline_id": 1, "actif": true, "ordre": 0 },
+    { "discipline_id": 2, "actif": true, "ordre": 1 },
+    { "discipline_id": 3, "actif": false, "ordre": 2 }
+  ]
+}
+```
+
+**Réponse 200**:
+```json
+{
+  "message": "Disciplines mises à jour"
+}
+```
+
+**Notes**:
+- Utilise `upsert` pour créer ou mettre à jour chaque discipline
+- Permet de configurer l'ordre d'affichage en une seule requête
+- Utile pour synchroniser la configuration complète d'une école
+
+---
+
 ## Endpoints PARTAGÉS
 
 ### Tous les utilisateurs authentifiés
