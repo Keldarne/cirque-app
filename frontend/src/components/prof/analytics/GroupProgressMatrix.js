@@ -148,20 +148,29 @@ const GroupProgressMatrix = ({ students, figures, selectedGroup }) => {
                 >
                   <Box
                     sx={{
-                      writingMode: 'vertical-rl',
-                      transform: 'rotate(180deg)',
-                      textAlign: 'left',
-                      whiteSpace: 'nowrap',
-                      fontWeight: 'bold',
-                      fontSize: '0.75rem',
                       display: 'flex',
-                      alignItems: 'center',
-                      maxHeight: 140,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
+                      justifyContent: 'center',
+                      alignItems: 'flex-end',
+                      height: '100%',
+                      width: '100%'
                     }}
                   >
-                    {fig.nom}
+                    <Box
+                      component="span"
+                      sx={{
+                        writingMode: 'vertical-rl',
+                        transform: 'rotate(180deg)',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem',
+                        maxHeight: 140,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {fig.nom}
+                    </Box>
                   </Box>
                 </TableCell>
               ))}
