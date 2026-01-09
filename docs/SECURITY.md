@@ -200,8 +200,13 @@ const user = await Utilisateur.findByPk(id, {
 ### 6. Security Misconfiguration
 **Protection:**
 - `.env` pour secrets (pas committé)
-- CORS configuré
-- Helmet.js recommandé (TODO)
+- CORS configuré strictement (`http://localhost:3000` en dev)
+- ✅ **Helmet.js implémenté** ([backend/server.js:11-28](backend/server.js))
+  - Content-Security-Policy configuré
+  - X-Content-Type-Options: nosniff
+  - X-Frame-Options: DENY
+  - X-XSS-Protection activé
+  - Strict-Transport-Security (HSTS) activé
 
 ### 7. XSS (Cross-Site Scripting)
 **Protection:**

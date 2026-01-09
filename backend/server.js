@@ -1,11 +1,31 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const cron = require('node-cron'); // Import node-cron
 const MemoryDecayService = require('./src/services/MemoryDecayService'); // Import MemoryDecayService
 const SuggestionService = require('./src/services/SuggestionService'); // Import SuggestionService
 const app = express();
 const PORT = 4000;
+
+// Security Headers - Helmet.js
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for Material-UI
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'], // Allow images from HTTPS sources
+      connectSrc: ["'self'", 'http://localhost:*'], // Allow API calls to backend
+      fontSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'", 'https:'], // Allow video/audio from HTTPS
+      frameSrc: ["'none'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false, // Disable for dev compatibility
+  crossOriginResourcePolicy: { policy: 'cross-origin' } // Allow cross-origin requests in dev
+}));
 
 // Middleware CORS - Configuration pour développement
 app.use(cors({
