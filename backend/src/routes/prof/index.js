@@ -8,5 +8,6 @@ router.use('/statistiques', require('./statistiques'));
 router.use('/programmes', require('./programmes'));
 router.use('/dashboard', require('./dashboard'));
 router.use('/suggestions', require('./suggestions'));
+router.use('/validation', require('./validation'));
 
 module.exports = router;
