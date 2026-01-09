@@ -92,20 +92,35 @@ const FigureManager = () => {
 
   const fetchFigureDetails = async (id) => {
     try {
-      // Parallel fetch figure and etapes
-      const [figRes, etapesRes] = await Promise.all([
+      // Parallel fetch figure, etapes, and prerequisites
+      const [figRes, etapesRes, exercicesRes] = await Promise.all([
         api.get(`/api/figures/${id}`),
-        api.get(`/api/figures/${id}/etapes`)
+        api.get(`/api/figures/${id}/etapes`),
+        api.get(`/api/admin/figures/${id}/exercices`)
       ]);
       
       if (figRes.ok && etapesRes.ok) {
         const figData = await figRes.json();
         const etapesData = await etapesRes.json();
         
+        // Handle prerequisites if the request was successful
+        let prerequisIds = [];
+        let prerequisObjects = [];
+        
+        if (exercicesRes.ok) {
+          const exercicesData = await exercicesRes.json();
+          // The API returns { exercices: [...] } where each item has "exercice" (the figure details)
+          if (exercicesData.exercices) {
+            prerequisIds = exercicesData.exercices.map(ex => ex.exercice.id);
+            prerequisObjects = exercicesData.exercices.map(ex => ex.exercice);
+          }
+        }
+        
         const fullFigure = {
             ...figData.figure, 
-            etapes: etapesData
-            // prerequis: ... (If API supports it, add here)
+            etapes: etapesData,
+            prerequis: prerequisIds,
+            prerequisObjects: prerequisObjects
         };
         
         setSelectedFigure(fullFigure);
