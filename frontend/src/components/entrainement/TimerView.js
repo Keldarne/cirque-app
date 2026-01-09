@@ -11,17 +11,23 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Stack
+  Stack,
+  useTheme,
+  useMediaQuery,
+  Chip
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ReplayIcon from '@mui/icons-material/Replay';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import StarIcon from '@mui/icons-material/Star';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Durée par défaut en secondes (ex: 2 minutes)
+const MotionBox = motion.create(Box);
+
 const DEFAULT_DURATION = 120; 
 
 function TimerView({ etape, onResult, disabled, mode = 'timer' }) {
@@ -29,17 +35,16 @@ function TimerView({ etape, onResult, disabled, mode = 'timer' }) {
   const [isActive, setIsActive] = useState(false);
   const [showEvaluation, setShowEvaluation] = useState(false);
   const [initialDuration, setInitialDuration] = useState(DEFAULT_DURATION);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
-  // Référence pour l'intervalle
   const timerRef = useRef(null);
 
   const handleEvaluation = useCallback((success) => {
-    // Si success est null (mode timer simple), on considère ça comme une validation de durée uniquement
-    // typeSaisie = 'duree'
     if (success === null) {
       setShowEvaluation(false);
       onResult({
-        reussie: true, // Toujours réussi si on va au bout du timer en mode simple
+        reussie: true,
         typeSaisie: 'duree',
         score: null,
         dureeSecondes: initialDuration
@@ -47,7 +52,6 @@ function TimerView({ etape, onResult, disabled, mode = 'timer' }) {
       return;
     }
 
-    // Sinon c'est le mode combiné ou un score explicite
     const finalScore = (typeof success === 'number') ? success : 3;
     const finalType = 'evaluation_duree'; 
     const isSuccess = finalScore >= 2;
@@ -67,221 +71,218 @@ function TimerView({ etape, onResult, disabled, mode = 'timer' }) {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0) {
-      // Fin du timer
       setIsActive(false);
       clearInterval(timerRef.current);
-      playAlarm(); // Sonnerie (visuelle ou audio)
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
       
-      // Si mode combiné, on demande l'évaluation
       if (mode === 'combined') {
         setShowEvaluation(true);
       } else {
-        // Sinon (mode timer simple), on valide directement sans note
         handleEvaluation(null); 
       }
     }
-
     return () => clearInterval(timerRef.current);
   }, [isActive, timeLeft, mode, handleEvaluation]);
 
-  const toggleTimer = () => {
-    setIsActive(!isActive);
-  };
-
-  const resetTimer = () => {
-    setIsActive(false);
-    setTimeLeft(initialDuration);
-  };
-
+  const toggleTimer = () => setIsActive(!isActive);
+  const resetTimer = () => { setIsActive(false); setTimeLeft(initialDuration); };
   const adjustTime = (seconds) => {
     const newTime = Math.max(10, initialDuration + seconds);
     setInitialDuration(newTime);
     setTimeLeft(newTime);
   };
 
-  const playAlarm = () => {
-    // Simple vibration pattern si supporté
-    if (navigator.vibrate) {
-      navigator.vibrate([200, 100, 200]);
-    }
-  };
-
-  // Format MM:SS
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   const progress = ((initialDuration - timeLeft) / initialDuration) * 100;
+  const circleSize = isMobile ? 200 : 280;
 
   return (
-    <Card 
-      elevation={4} 
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        borderRadius: 4,
-        overflow: 'hidden',
-        maxWidth: 600,
-        mx: 'auto',
-        position: 'relative'
-      }}
-    >
-      <Box sx={{ p: 3, textAlign: 'center', bgcolor: mode === 'combined' ? 'warning.main' : 'primary.main', color: 'white' }}>
-        <Typography variant="h6" fontWeight="bold">
-          {etape.titre || etape.nom || `Étape ${etape.ordre}`}
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9 }}>
-          {mode === 'combined' ? 'Mode Combiné (Timer + Éval)' : 'Mode Chrono - Mains libres'}
-        </Typography>
-      </Box>
-
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 6 }}>
-        
-        {/* Cercle Timer */}
-        <Box sx={{ position: 'relative', display: 'inline-flex', mb: 4 }}>
-          <CircularProgress 
-            variant="determinate" 
-            value={100} 
-            size={240} 
-            sx={{ color: 'grey.200', position: 'absolute' }} 
-            thickness={2}
-          />
-          <CircularProgress 
-            variant="determinate" 
-            value={progress} 
-            size={240} 
-            thickness={2}
-            sx={{ 
-              color: isActive ? (mode === 'combined' ? 'warning.main' : 'primary.main') : 'text.secondary',
-              transition: 'all 0.5s linear' 
-            }}
-          />
-          <Box
-            sx={{
-              top: 0,
-              left: 0,
-              bottom: 0,
-              right: 0,
-              position: 'absolute',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'column'
-            }}
-          >
-            <Typography variant="h2" component="div" fontWeight="bold" color="text.primary">
-              {formatTime(timeLeft)}
+    <AnimatePresence mode="wait">
+      <MotionBox
+        key="timer-container"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        sx={{ width: '100%', maxWidth: 500, height: isMobile ? 'calc(100vh - 180px)' : 700 }}
+      >
+        <Card 
+          elevation={8} 
+          sx={{ 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            borderRadius: 6,
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            position: 'relative'
+          }}
+        >
+          {/* Header Info */}
+          <Box sx={{ 
+            p: 3, 
+            textAlign: 'center', 
+            background: mode === 'combined' ? 'linear-gradient(135deg, #ffa726 0%, #f57c00 100%)' : 'linear-gradient(135deg, #42a5f5 0%, #1976d2 100%)', 
+            color: 'white' 
+          }}>
+            <Typography variant="h6" fontWeight="800">
+              {etape.titre || etape.nom}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {isActive ? 'EN COURS' : 'PAUSE'}
+            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 'bold' }}>
+              {mode === 'combined' ? 'CHRONO + ÉVALUATION' : 'CHRONO MAIN LIBRE'}
             </Typography>
           </Box>
-        </Box>
 
-        {/* Contrôles */}
-        <Stack direction="row" spacing={3} alignItems="center">
-          <IconButton onClick={() => adjustTime(-30)} disabled={isActive}>
-            <RemoveIcon />
-          </IconButton>
-          
-          <Button
-            variant="contained"
-            size="large"
-            color={isActive ? "warning" : (mode === 'combined' ? "warning" : "primary")}
-            onClick={toggleTimer}
-            startIcon={isActive ? <PauseIcon /> : <PlayArrowIcon />}
-            sx={{ 
-              borderRadius: 50, 
-              px: 4, 
-              py: 2,
-              minWidth: 160,
-              fontSize: '1.2rem'
-            }}
-          >
-            {isActive ? "PAUSE" : "DÉMARRER"}
-          </Button>
+          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+            
+            {/* TIMER CIRCLE */}
+            <Box sx={{ position: 'relative', display: 'inline-flex', mb: 6 }}>
+              <CircularProgress 
+                variant="determinate" 
+                value={100} 
+                size={circleSize} 
+                sx={{ color: 'grey.100', position: 'absolute' }} 
+                thickness={1.5}
+              />
+              <CircularProgress 
+                variant="determinate" 
+                value={progress} 
+                size={circleSize} 
+                thickness={2}
+                sx={{ 
+                  color: isActive ? 'primary.main' : 'text.disabled',
+                  transition: 'all 0.5s linear',
+                  filter: 'drop-shadow(0px 0px 8px rgba(25, 118, 210, 0.2))'
+                }}
+              />
+              <Box
+                sx={{
+                  top: 0, left: 0, bottom: 0, right: 0,
+                  position: 'absolute',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'
+                }}
+              >
+                <Typography variant={isMobile ? "h2" : "h1"} fontWeight="900" color="text.primary" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {formatTime(timeLeft)}
+                </Typography>
+                <Chip 
+                  label={isActive ? 'ACTION' : 'PAUSE'} 
+                  size="small" 
+                  color={isActive ? 'success' : 'default'}
+                  sx={{ mt: 1, fontWeight: 'bold' }}
+                />
+              </Box>
+            </Box>
 
-          <IconButton onClick={() => adjustTime(30)} disabled={isActive}>
-            <AddIcon />
-          </IconButton>
-        </Stack>
-        
-        {!isActive && timeLeft !== initialDuration && (
-          <Button 
-            startIcon={<ReplayIcon />} 
-            onClick={resetTimer} 
-            sx={{ mt: 2 }} 
-            color="secondary"
-          >
-            Réinitialiser
-          </Button>
-        )}
+            {/* CONTROLS */}
+            <Stack direction="row" spacing={4} alignItems="center">
+              <IconButton 
+                onClick={() => adjustTime(-30)} 
+                disabled={isActive}
+                sx={{ border: '1px solid', borderColor: 'divider' }}
+              >
+                <RemoveIcon />
+              </IconButton>
+              
+              <MotionBox whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="contained"
+                  onClick={toggleTimer}
+                  sx={{ 
+                    borderRadius: '50%', 
+                    width: 80, height: 80,
+                    bgcolor: isActive ? 'error.main' : 'primary.main',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    '&:hover': { bgcolor: isActive ? 'error.dark' : 'primary.dark' }
+                  }}
+                >
+                  {isActive ? <PauseIcon sx={{ fontSize: 40 }} /> : <PlayArrowIcon sx={{ fontSize: 40 }} />}
+                </Button>
+              </MotionBox>
 
-      </CardContent>
+              <IconButton 
+                onClick={() => adjustTime(30)} 
+                disabled={isActive}
+                sx={{ border: '1px solid', borderColor: 'divider' }}
+              >
+                <AddIcon />
+              </IconButton>
+            </Stack>
+            
+            <AnimatePresence>
+              {!isActive && timeLeft !== initialDuration && (
+                <MotionBox
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <Button 
+                    variant="text"
+                    startIcon={<ReplayIcon />} 
+                    onClick={resetTimer} 
+                    sx={{ mt: 4, color: 'text.secondary' }} 
+                  >
+                    RÉINITIALISER
+                  </Button>
+                </MotionBox>
+              )}
+            </AnimatePresence>
 
-      {/* Modal d'évaluation fin de timer (Uniquement pour mode Combiné) */}
-      <Dialog 
-        open={showEvaluation} 
-        onClose={() => {}} // Empêcher fermeture au clic extérieur
-        PaperProps={{
-          sx: { borderRadius: 3, p: 1, textAlign: 'center' }
-        }}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 'bold' }}>
-          Session terminée !
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" paragraph>
-            Comment s'est passée cette session de pratique ?
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Cela validera l'étape dans votre progression.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 3, px: 2, flexDirection: 'column', gap: 1 }}>
-          <Button
-            fullWidth
-            variant="contained"
-            color="success"
-            size="large"
-            startIcon={<CheckCircleIcon />}
-            onClick={() => handleEvaluation(3)} // Score 3: Maîtrisé
-            sx={{ py: 1.5, borderRadius: 2 }}
-          >
-            Maîtrisé (Parfait)
-          </Button>
-          
-          <Button
-            fullWidth
-            variant="contained"
-            color="warning"
-            size="large"
-            startIcon={<RemoveIcon sx={{ transform: 'rotate(90deg)' }} />}
-            onClick={() => handleEvaluation(2)} // Score 2: Instable
-            sx={{ py: 1.5, borderRadius: 2, color: 'white' }}
-          >
-            Instable (Moyen)
-          </Button>
+          </CardContent>
+        </Card>
 
-          <Button
-            fullWidth
-            variant="outlined"
-            color="error"
-            size="large"
-            startIcon={<CancelIcon />}
-            onClick={() => handleEvaluation(1)} // Score 1: À revoir
-            sx={{ py: 1.5, borderRadius: 2 }}
-          >
-            À revoir (Échec)
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Card>
+        {/* Evaluation Dialog - Cleaner version */}
+        <Dialog 
+          open={showEvaluation} 
+          fullScreen={isMobile}
+          PaperProps={{ sx: { borderRadius: isMobile ? 0 : 6, p: 2 } }}
+        >
+          <DialogTitle sx={{ textAlign: 'center', pt: 4 }}>
+            <Typography variant="h4" fontWeight="900" gutterBottom>Session terminée !</Typography>
+            <Typography variant="body1" color="text.secondary">Bravo, vous avez tenu toute la durée.</Typography>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 4 }}>
+                Comment évaluez-vous votre technique ?
+              </Typography>
+              
+              <Stack spacing={2}>
+                <Button
+                  fullWidth size="large" variant="contained" color="success"
+                  startIcon={<CheckIcon />}
+                  onClick={() => handleEvaluation(3)}
+                  sx={{ py: 2, borderRadius: 3, fontWeight: 'bold' }}
+                >
+                  MAÎTRISÉ (PARFAIT)
+                </Button>
+                
+                <Button
+                  fullWidth size="large" variant="outlined" color="warning"
+                  startIcon={<StarIcon />}
+                  onClick={() => handleEvaluation(2)}
+                  sx={{ py: 2, borderRadius: 3, fontWeight: 'bold', borderWidth: 2 }}
+                >
+                  INSTABLE (MOYEN)
+                </Button>
+
+                <Button
+                  fullWidth size="large" variant="text" color="error"
+                  startIcon={<CloseIcon />}
+                  onClick={() => handleEvaluation(1)}
+                  sx={{ py: 2, borderRadius: 3, fontWeight: 'bold' }}
+                >
+                  À REVOIR (ÉCHEC)
+                </Button>
+              </Stack>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      </MotionBox>
+    </AnimatePresence>
   );
 }
 

@@ -29,10 +29,33 @@ app.use(helmet({
 
 // Middleware CORS - Configuration pour développement et réseau local
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://192.168.0.50:3000' // Accès réseau local
-  ],
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origin (comme Postman, curl, etc.)
+    if (!origin) return callback(null, true);
+
+    // Liste des patterns autorisés
+    const allowedPatterns = [
+      /^http:\/\/localhost:3000$/,
+      /^http:\/\/127\.0\.0\.1:3000$/,
+      /^http:\/\/backend:4000$/,  // Requêtes internes Docker
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:3000$/,  // Réseau local 192.168.x.x
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:4000$/,  // API backend réseau local
+      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/,  // Réseau local 10.x.x.x
+      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:4000$/,  // API backend 10.x.x.x
+      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/,  // Réseau local 172.16-31.x.x
+      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:4000$/  // API backend 172.16-31.x.x
+    ];
+
+    // Vérifier si l'origin correspond à un des patterns
+    const isAllowed = allowedPatterns.some(pattern => pattern.test(origin));
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS: Origin non autorisée: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true, // Permet l'envoi de cookies/credentials
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

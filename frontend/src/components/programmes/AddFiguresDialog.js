@@ -13,7 +13,9 @@ import {
   Typography,
   IconButton,
   Box,
-  Chip
+  Chip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { api } from '../../utils/api';
@@ -44,6 +46,8 @@ function AddFiguresDialog({
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const loadFigures = useCallback(async () => {
     setLoading(true);
@@ -116,7 +120,7 @@ function AddFiguresDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       {/* Header */}
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">

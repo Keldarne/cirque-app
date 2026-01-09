@@ -25,7 +25,9 @@ import {
   ListItemSecondaryAction,
   Avatar,
   Autocomplete,
-  Divider
+  Divider,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -62,6 +64,8 @@ function GroupesPage() {
   const [nouveauGroupe, setNouveauGroupe] = useState({ nom: '', description: '', couleur: '#1976d2' });
   const [eleveAAjouter, setEleveAAjouter] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     chargerDonnees();
@@ -309,7 +313,7 @@ function GroupesPage() {
       )}
 
       {/* Dialog création groupe */}
-      <Dialog open={dialogCreer} onClose={() => setDialogCreer(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogCreer} onClose={() => setDialogCreer(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle>
           <Box display="flex" alignItems="center">
             <GroupIcon sx={{ mr: 1 }} />
@@ -390,6 +394,7 @@ function GroupesPage() {
         }}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobile}
       >
         {groupeSelectionne && (
           <>
@@ -495,7 +500,7 @@ function GroupesPage() {
       </Dialog>
 
       {/* Dialog ajout membre */}
-      <Dialog open={dialogAjouterMembre} onClose={() => setDialogAjouterMembre(false)} maxWidth="xs" fullWidth>
+      <Dialog open={dialogAjouterMembre} onClose={() => setDialogAjouterMembre(false)} maxWidth="xs" fullWidth fullScreen={isMobile}>
         <DialogTitle>Ajouter un élève</DialogTitle>
         <DialogContent>
           <Autocomplete

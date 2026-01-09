@@ -9,13 +9,17 @@ import {
   Box,
   Typography,
   IconButton,
-  Alert
+  Alert,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 
 function PersonalProgrammeDialog({ open, onClose, onSave, initialData = null }) {
   const [formData, setFormData] = useState({ nom: '', description: '' });
   const [error, setError] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (open) {
@@ -45,7 +49,7 @@ function PersonalProgrammeDialog({ open, onClose, onSave, initialData = null }) 
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">

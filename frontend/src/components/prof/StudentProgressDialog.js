@@ -17,7 +17,9 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  IconButton
+  IconButton,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { api } from '../../utils/api';
@@ -44,6 +46,8 @@ function StudentProgressDialog({
   const [progressions, setProgressions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const loadStudentProgressions = useCallback(async () => {
     setLoading(true);
@@ -81,7 +85,7 @@ function StudentProgressDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth fullScreen={isMobile}>
       {/* Header */}
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="start">

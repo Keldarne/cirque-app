@@ -1,8 +1,20 @@
 # Accès Réseau Local - Guide Rapide
 
-## ✅ Configuration Effectuée
+## ✅ Configuration Effectuée (Mise à jour 2026-01-09)
 
 Le frontend Cirque App est maintenant accessible depuis **tout le réseau local** !
+
+### 🆕 Correctifs Appliqués
+
+1. **CORS Dynamique** (✅) : Le backend accepte automatiquement toutes les IPs du réseau local (192.168.x.x, 10.x.x.x, etc.)
+2. **Proxy Frontend Corrigé** (✅) : Pointe vers localhost:4000 en dev local
+3. **Script Auto-Configuration** (✅) : Détecte votre IP et configure automatiquement les fichiers
+
+**Commandes rapides** :
+```bash
+npm run setup:network     # Auto-configure pour réseau local
+npm run setup:localhost   # Configure pour dev local uniquement
+```
 
 ---
 
@@ -47,51 +59,45 @@ Adresse IPv4. . . . . . . . . . . . . .: 192.168.0.50
 
 ## 🚀 Démarrage
 
-### ⚠️ Configuration Préalable (IMPORTANT)
+### 🎯 Configuration Automatique (RECOMMANDÉ)
 
-**Avant de démarrer**, modifiez 2 fichiers avec VOTRE IP locale :
+**Plus besoin de modifier manuellement les fichiers !**
 
-1. **`docker-compose.yml` ligne 66** :
-```yaml
-# Remplacer 192.168.0.50 par VOTRE IP locale
-REACT_APP_API_URL: http://192.168.0.50:4000  # ← Modifier ici
-```
+Utilisez le script de configuration automatique :
 
-2. **`backend/server.js` lignes 32-35** :
-```javascript
-origin: [
-  'http://localhost:3000',
-  'http://192.168.0.50:3000' // ← Modifier ici avec VOTRE IP
-],
-```
-
-**Trouver votre IP** : `ipconfig | findstr "IPv4"` (Windows)
-
-### Avec Docker (Recommandé)
 ```bash
-# 1. Modifier les 2 fichiers avec votre IP locale (voir ci-dessus)
+# 1. Détecter votre IP et configurer automatiquement
+npm run setup:network
 
-# 2. Démarrer tous les services
+# 2. Démarrer l'application
 docker-compose up -d --build
-
-# 3. Voir les logs
-docker-compose logs -f
 ```
 
-Le frontend sera accessible sur :
-- http://localhost:3000 (PC hôte)
-- http://192.168.0.50:3000 (réseau local)
+Le script va :
+- ✅ Détecter votre IP locale automatiquement
+- ✅ Mettre à jour `docker-compose.yml`
+- ✅ Mettre à jour `frontend/.env.local`
+- ✅ Afficher les URLs d'accès
 
-### Sans Docker (Dev Local)
+### ⚙️ Configuration Manuelle (Alternative)
+
+Si vous préférez configurer manuellement :
+
+1. **Trouver votre IP locale** :
+   ```bash
+   ipconfig | findstr "IPv4"  # Windows
+   ```
+
+2. **Modifier `docker-compose.yml` ligne 66** :
+   ```yaml
+   REACT_APP_API_URL: http://VOTRE_IP:4000
+   ```
+
+3. **Note** : Le CORS backend est maintenant dynamique, plus besoin de modifier `backend/server.js` !
+
+### Voir les Logs
 ```bash
-# Frontend
-cd frontend
-npm start
-# Frontend écoute automatiquement sur 0.0.0.0:3000
-
-# Backend (autre terminal)
-cd backend
-npm run reset-and-seed && npm run dev
+docker-compose logs -f frontend backend
 ```
 
 ---
@@ -165,18 +171,52 @@ En production, utilisez :
 
 ## 🐛 Dépannage
 
-### Frontend inaccessible depuis autre appareil
+### Problème : Erreurs CORS
 
+**Symptôme** : Console affiche "blocked by CORS policy"
+
+**Solution** :
+```bash
+# 1. Vérifier que le backend a redémarré
+docker-compose restart backend
+
+# 2. Vérifier les logs
+docker-compose logs backend --tail=20
+
+# 3. Le CORS est maintenant dynamique, devrait fonctionner avec toute IP locale
+```
+
+### Problème : Données ne S'affichent Pas
+
+**Symptôme** : Page blanche ou spinners infinis
+
+**Solution** :
+```bash
+# 1. Re-exécuter la configuration
+npm run setup:network
+
+# 2. Redémarrer frontend
+docker-compose restart frontend
+
+# 3. Vérifier la configuration
+cat frontend/.env.local | grep REACT_APP_API_URL
+# Devrait afficher : REACT_APP_API_URL=http://VOTRE_IP:4000
+```
+
+### Problème : Frontend Inaccessible depuis Autre Appareil
+
+**Solutions** :
 1. **Vérifier IP locale** : `ipconfig` (Windows) ou `ifconfig` (Mac/Linux)
-2. **Vérifier pare-feu** : Autoriser ports 3000 et 4000
+2. **Vérifier pare-feu** : Autoriser ports 3000 et 4000 (voir section Pare-feu ci-dessus)
 3. **Vérifier réseau** : Même Wi-Fi sur tous les appareils
-4. **Redémarrer services** : `docker-compose restart frontend`
+4. **Tester connectivité** : Depuis mobile, accéder à `http://VOTRE_IP:4000/api/disciplines`
 
-### Backend API ne répond pas
+### Guide de Test Complet
 
-Le backend doit être accessible depuis le frontend :
-- Vérifier `REACT_APP_API_URL` dans `.env.local`
-- Pour accès mobile, utiliser IP locale : `http://192.168.0.50:4000`
+Voir **[docs/RESEAU_LOCAL_TESTS.md](docs/RESEAU_LOCAL_TESTS.md)** pour :
+- ✅ Checklist de validation
+- 🧪 Tests pas-à-pas
+- 🔍 Diagnostic détaillé
 
 ---
 

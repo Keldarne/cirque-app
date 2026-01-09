@@ -18,7 +18,9 @@ import {
   Chip,
   Typography,
   TextField,
-  InputAdornment
+  InputAdornment,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupIcon from '@mui/icons-material/Group';
@@ -47,6 +49,8 @@ function AssignProgramModalV2({ open, onClose, programme, onSuccess }) {
   const [error, setError] = useState(null);
   const [searchEleve, setSearchEleve] = useState('');
   const [searchGroupe, setSearchGroupe] = useState('');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (!open || !programme) return;
@@ -213,7 +217,7 @@ function AssignProgramModalV2({ open, onClose, programme, onSuccess }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
       <DialogTitle>
         Assigner le programme: {programme?.nom}
       </DialogTitle>

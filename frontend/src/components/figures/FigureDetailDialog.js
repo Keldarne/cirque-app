@@ -10,7 +10,9 @@ import {
   Typography,
   Tabs,
   Tab,
-  IconButton
+  IconButton,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { Close as CloseIcon, FitnessCenter as FitnessCenterIcon } from '@mui/icons-material';
 import EtapesProgressionList from './EtapesProgressionList';
@@ -40,6 +42,8 @@ function FigureDetailDialog({
   editable = false
 }) {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabIndex, setTabIndex] = useState(0);
 
   if (!figure) return null;
@@ -72,7 +76,7 @@ function FigureDetailDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
       {/* Header */}
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="start">

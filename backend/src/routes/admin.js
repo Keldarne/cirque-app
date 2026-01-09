@@ -60,16 +60,16 @@ router.get('/figures', verifierToken, estAdmin, async (req, res) => {
 
 /**
  * POST /admin/figures
- * Crée une nouvelle figure avec ses étapes de progression
+ * Crée une nouvelle figure avec ses étapes de progression et ses prérequis
  */
 router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) => {
   try {
-    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id } = req.body;
+    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis } = req.body;
 
     if (!nom || !discipline_id) {
       return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
     }
-    
+
     const figureData = {
       nom, descriptif, image_url, video_url, discipline_id,
       createur_id: req.user.id
@@ -81,7 +81,8 @@ router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) =
       figureData.ecole_id = ecole_id || null;
     }
 
-    const figureComplete = await FigureService.createFigureWithEtapes(figureData, etapes);
+    // Passer les prérequis au service (tableau d'IDs)
+    const figureComplete = await FigureService.createFigureWithEtapes(figureData, etapes, prerequis);
 
     res.status(201).json(figureComplete);
   } catch (err) {
@@ -94,13 +95,13 @@ router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) =
 
 /**
  * PUT /admin/figures/:id
- * Modifie une figure existante et ses étapes
+ * Modifie une figure existante, ses étapes et ses prérequis
  */
 router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigure, async (req, res) => {
   try {
     // Le middleware peutModifierFigure a déjà vérifié les droits et attaché la figure
     const figure = req.figure; // The Figure instance is passed from the middleware
-    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id } = req.body;
+    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis } = req.body;
 
     if (!nom || !discipline_id) {
       return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
@@ -115,11 +116,70 @@ router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigu
       updateData.ecole_id = ecole_id;
     }
 
-    const figureComplete = await FigureService.updateFigureWithEtapes(figure, updateData, etapes);
+    // Passer les prérequis au service (tableau d'IDs, ou undefined si non fourni)
+    const figureComplete = await FigureService.updateFigureWithEtapes(figure, updateData, etapes, prerequis);
 
     res.json(figureComplete);
   } catch (err) {
     console.error('Erreur PUT /admin/figures/:id:', err);
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+/**
+ * GET /admin/figures/:id/exercices
+ * Récupère les exercices (prérequis) d'une figure
+ */
+router.get('/figures/:id/exercices', verifierToken, async (req, res) => {
+  try {
+    const figureId = parseInt(req.params.id);
+    const { ExerciceFigure } = require('../models');
+
+    if (isNaN(figureId)) {
+      return res.status(400).json({ error: 'ID de figure invalide' });
+    }
+
+    // Vérifier que la figure existe
+    const figure = await Figure.findByPk(figureId, { attributes: ['id', 'nom'] });
+    if (!figure) {
+      return res.status(404).json({ error: 'Figure non trouvée' });
+    }
+
+    // Récupérer les exercices avec les détails des figures prérequises
+    const exercices = await ExerciceFigure.findAll({
+      where: { figure_id: figureId },
+      include: [{
+        model: Figure,
+        as: 'exerciceFigure',
+        attributes: ['id', 'nom', 'descriptif', 'difficulty_level', 'type', 'discipline_id']
+      }],
+      order: [['ordre', 'ASC']]
+    });
+
+    res.json({
+      figure: {
+        id: figure.id,
+        nom: figure.nom
+      },
+      exercices: exercices.map(ex => ({
+        id: ex.id,
+        ordre: ex.ordre,
+        est_requis: ex.est_requis,
+        poids: ex.poids,
+        exercice: {
+          id: ex.exerciceFigure.id,
+          nom: ex.exerciceFigure.nom,
+          descriptif: ex.exerciceFigure.descriptif,
+          difficulty_level: ex.exerciceFigure.difficulty_level,
+          type: ex.exerciceFigure.type,
+          discipline_id: ex.exerciceFigure.discipline_id
+        }
+      })),
+      count: exercices.length
+    });
+
+  } catch (err) {
+    console.error('Erreur GET /admin/figures/:id/exercices:', err);
     res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 });

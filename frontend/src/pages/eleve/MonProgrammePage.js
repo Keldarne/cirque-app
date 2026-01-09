@@ -293,7 +293,7 @@ function MonProgrammePage() {
   ];
 
   return (
-    <Container sx={{ mt: { xs: 2, md: 4 }, mb: 4 }}>
+    <Container sx={{ mt: { xs: 2, md: 4 }, mb: 4, px: { xs: 1, sm: 2 } }}>
       {/* En-tête */}
       <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'center' }} mb={3} gap={2}>
         <Typography variant="h3" sx={{ fontSize: { xs: '1.75rem', md: '2.125rem' }, fontWeight: 'bold' }}>
@@ -339,6 +339,7 @@ function MonProgrammePage() {
 
       {/* Progression */}
       <ProgressionGlobale
+        progressPercent={stats.percentage}
         figuresValidees={stats.validated}
         figuresTotal={stats.total}
         disciplinesCount={Object.keys(figuresParDiscipline).length}

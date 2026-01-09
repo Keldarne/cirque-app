@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Box, Typography } from '@mui/material';
+import { Paper, Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { TrendingUp as TrendingUpIcon } from '@mui/icons-material';
 import ProgressBar from '../common/ProgressBar';
 
@@ -22,44 +22,56 @@ function ProgressionGlobale({
   variant = 'summary',
   sx = {}
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <Paper
-      elevation={3}
+      elevation={isMobile ? 1 : 3}
       sx={{
-        p: 3,
-        mb: 4,
+        p: isMobile ? 2 : 3,
+        mb: isMobile ? 2 : 4,
         bgcolor: 'primary.light',
         color: 'primary.contrastText',
+        borderRadius: isMobile ? 2 : 3,
         ...sx
       }}
     >
-      <Box display="flex" alignItems="center" gap={2} mb={2}>
-        <TrendingUpIcon sx={{ fontSize: 40 }} />
+      <Box display="flex" alignItems="center" gap={isMobile ? 1 : 2} mb={isMobile ? 1 : 2}>
+        <TrendingUpIcon sx={{ fontSize: isMobile ? 30 : 40 }} />
         <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h5" gutterBottom>
-            🎯 Progression Globale
+          <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 'bold' }}>
+            🎯 {isMobile ? "Progression" : "Progression Globale"}
           </Typography>
-          {variant === 'detailed' && (
+          {variant === 'detailed' && !isMobile && (
             <Typography variant="body2">
-              Moyenne de progression sur {disciplinesCount} discipline{disciplinesCount > 1 ? 's' : ''} active{disciplinesCount > 1 ? 's' : ''}
+              Moyenne sur {disciplinesCount} discipline{disciplinesCount > 1 ? 's' : ''}
             </Typography>
           )}
         </Box>
-        <Typography variant="h2" sx={{ fontWeight: 'bold', fontSize: { xs: '2.5rem', md: '3.75rem' } }}>
+        <Typography 
+          variant="h2" 
+          sx={{ 
+            fontWeight: 'bold', 
+            fontSize: isMobile ? '1.75rem' : { xs: '2.5rem', md: '3.75rem' },
+            lineHeight: 1
+          }}
+        >
           {Math.round(progressPercent)}%
         </Typography>
       </Box>
 
       <ProgressBar
         value={progressPercent}
-        size="large"
+        size={isMobile ? "medium" : "large"}
         color="success"
         showPercentage={false}
       />
 
       {variant === 'detailed' && (
-        <Typography variant="body2" mt={2}>
+        <Typography variant="caption" display="block" mt={1} sx={{ opacity: 0.9 }}>
           {figuresValidees} figure{figuresValidees > 1 ? 's' : ''} validée{figuresValidees > 1 ? 's' : ''} / {figuresTotal} total
+          {isMobile && ` • ${disciplinesCount} disc.`}
         </Typography>
       )}
     </Paper>

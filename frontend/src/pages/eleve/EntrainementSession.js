@@ -10,7 +10,8 @@ import {
   CircularProgress,
   Alert,
   useMediaQuery,
-  useTheme
+  useTheme,
+  LinearProgress
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import confetti from 'canvas-confetti';
@@ -38,7 +39,6 @@ function EntrainementSession() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Récupérer le mode depuis l'état de navigation (par défaut 'focus')
   const mode = location.state?.mode || 'focus';
 
   const {
@@ -59,35 +59,19 @@ function EntrainementSession() {
   const [showSummary, setShowSummary] = useState(false);
   const [sessionSummary, setSessionSummary] = useState(null);
 
-  // Démarrer la session au montage
   useEffect(() => {
     if (figureId) {
       startSession(figureId);
     }
   }, [figureId, startSession]);
 
-  // Gérer le résultat d'une étape (pour tous les modes)
   const handleResult = async (resultData) => {
     if (processing || protectionDelay) return;
-
     setProcessing(true);
     setProtectionDelay(true);
-    
-    // Désactiver temporairement les inputs pour éviter double-clic
     setTimeout(() => setProtectionDelay(false), 1000);
     
-    // Normalisation des données reçues des composants
-    // FocusView et TimerView renvoient maintenant un objet complet { reussie, typeSaisie, score, dureeSecondes }
-    // Ancienne compatibilité (si appel direct avec booléen)
-    let payload = {};
-    
-    if (typeof resultData === 'boolean') {
-        payload = { reussie: resultData, typeSaisie: 'binaire' };
-    } else {
-        payload = resultData;
-    }
-
-    // Enregistrer la tentative
+    let payload = typeof resultData === 'boolean' ? { reussie: resultData, typeSaisie: 'binaire' } : resultData;
     const result = await recordTentative(payload);
 
     if (!result.success) {
@@ -95,47 +79,35 @@ function EntrainementSession() {
       return;
     }
 
-    // Gestion de l'idempotence (si le backend le signale)
     if (result.updatedProgression?.idempotent) {
-        console.log("Tentative ignorée (doublon détecté)");
-        // On ne joue pas l'animation ni ne passe à la suite si c'est un doublon strict
-        // Mais on débloque l'interface
         setProcessing(false);
         return; 
     }
 
-    // Animation de célébration si réussite
     if (payload.reussie) {
       confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.8 },
+        particleCount: 40,
+        spread: 50,
+        origin: { y: 0.7 },
         colors: ['#4CAF50', '#8BC34A', '#CDDC39']
       });
     }
 
-    // Délai pour transition
     setTimeout(() => {
       if (result.isLastEtape) {
-        // Fin de session
         const summary = endSession();
         setSessionSummary(summary);
         setShowSummary(true);
       } else {
-        // Passer à l'étape suivante
         nextEtape();
       }
       setProcessing(false);
-    }, 300);
+    }, 400);
   };
 
-  // Retour en arrière avec confirmation
   const handleBack = () => {
     if (session) {
-      const confirmed = window.confirm(
-        'Êtes-vous sûr de vouloir quitter? Votre progression sera perdue.'
-      );
-      if (confirmed) {
+      if (window.confirm('Quitter la session ? Votre progression actuelle ne sera pas sauvegardée.')) {
         navigate(-1);
       }
     } else {
@@ -143,16 +115,12 @@ function EntrainementSession() {
     }
   };
 
-  // Refaire la session
   const handleRetry = () => {
     setShowSummary(false);
     setSessionSummary(null);
-    if (figureId) {
-      startSession(figureId);
-    }
+    if (figureId) startSession(figureId);
   };
 
-  // Fermer le résumé et retourner
   const handleCloseSummary = () => {
     setShowSummary(false);
     navigate(-1);
@@ -165,77 +133,79 @@ function EntrainementSession() {
     <Box
       sx={{
         minHeight: '100vh',
-        bgcolor: 'background.default',
+        bgcolor: '#f8f9fa',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        overflow: 'hidden'
       }}
     >
-      {/* Header */}
-      <AppBar position="sticky" color="default" elevation={1}>
-        <Toolbar>
-          <IconButton edge="start" onClick={handleBack} sx={{ mr: 2 }}>
+      {/* Immersive Header */}
+      <AppBar 
+        position="static" 
+        color="transparent" 
+        elevation={0} 
+        sx={{ 
+          bgcolor: 'white', 
+          borderBottom: '1px solid', 
+          borderColor: 'divider' 
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <IconButton edge="start" onClick={handleBack}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            {mode === 'combined' ? 'Mode Combiné' : (mode === 'timer' ? 'Mode Chrono' : 'Mode Focus')}
-          </Typography>
+          
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="subtitle2" fontWeight="bold" sx={{ opacity: 0.6, letterSpacing: 1 }}>
+              {mode.toUpperCase()}
+            </Typography>
+            <Typography variant="body2" fontWeight="900" color="primary">
+              {stats?.progress.current || 0} / {stats?.progress.total || 0}
+            </Typography>
+          </Box>
+
+          <Box sx={{ width: 48 }} /> {/* Spacer */}
         </Toolbar>
+        
+        {/* Progress bar at the very top of the app bar */}
+        <LinearProgress 
+          variant="determinate" 
+          value={stats?.progress.percent || 0} 
+          sx={{ height: 4, bgcolor: 'rgba(0,0,0,0.05)' }}
+        />
       </AppBar>
 
-      {/* Contenu principal */}
-      <Container
-        maxWidth="md"
+      {/* Main content area */}
+      <Box
         sx={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          py: 3,
-          pb: isMobile ? 10 : 3
+          justifyContent: 'center',
+          alignItems: 'center',
+          p: isMobile ? 2 : 4,
+          overflowY: 'auto'
         }}
       >
-        {/* Loading */}
-        {loading && (
-          <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
-            <CircularProgress size={60} />
+        {loading ? (
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress size={60} thickness={4} />
+            <Typography sx={{ mt: 2, fontWeight: 'bold', opacity: 0.5 }}>PRÉPARATION...</Typography>
           </Box>
-        )}
-
-        {/* Error */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Session active */}
-        {session && currentEtape && stats && (
-          <>
-            {/* Stats (desktop uniquement) */}
-            {!isMobile && (
-              <SessionStats
-                stats={stats}
-                startTime={session.stats.startTime}
-                compact={false}
-              />
-            )}
-
-            {/* Zone principale d'entraînement */}
-            <Box
-              sx={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: 400
-              }}
-            >
+        ) : error ? (
+          <Alert severity="error" variant="filled" sx={{ borderRadius: 4 }}>{error}</Alert>
+        ) : (
+          session && currentEtape && (
+            <Box sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               {mode === 'timer' || mode === 'combined' ? (
                 <TimerView
                   key={currentEtape.id}
                   etape={currentEtape}
                   onResult={handleResult}
                   disabled={processing || protectionDelay}
-                  mode={mode} // Pass 'timer' or 'combined'
+                  mode={mode}
                 />
               ) : (
                 <FocusView
@@ -246,24 +216,12 @@ function EntrainementSession() {
                 />
               )}
             </Box>
-
-            {/* Message progression */}
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Étape {stats.progress.current} sur {stats.progress.total}
-              </Typography>
-              {isLastEtape && (
-                <Typography variant="body2" color="primary" fontWeight={600} sx={{ mt: 1 }}>
-                  Dernière étape!
-                </Typography>
-              )}
-            </Box>
-          </>
+          )
         )}
-      </Container>
+      </Box>
 
-      {/* Bottom stats bar (mobile uniquement) */}
-      {isMobile && session && stats && (
+      {/* Real-time stats footer (Mobile only) */}
+      {isMobile && session && stats && !showSummary && (
         <SessionStats
           stats={stats}
           startTime={session.stats.startTime}
@@ -271,7 +229,17 @@ function EntrainementSession() {
         />
       )}
 
-      {/* Modal résumé fin de session */}
+      {/* Stats side-panel or header (Desktop only) */}
+      {!isMobile && session && stats && !showSummary && (
+        <Box sx={{ position: 'absolute', top: 100, right: 40, width: 280 }}>
+          <SessionStats
+            stats={stats}
+            startTime={session.stats.startTime}
+            compact={false}
+          />
+        </Box>
+      )}
+
       <SessionSummary
         open={showSummary}
         onClose={handleCloseSummary}

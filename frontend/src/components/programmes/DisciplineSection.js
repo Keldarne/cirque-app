@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Box, Typography, Button, Divider, Grid, Chip } from '@mui/material';
+import { Paper, Box, Typography, Button, Divider, Grid, Chip, useMediaQuery, useTheme } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import FigureCard from '../common/FigureCard';
 import ProgressBar from '../common/ProgressBar';
@@ -33,6 +33,9 @@ function DisciplineSection({
   showProgress = true,
   sx = {}
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   // Calculer progression de la discipline
   const calculateDisciplineProgress = () => {
     if (figures.length === 0) return 0;
@@ -51,23 +54,25 @@ function DisciplineSection({
   }).length;
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3, ...sx }}>
+    <Paper elevation={isMobile ? 1 : 3} sx={{ p: isMobile ? 1.5 : 3, mb: 3, ...sx }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Box display="flex" alignItems="center" gap={2}>
-          <Typography variant="h5">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={1}>
+        <Box display="flex" alignItems="center" gap={isMobile ? 1 : 2}>
+          <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 'bold' }}>
             📚 {disciplineNom}
           </Typography>
           <Chip
-            label={`${figures.length} figure${figures.length > 1 ? 's' : ''}`}
+            label={`${figures.length} fig.`}
             color="primary"
-            sx={{ fontSize: '0.875rem' }}
+            size="small"
+            sx={{ fontSize: '0.75rem' }}
           />
           {showProgress && (
             <Chip
               label={`${disciplineProgress}%`}
               color={disciplineProgress === 100 ? 'success' : disciplineProgress >= 50 ? 'primary' : 'default'}
-              sx={{ fontSize: '0.875rem' }}
+              size="small"
+              sx={{ fontSize: '0.75rem' }}
             />
           )}
         </Box>
@@ -80,23 +85,23 @@ function DisciplineSection({
             onClick={onAddFigures}
             variant="outlined"
           >
-            Ajouter des figures
+            {isMobile ? "Ajouter" : "Ajouter des figures"}
           </Button>
         )}
       </Box>
 
       {/* Barre de progression de la discipline */}
       {showProgress && (
-        <Box mb={3}>
+        <Box mb={isMobile ? 2 : 3}>
           <ProgressBar
             value={disciplineProgress}
-            label={`${validatedCount}/${figures.length} validées`}
-            size="medium"
+            label={isMobile ? `${validatedCount}/${figures.length}` : `${validatedCount}/${figures.length} validées`}
+            size={isMobile ? "small" : "medium"}
           />
         </Box>
       )}
 
-      <Divider sx={{ mb: 3 }} />
+      <Divider sx={{ mb: isMobile ? 2 : 3 }} />
 
       {/* Grid de FigureCards */}
       {figures.length === 0 ? (
@@ -104,7 +109,7 @@ function DisciplineSection({
           Aucune figure dans cette discipline
         </Typography>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           {figures.map((figureData, index) => {
             // Transform API data structure to match FigureCard expectations
             const figureId = figureData.figure_id || figureData.id;
@@ -159,7 +164,7 @@ function DisciplineSection({
               // Bouton retirer
               if (onRemoveFigure) {
                 actions.push({
-                  label: '❌',
+                  label: isMobile ? 'Suppr.' : '❌',
                   onClick: () => onRemoveFigure(figureId),
                   variant: 'text',
                   color: 'error'
@@ -168,7 +173,7 @@ function DisciplineSection({
             }
 
             return (
-              <Grid item xs={12} sm={6} md={4} key={figureId}>
+              <Grid item xs={12} sm="auto" md="auto" key={figureId}>
                 <FigureCard
                   figure={figure}
                   progression={progression}

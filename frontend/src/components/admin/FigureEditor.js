@@ -15,7 +15,9 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Snackbar
+  Snackbar,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { api } from '../../utils/api';
@@ -26,6 +28,8 @@ import { useRefresh } from '../../contexts/RefreshContext';
 function FigureEditor({ scopedEcoleId = null }) {
   const { user } = useAuth();
   const { refreshKey, triggerRefresh } = useRefresh(); // Utiliser le contexte de rafraîchissement
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [figures, setFigures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -145,7 +149,7 @@ function FigureEditor({ scopedEcoleId = null }) {
         </TableContainer>
       </Paper>
       
-      <Dialog open={isModalOpen} onClose={handleCloseModal} maxWidth="md" fullWidth>
+      <Dialog open={isModalOpen} onClose={handleCloseModal} maxWidth="md" fullWidth fullScreen={isMobile}>
         <DialogTitle>{editingFigure ? 'Modifier la Figure' : 'Ajouter une Figure'}</DialogTitle>
         <DialogContent>
           <FigureForm 

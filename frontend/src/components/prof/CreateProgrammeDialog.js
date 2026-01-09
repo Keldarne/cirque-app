@@ -16,7 +16,9 @@ import {
   Box,
   CircularProgress,
   Alert,
-  Chip
+  Chip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { useCreateProgramme, useFigures } from '../../hooks/useProgrammes';
 
@@ -25,6 +27,8 @@ function CreateProgrammeDialog({ open, onClose, onSuccess }) {
   const [description, setDescription] = useState('');
   const [figureIds, setFigureIds] = useState([]);
   const [estModele, setEstModele] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const { createProgramme, loading: creating } = useCreateProgramme();
   const { figures, loading: loadingFigures } = useFigures();
@@ -78,7 +82,7 @@ function CreateProgrammeDialog({ open, onClose, onSuccess }) {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMobile}>
       <DialogTitle>Créer un Programme</DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 1 }}>

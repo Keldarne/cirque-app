@@ -1,20 +1,22 @@
-const { Figure, EtapeProgression, Discipline } = require('../models');
+const { Figure, EtapeProgression, Discipline, ExerciceFigure } = require('../models');
 const sequelize = require('../../db');
 const { Op } = require('sequelize');
 
 class FigureService {
 
   /**
-   * Crée une nouvelle figure avec ses étapes.
+   * Crée une nouvelle figure avec ses étapes et ses prérequis.
    * @param {Object} figureData - Données de la figure (nom, descriptif, image_url, video_url, discipline_id, createur_id, ecole_id)
    * @param {Array<Object>} etapesData - Données des étapes associées à la figure.
+   * @param {Array<number>} prerequisIds - IDs des figures prérequises (optionnel)
    * @returns {Promise<Object>} La figure créée avec ses étapes.
    */
-  static async createFigureWithEtapes(figureData, etapesData) {
+  static async createFigureWithEtapes(figureData, etapesData, prerequisIds = null) {
     const transaction = await sequelize.transaction();
     try {
       const figure = await Figure.create(figureData, { transaction });
 
+      // Créer les étapes
       if (etapesData && etapesData.length > 0) {
         const etapesToCreate = etapesData.map((etape, index) => ({
           figure_id: figure.id,
@@ -26,6 +28,18 @@ class FigureService {
           ordre: etape.ordre || (index + 1)
         }));
         await EtapeProgression.bulkCreate(etapesToCreate, { transaction });
+      }
+
+      // Créer les relations de prérequis
+      if (prerequisIds && Array.isArray(prerequisIds) && prerequisIds.length > 0) {
+        const prerequisToCreate = prerequisIds.map((exerciceFigureId, index) => ({
+          figure_id: figure.id,
+          exercice_figure_id: exerciceFigureId,
+          ordre: index + 1,
+          est_requis: true,
+          poids: 1
+        }));
+        await ExerciceFigure.bulkCreate(prerequisToCreate, { transaction });
       }
 
       await transaction.commit();
@@ -46,17 +60,19 @@ class FigureService {
   }
 
   /**
-   * Met à jour une figure existante et ses étapes.
+   * Met à jour une figure existante, ses étapes et ses prérequis.
    * @param {Object} figure - L'instance de la figure à mettre à jour.
    * @param {Object} updateData - Données de la figure à mettre à jour (nom, descriptif, etc.).
    * @param {Array<Object>} etapesData - Nouvelles données des étapes.
+   * @param {Array<number>} prerequisIds - IDs des figures prérequises (optionnel, undefined = pas de changement)
    * @returns {Promise<Object>} La figure mise à jour avec ses étapes.
    */
-  static async updateFigureWithEtapes(figure, updateData, etapesData) {
+  static async updateFigureWithEtapes(figure, updateData, etapesData, prerequisIds = undefined) {
     const transaction = await sequelize.transaction();
     try {
       await figure.update(updateData, { transaction });
 
+      // Mettre à jour les étapes si fournies
       if (etapesData !== undefined && Array.isArray(etapesData)) { // Only update if etapesData is provided
         await EtapeProgression.destroy({ where: { figure_id: figure.id }, transaction });
         if (etapesData.length > 0) {
@@ -70,6 +86,27 @@ class FigureService {
             ordre: etape.ordre || (index + 1)
           }));
           await EtapeProgression.bulkCreate(etapesToCreate, { transaction });
+        }
+      }
+
+      // Mettre à jour les prérequis si fournis (undefined = pas de changement)
+      if (prerequisIds !== undefined) {
+        // Supprimer toutes les relations existantes
+        await ExerciceFigure.destroy({
+          where: { figure_id: figure.id },
+          transaction
+        });
+
+        // Recréer les nouvelles relations si le tableau n'est pas vide
+        if (Array.isArray(prerequisIds) && prerequisIds.length > 0) {
+          const prerequisToCreate = prerequisIds.map((exerciceFigureId, index) => ({
+            figure_id: figure.id,
+            exercice_figure_id: exerciceFigureId,
+            ordre: index + 1,
+            est_requis: true,
+            poids: 1
+          }));
+          await ExerciceFigure.bulkCreate(prerequisToCreate, { transaction });
         }
       }
 

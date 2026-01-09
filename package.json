@@ -9,7 +9,11 @@
     "test:backend": "cd backend && npm test",
     "test:frontend": "cd frontend && npm test",
     "reset-and-seed": "cd backend && npm run reset-and-seed",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "setup:network": "node scripts/setup-network.js network",
+    "setup:localhost": "node scripts/setup-network.js localhost",
+    "mode:local": "node scripts/switch-mode.js local",
+    "mode:docker": "node scripts/switch-mode.js docker"
   },
   "keywords": [
     "circus",

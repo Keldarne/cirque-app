@@ -8,7 +8,9 @@ import {
   TextField,
   IconButton,
   Box,
-  Typography
+  Typography,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { api } from '../../utils/api';
@@ -33,6 +35,8 @@ function ModifierProgrammeDialog({
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Initialiser les champs quand le programme change
   useEffect(() => {
@@ -73,7 +77,7 @@ function ModifierProgrammeDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       {/* Header */}
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">

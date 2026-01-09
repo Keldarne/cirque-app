@@ -10,19 +10,67 @@ class StatsService {
 
   // ... (previous methods)
 
-  // TODO: Re-implement this logic based on new XP model.
-  // This KPI is broken because `xp_gagne` was removed from the progression model.
-  async calculerScoreSecurite(_utilisateurId) {
+  /**
+   * Calcule le score de sécurité basé sur le ratio XP renforcement / XP total
+   * @param {number} utilisateurId - ID de l'utilisateur
+   * @returns {Object} Score de sécurité avec détails
+   */
+  async calculerScoreSecurite(utilisateurId) {
+    // Récupérer toutes les progressions validées de l'utilisateur avec les détails des étapes
+    const progressions = await ProgressionEtape.findAll({
+      where: {
+        utilisateur_id: utilisateurId,
+        statut: 'valide'
+      },
+      include: [{
+        model: EtapeProgression,
+        as: 'etape',
+        attributes: ['xp'],
+        include: [{
+          model: Figure,
+          as: 'Figure',
+          attributes: ['type']  // 'renforcement' vs 'artistique'
+        }]
+      }]
+    });
+
+    // Calculer XP de renforcement
+    const xp_renforcement = progressions
+      .filter(p => p.etape?.Figure?.type === 'renforcement')
+      .reduce((sum, p) => sum + (p.etape?.xp || 0), 0);
+
+    // Calculer XP total
+    const xp_total = progressions
+      .reduce((sum, p) => sum + (p.etape?.xp || 0), 0);
+
+    // Calculer le score (pourcentage de renforcement)
+    const score = xp_total > 0 ? (xp_renforcement / xp_total) * 100 : 0;
+
     return {
-      score: 50,
-      xp_renforcement: 0,
-      xp_total: 0,
-      interpretation: this._interpreterScoreSecurite(50)
+      score: Math.round(score),
+      xp_renforcement,
+      xp_total,
+      interpretation: this._interpreterScoreSecurite(Math.round(score))
     };
   }
 
-  _interpreterScoreSecurite(_score) {
-    // ... (logic inchangée)
+  /**
+   * Interprète le score de sécurité
+   * @param {number} score - Score de sécurité (0-100)
+   * @returns {string} Interprétation textuelle
+   */
+  _interpreterScoreSecurite(score) {
+    if (score >= 70) {
+      return 'Excellent équilibre - Sécurité optimale';
+    } else if (score >= 50) {
+      return 'Bon équilibre - Progression sécurisée';
+    } else if (score >= 30) {
+      return 'Attention - Renforcement insuffisant';
+    } else if (score > 0) {
+      return 'Risque élevé - Prioriser le renforcement';
+    } else {
+      return 'Aucun renforcement - Risque critique';
+    }
   }
 
   async detecterDecrochage(utilisateurId) {
@@ -168,6 +216,60 @@ class StatsService {
 
   async _trouverElevesARisque(_eleveIds) {
     // ... (logic inchangée)
+  }
+
+  /**
+   * Analyse la latéralité d'un utilisateur
+   * @param {number} utilisateurId - ID de l'utilisateur
+   * @returns {Object} Statistiques de latéralité avec interprétation
+   */
+  async analyserLateralite(utilisateurId) {
+    const progressions = await ProgressionEtape.findAll({
+      where: {
+        utilisateur_id: utilisateurId,
+        statut: 'valide',
+        lateralite: { [Op.ne]: 'non_applicable' }
+      },
+      attributes: ['lateralite', 'etape_id'],
+      include: [{
+        model: EtapeProgression,
+        as: 'etape',
+        attributes: ['titre']
+      }]
+    });
+
+    const stats = {
+      gauche: progressions.filter(p => p.lateralite === 'gauche').length,
+      droite: progressions.filter(p => p.lateralite === 'droite').length,
+      bilateral: progressions.filter(p => p.lateralite === 'bilateral').length
+    };
+
+    const total = stats.gauche + stats.droite + stats.bilateral;
+    const desequilibre = total > 0
+      ? Math.abs(stats.gauche - stats.droite) / total
+      : 0;
+
+    return {
+      stats,
+      total,
+      desequilibre: Math.round(desequilibre * 100),  // % de déséquilibre
+      interpretation: this._interpreterDesequilibre(desequilibre)
+    };
+  }
+
+  /**
+   * Interprète le déséquilibre de latéralité
+   * @param {number} desequilibre - Ratio de déséquilibre (0-1)
+   * @returns {string} Interprétation textuelle
+   */
+  _interpreterDesequilibre(desequilibre) {
+    if (desequilibre > 0.3) {
+      return 'Déséquilibre important - Travailler côté faible';
+    } else if (desequilibre > 0.15) {
+      return 'Léger déséquilibre - Maintenir équilibre';
+    } else {
+      return 'Équilibré - Continue ainsi!';
+    }
   }
 }
 

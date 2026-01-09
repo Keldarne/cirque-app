@@ -21,7 +21,9 @@ import {
   LinearProgress,
   Avatar,
   IconButton,
-  Tooltip
+  Tooltip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   School as SchoolIcon,
@@ -53,6 +55,8 @@ function MesElevesPage() {
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedEleveForAssignment, setSelectedEleveForAssignment] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const chargerEleves = useCallback(async () => {
     try {
@@ -221,7 +225,7 @@ function MesElevesPage() {
         </Grid>
       )}
 
-      <Dialog open={dialogDetail} onClose={() => { setDialogDetail(false); navigate('/prof/eleves'); }} maxWidth="md" fullWidth>
+      <Dialog open={dialogDetail} onClose={() => { setDialogDetail(false); navigate('/prof/eleves'); }} maxWidth="md" fullWidth fullScreen={isMobile}>
         {eleveSelectionne && (
           <>
             <DialogTitle>
@@ -280,7 +284,7 @@ function MesElevesPage() {
         )}
       </Dialog>
 
-      <Dialog open={dialogNotes} onClose={() => setDialogNotes(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogNotes} onClose={() => setDialogNotes(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle>Modifier vos notes</DialogTitle>
         <DialogContent>
           <TextField label="Notes sur cet élève" multiline rows={6} fullWidth value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observations, points forts, axes d'amélioration..." sx={{ mt: 2 }} />

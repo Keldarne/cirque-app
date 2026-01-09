@@ -4,7 +4,8 @@ import {
   Container, Typography, Box, Button, Paper, Chip,
   IconButton, Dialog, DialogTitle, DialogContent,
   DialogActions, List, ListItem,
-  ListItemText, Checkbox, Alert, CircularProgress
+  ListItemText, Checkbox, Alert, CircularProgress,
+  useTheme, useMediaQuery
 } from '@mui/material';
 import {
   ArrowBack, Add as AddIcon,
@@ -180,6 +181,8 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
   const [figures, setFigures] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const loadFiguresDiscipline = useCallback(async () => {
     setLoading(true);
@@ -228,7 +231,7 @@ function AjouterFiguresDialog({ open, discipline, programmeId, onClose, onSucces
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>Ajouter des figures - {discipline}</DialogTitle>
       <DialogContent>
         {loading ? (

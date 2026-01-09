@@ -6,7 +6,8 @@ import {
   IconButton, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, List, ListItem,
   ListItemText, Checkbox, Alert, CircularProgress,
-  Card, CardContent, LinearProgress, Grid
+  Card, CardContent, LinearProgress, Grid,
+  useMediaQuery
 } from '@mui/material';
 import {
   ArrowBack, Edit as EditIcon, Add as AddIcon,
@@ -443,6 +444,8 @@ function ProgrammeDetailPage() {
 function ModifierProgrammeDialog({ open, programme, onClose, onSuccess, programmeId }) {
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (programme) {
@@ -465,7 +468,7 @@ function ModifierProgrammeDialog({ open, programme, onClose, onSuccess, programm
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>Modifier le programme</DialogTitle>
       <DialogContent>
         <TextField
@@ -499,6 +502,8 @@ function AjouterFiguresDialog({ open, discipline, programmeId, existingFigureIds
   const [figures, setFigures] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const loadFiguresDiscipline = useCallback(async () => {
     setLoading(true);
@@ -546,7 +551,7 @@ function AjouterFiguresDialog({ open, discipline, programmeId, existingFigureIds
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>Ajouter des figures - {discipline}</DialogTitle>
       <DialogContent>
         {loading ? (
@@ -596,6 +601,8 @@ function AjouterFiguresDialog({ open, discipline, programmeId, existingFigureIds
 function AjouterDisciplineDialog({ open, onClose, onSelectDiscipline }) {
   const [disciplines, setDisciplines] = useState([]);
   const [loading, setLoading] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (open) {
@@ -617,7 +624,7 @@ function AjouterDisciplineDialog({ open, onClose, onSelectDiscipline }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <DialogTitle>Sélectionner une discipline</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -663,11 +670,12 @@ function AjouterDisciplineDialog({ open, onClose, onSelectDiscipline }) {
 
 function DetailsDialog({ open, figure, figureProgressions, onClose }) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   if (!figure) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
       <DialogTitle>
         <Typography variant="h5">{figure.nom}</Typography>
         <Typography variant="body2" color="text.secondary">

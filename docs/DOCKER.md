@@ -70,11 +70,7 @@ ifconfig | grep "inet " | grep -v 127.0.0.1
 
 ### 2. Comptes de Test
 
-Utilisez les comptes suivants pour vous connecter :
-
-- **Admin** : `admin1@example.com` / `admin123`
-- **Professeur** : `prof1@example.com` / `prof123`
-- **Étudiant** : `user1@example.com` / `user123`
+VOIR COMPTE_TEST.md
 
 ## Commandes Essentielles
 

@@ -62,8 +62,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Pour accès réseau local, remplacer localhost par votre IP locale (ex: 192.168.0.50)
-      REACT_APP_API_URL: http://192.168.0.50:4000
+      # Laisser vide pour utiliser le proxy (recommandé pour Docker)
+      # Le proxy de package.json redirige /api/* vers backend:4000
+      REACT_APP_API_URL: ""
       HOST: 0.0.0.0  # Écouter sur toutes les interfaces réseau
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"

@@ -7,7 +7,7 @@
 - **Modifications :** Tu es l'acteur principal des modifications sur le dossier `frontend/` et les fichiers de documentation (`API_DOCUMENTATION.md`, `INTEGRATION_LOG.md`, `GEMINI.md`).
 - **Consultation :** Tu peux (et dois) consulter le code backend (`models/`, `routes/`, `services/`, `seed/`) pour comprendre la logique métier, les schémas de données et les contrats d'API, mais tu ne les modifies jamais.
 
-**Interdiction :** Ne jamais modifier le code source du backend. C'est le domaine réservé aux agents spécialisés backend ou à l'utilisateur.
+**Interdiction STRICTE :** Ne jamais modifier le code source du backend (`backend/src/...`). Si une fonctionnalité backend manque (ex: sauvegarde d'un champ), tu dois **revenir en arrière**, documenter le besoin dans `INTEGRATION_LOG.md` et demander à l'agent Backend ("Claude Code") de l'implémenter.
 
 ## 2. Flux de Collaboration (Backend-First)
 Pour avancer sans casser la logique métier :
