@@ -148,9 +148,9 @@ function DashboardProfPage() {
   return (
     <Container maxWidth="lg" className="dashboard-prof-container">
       {/* En-tête */}
-      <Box className="dashboard-prof-header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box className="dashboard-prof-header" sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, mb: 3, gap: 2 }}>
         <Box>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
             Dashboard Professeur
           </Typography>
           <Typography variant="body1" color="textSecondary">
@@ -162,6 +162,8 @@ function DashboardProfPage() {
           startIcon={<RefreshIcon />}
           onClick={chargerDonnees}
           disabled={loading}
+          fullWidth={false}
+          sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' } }}
         >
           Rafraîchir
         </Button>
@@ -379,7 +381,13 @@ function DashboardProfPage() {
 
       {/* Onglets */}
       <Paper className="dashboard-tabs-section">
-        <Tabs value={onglet} onChange={(e, newValue) => setOnglet(newValue)}>
+        <Tabs 
+          value={onglet} 
+          onChange={(e, newValue) => setOnglet(newValue)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+        >
           <Tab label="Élèves récents" />
           <Tab label="Groupes" />
         </Tabs>

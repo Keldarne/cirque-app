@@ -11,7 +11,15 @@ import {
   Box,
   Typography,
   CircularProgress,
-  Chip
+  Chip,
+  useTheme,
+  useMediaQuery,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  LinearProgress
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // Validé
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'; // Non commencé
@@ -34,6 +42,9 @@ const GroupProgressMatrix = ({ students, figures, selectedGroup }) => {
   const [loading, setLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // Switch to list on tablets too for better UX
 
   useEffect(() => {
     fetchAllProgressions();
@@ -125,6 +136,48 @@ const GroupProgressMatrix = ({ students, figures, selectedGroup }) => {
   };
 
   if (loading) return <CircularProgress />;
+
+  if (isMobile) {
+    return (
+      <Box>
+        <List>
+          {students.map((student) => {
+             // Calculate progress for this student on these figures
+             const studentProgress = figures.map(f => matrixData[student.id]?.[f.id] || 'non_commence');
+             const validCount = studentProgress.filter(s => s === 'valide').length;
+             const progressPercent = figures.length > 0 ? Math.round((validCount / figures.length) * 100) : 0;
+
+             return (
+               <ListItem key={student.id} button onClick={() => handleStudentClick(student)} divider>
+                 <ListItemAvatar>
+                   <Avatar sx={{ bgcolor: theme.palette.primary.main }}>{student.prenom?.[0]}</Avatar>
+                 </ListItemAvatar>
+                 <ListItemText 
+                   primary={`${student.prenom} ${student.nom}`}
+                   secondary={
+                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                       <Box sx={{ width: '100%', mr: 1 }}>
+                         <LinearProgress variant="determinate" value={progressPercent} color={progressPercent === 100 ? "success" : "primary"} />
+                       </Box>
+                       <Box sx={{ minWidth: 35 }}>
+                         <Typography variant="body2" color="text.secondary">{`${Math.round(progressPercent)}%`}</Typography>
+                       </Box>
+                     </Box>
+                   }
+                 />
+               </ListItem>
+             );
+          })}
+        </List>
+        <StudentAnalyticsModal 
+          open={analyticsOpen} 
+          onClose={() => setAnalyticsOpen(false)} 
+          student={selectedStudent} 
+          onValidation={fetchAllProgressions}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -220,7 +273,8 @@ const GroupProgressMatrix = ({ students, figures, selectedGroup }) => {
       <StudentAnalyticsModal 
         open={analyticsOpen} 
         onClose={() => setAnalyticsOpen(false)} 
-        student={selectedStudent} 
+        student={selectedStudent}
+        onValidation={fetchAllProgressions}
       />
     </Box>
   );
