@@ -75,65 +75,85 @@ async function seedProgressions(students, figuresByDiscipline, scenarioDefinitio
     await ProgressionEtape.bulkCreate(progressionsToCreate);
     totalEtapeProgressions += progressionsToCreate.length;
 
-    // 3. Simuler la validation et progression en cours des étapes
+    // 3. Simuler la validation et progression en cours de manière SÉQUENTIELLE par figure
     const distribution = scenarioDef.distribution || { last_7_days: 5, days_8_to_30: 10 };
+    // Générer un pool large de timestamps pour couvrir les besoins
     let timestamps = generateTimestamps({
-        last7DaysCount: distribution.last_7_days,
-        days8to30Count: distribution.days_8_to_30,
+        last7DaysCount: distribution.last_7_days * 3, // Multiplier pour avoir du stock
+        days8to30Count: distribution.days_8_to_30 * 3,
     });
 
-    // Mélanger toutes les étapes
-    const shuffledEtapes = allEtapesForFigures.sort(() => 0.5 - Math.random());
+    // Grouper les étapes par figure pour respecter l'ordre
+    const etapesByFigure = allEtapesForFigures.reduce((acc, etape) => {
+      if (!acc[etape.figure_id]) acc[etape.figure_id] = [];
+      acc[etape.figure_id].push(etape);
+      return acc;
+    }, {});
 
-    // Diviser les étapes en 3 groupes:
-    // - Validées (selon timestamps)
-    // - En cours (10-20% des étapes restantes)
-    // - Non commencées (le reste)
+    let statsStudent = { valide: 0, en_cours: 0, non_commence: 0 };
 
-    const nbValidees = timestamps.length;
-    const nbEnCours = Math.floor((shuffledEtapes.length - nbValidees) * 0.15); // 15% en cours
+    for (const [figureId, etapes] of Object.entries(etapesByFigure)) {
+       // Déterminer le niveau de maîtrise (0.0 à 1.0) basé sur le scénario
+       let mastery = 0;
+       
+       if (scenario === 'at_risk') {
+         // Faible progression: 0% à 40% des étapes validées
+         // Lucas Leroy spécifique: parfois rien (0), parfois un peu
+         mastery = Math.random() * 0.4; 
+       } else if (scenario === 'stable') {
+         // Moyen: 30% à 80%
+         mastery = 0.3 + Math.random() * 0.5;
+       } else if (scenario === 'progressing') {
+         // Bon: 50% à 95%
+         mastery = 0.5 + Math.random() * 0.45;
+       } else {
+         // Spécialistes / Balanced: 70% à 100%
+         mastery = 0.7 + Math.random() * 0.3;
+       }
 
-    // Étapes validées
-    const etapesToValidate = shuffledEtapes.slice(0, nbValidees);
-    for (let i = 0; i < etapesToValidate.length; i++) {
-        const etape = etapesToValidate[i];
-        const timestamp = timestamps[i];
+       const stepsToValidate = Math.floor(etapes.length * mastery);
+       
+       for (let i = 0; i < etapes.length; i++) {
+          const etape = etapes[i];
+          let status = 'non_commence';
+          let date_validation = null;
+          let valide_par_prof_id = null;
+          
+          if (i < stepsToValidate) {
+             status = 'valide';
+             date_validation = timestamps.pop() || new Date(Date.now() - Math.floor(Math.random() * 1000000000));
+             
+             // Simuler validation prof aléatoire
+             if (Math.random() < 0.3) {
+                const prof = getRandomProf();
+                valide_par_prof_id = prof.id;
+             }
+             statsStudent.valide++;
+          } else if (i === stepsToValidate) {
+             // L'étape juste après les validées est "en cours"
+             status = 'en_cours';
+             statsStudent.en_cours++;
+          } else {
+             statsStudent.non_commence++;
+          }
 
-        const updatePayload = {
-            statut: 'valide',
-            date_validation: timestamp
-        };
-
-        // Simuler une validation par un prof pour ~30% des étapes validées
-        if (Math.random() < 0.3) {
-            const prof = getRandomProf();
-            updatePayload.valide_par_prof_id = prof.id;
-        }
-
-        await ProgressionEtape.update(updatePayload, {
-            where: {
-                utilisateur_id: student.id,
-                etape_id: etape.id
-            }
-        });
-    }
-
-    // Étapes en cours (pas de date_validation)
-    const etapesEnCours = shuffledEtapes.slice(nbValidees, nbValidees + nbEnCours);
-    for (const etape of etapesEnCours) {
-        await ProgressionEtape.update(
-            { statut: 'en_cours' },
-            {
+          if (status !== 'non_commence') {
+             await ProgressionEtape.update({
+                statut: status,
+                date_validation,
+                valide_par_prof_id
+             }, {
                 where: {
                     utilisateur_id: student.id,
                     etape_id: etape.id
                 }
-            }
-        );
+             });
+          }
+       }
     }
 
     logger.info(
-      `  → ${progressionsToCreate.length} progressions créées: ${nbValidees} validées, ${nbEnCours} en cours, ${progressionsToCreate.length - nbValidees - nbEnCours} non commencées`
+      `  → ${totalEtapeProgressions} progressions: ${statsStudent.valide} validées, ${statsStudent.en_cours} en cours`
     );
   }
 
