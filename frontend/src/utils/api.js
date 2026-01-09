@@ -36,7 +36,8 @@ export const fetchWithAuth = async (url, options = {}) => {
   // Effectuer la requête
   const response = await fetch(fullUrl, {
     ...options,
-    headers
+    headers,
+    credentials: 'include' // Important pour CORS avec credentials
   });
 
   return response;

@@ -156,7 +156,11 @@ export const useGritScore = (userId) => {
 
       try {
         const response = await api.get('/api/progression/grit-score');
-        setData(response.grit_score);
+        if (!response.ok) {
+          throw new Error('Erreur chargement grit score');
+        }
+        const data = await response.json();
+        setData(data.grit_score);
       } catch (err) {
         console.error('Erreur useGritScore:', err);
         setError(err.message);
