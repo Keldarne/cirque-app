@@ -44,7 +44,7 @@ import EngagementChart from './EngagementChart';
 import VolumeChart from './VolumeChart';
 import SentimentChart from './SentimentChart';
 
-const StudentAnalyticsModal = ({ open, onClose, student }) => {
+const StudentAnalyticsModal = ({ open, onClose, student, onValidation }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -104,14 +104,18 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
   const handleValidateFigure = async (figureId) => {
     setValidating(figureId);
     try {
-      // Endpoint de validation en masse défini dans routes/prof/eleves.js
-      const res = await api.post(`/api/prof/eleves/${student.id}/figures/${figureId}/valider`);
+      // Utilisation de l'endpoint dédié à la validation en masse
+      // URL: /api/prof/validation/eleves/:eleveId/figures/:figureId
+      const url = `/api/prof/validation/eleves/${student.id}/figures/${figureId}`;
+      const res = await api.post(url, {}); 
+      
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Erreur lors de la validation');
+        throw new Error(err.error || err.message || 'Erreur lors de la validation');
       }
 
       await fetchAllData();
+      if (onValidation) onValidation();
       
       // Update selected figure details if open
       if (selectedFigureDetails && selectedFigureDetails.progression.figure_id === figureId) {
