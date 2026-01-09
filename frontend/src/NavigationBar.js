@@ -12,7 +12,8 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider
+  Divider,
+  useTheme
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import {
@@ -25,19 +26,15 @@ import {
   EmojiEvents as TrophyIcon,
   Star as StarIcon,
   Flag as FlagIcon,
-  Leaderboard as LeaderboardIcon,
   Assignment as AssignmentIcon
 } from "@mui/icons-material";
 import { useAuth } from "./contexts/AuthContext";
 
 function NavigationBar() {
-  // Récupère l'état d'authentification et l'utilisateur depuis le contexte
   const { isAuthenticated, user } = useAuth();
-
-  // État pour gérer l'ouverture du menu mobile
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const theme = useTheme();
 
-  // Fonction pour fermer le menu mobile
   const handleMobileMenuClose = () => {
     setMobileMenuOpen(false);
   };
@@ -45,52 +42,42 @@ function NavigationBar() {
   return (
     <>
       <AppBar position="sticky" sx={{ top: 0, zIndex: 1100 }}>
-        <Toolbar>
-          {/* Bouton hamburger - visible uniquement sur mobile */}
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={() => setMobileMenuOpen(true)}
-            className="navbar-mobile-menu-button"
-          >
-            <MenuIcon />
-          </IconButton>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          {/* Section Gauche : Menu Mobile + Logo */}
+          <Box display="flex" alignItems="center">
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={() => setMobileMenuOpen(true)}
+              sx={{ display: { xs: 'flex', md: 'none' }, mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
 
-                    {/* Titre / logo de l'app */}          <Typography 
+            <Typography
+              variant="h6"
+              noWrap
+              component={Link}
+              to="/"
+              sx={{
+                mr: 2,
+                fontWeight: 700,
+                color: 'inherit',
+                textDecoration: 'none',
+                background: 'linear-gradient(45deg, #2979ff, #0056b3)',
+                backgroundClip: 'text',
+                textFillColor: 'transparent',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '.1rem',
+              }}
+            >
+              CIRQUE APP
+            </Typography>
+          </Box>
 
-                      variant="h5" 
-
-                      className="navbar-title" 
-
-                      sx={{ 
-
-                        fontWeight: 800, 
-
-                        background: 'linear-gradient(45deg, #2979ff, #0056b3)',
-
-                        backgroundClip: 'text',
-
-                        textFillColor: 'transparent',
-
-                        WebkitBackgroundClip: 'text',
-
-                        WebkitTextFillColor: 'transparent',
-
-                        mr: 4,
-
-                        letterSpacing: '0.05em'
-
-                      }}
-
-                    >
-
-                      CIRQUE APP
-
-                    </Typography>
-
-          {/* Menu desktop - caché sur mobile */}
-          <Box className="navbar-links-container">
-            {/* Si connecté, on affiche le lien vers Mon Programme */}
+          {/* Section Droite : Liens Desktop */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
             {isAuthenticated && (
               <Button
                 color="inherit"
@@ -102,43 +89,35 @@ function NavigationBar() {
               </Button>
             )}
 
-            {/* Lien Dashboard Professeur (accessible aux professeurs et admins) */}
             {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
-              <Button
-                color="inherit"
-                component={Link}
-                to="/prof/dashboard"
-                startIcon={<SchoolIcon />}
-              >
-                Dashboard Prof
-              </Button>
+              <>
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/prof/dashboard"
+                  startIcon={<SchoolIcon />}
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/prof/programmes"
+                  startIcon={<AssignmentIcon />}
+                >
+                  Programmes
+                </Button>
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/admin"
+                  startIcon={<AdminIcon />}
+                >
+                  Admin
+                </Button>
+              </>
             )}
 
-            {/* Lien Programmes Professeur */}
-            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
-              <Button
-                color="inherit"
-                component={Link}
-                to="/prof/programmes"
-                startIcon={<AssignmentIcon />}
-              >
-                Programmes
-              </Button>
-            )}
-
-            {/* Lien Administration (accessible aux professeurs et admins) */}
-            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
-              <Button
-                color="inherit"
-                component={Link}
-                to="/admin"
-                startIcon={<AdminIcon />}
-              >
-                Administration
-              </Button>
-            )}
-
-            {/* Affiche le bloc utilisateur (pseudo, niveau) ou le lien de connexion */}
             {isAuthenticated ? (
               <Button
                 color="inherit"
@@ -146,147 +125,141 @@ function NavigationBar() {
                 to="/profil"
                 startIcon={<PersonIcon />}
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 2
                 }}
               >
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <span>{user?.pseudo}</span>
-                  <Typography variant="caption" sx={{ fontSize: '0.7rem', lineHeight: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', ml: 1 }}>
+                  <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1 }}>
+                    {user?.pseudo}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.8 }}>
                     Niveau {user?.niveau}
                   </Typography>
                 </Box>
               </Button>
             ) : (
               <Button
+                variant="outlined"
                 color="inherit"
                 component={Link}
                 to="/auth"
                 startIcon={<LoginIcon />}
               >
-                Connexion / Inscription
+                Connexion
               </Button>
             )}
           </Box>
         </Toolbar>
       </AppBar>
 
-      {/* Menu mobile - Drawer */}
+      {/* Drawer Mobile */}
       <Drawer
         anchor="left"
         open={mobileMenuOpen}
         onClose={handleMobileMenuClose}
+        PaperProps={{ sx: { width: 280 } }}
       >
         <Box
-          sx={{ width: 250 }}
           role="presentation"
           onClick={handleMobileMenuClose}
+          onKeyDown={handleMobileMenuClose}
         >
-          <List>
-            {/* En-tête du menu mobile avec info utilisateur */}
-            {isAuthenticated && (
-              <>
-                <ListItem>
-                  <ListItemIcon>
+          {isAuthenticated && (
+            <>
+              <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+                <Box display="flex" alignItems="center" gap={2} mb={1}>
+                  <Box sx={{ bgcolor: 'white', color: 'primary.main', p: 1, borderRadius: '50%' }}>
                     <PersonIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={user?.pseudo}
-                    secondary={`Niveau ${user?.niveau}`}
-                  />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {user?.pseudo}
+                    </Typography>
+                    <Typography variant="caption">
+                      Niveau {user?.niveau}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+              <Divider />
+            </>
+          )}
+
+          <List>
+            {isAuthenticated && (
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/mon-programme">
+                  <ListItemIcon><FitnessCenterIcon color="primary" /></ListItemIcon>
+                  <ListItemText primary="Mon Programme" />
+                </ListItemButton>
+              </ListItem>
+            )}
+
+            <ListItem disablePadding>
+              <ListItemButton component={Link} to="/badges">
+                <ListItemIcon><TrophyIcon sx={{ color: '#FFD700' }} /></ListItemIcon>
+                <ListItemText primary="Badges" />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton component={Link} to="/titres">
+                <ListItemIcon><StarIcon sx={{ color: '#FFD700' }} /></ListItemIcon>
+                <ListItemText primary="Titres" />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton component={Link} to="/defis">
+                <ListItemIcon><FlagIcon color="error" /></ListItemIcon>
+                <ListItemText primary="Défis" />
+              </ListItemButton>
+            </ListItem>
+
+            <Divider sx={{ my: 1 }} />
+
+            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
+              <>
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/prof/dashboard">
+                    <ListItemIcon><SchoolIcon color="secondary" /></ListItemIcon>
+                    <ListItemText primary="Dashboard Prof" />
+                  </ListItemButton>
                 </ListItem>
-                <Divider />
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/prof/programmes">
+                    <ListItemIcon><AssignmentIcon color="secondary" /></ListItemIcon>
+                    <ListItemText primary="Gestion Programmes" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/admin">
+                    <ListItemIcon><AdminIcon color="action" /></ListItemIcon>
+                    <ListItemText primary="Administration" />
+                  </ListItemButton>
+                </ListItem>
+                <Divider sx={{ my: 1 }} />
               </>
             )}
 
-            {/* Mon Programme */}
-            {isAuthenticated && (
-              <ListItemButton component={Link} to="/mon-programme">
-                <ListItemIcon>
-                  <FitnessCenterIcon />
-                </ListItemIcon>
-                <ListItemText primary="Mon Programme" />
-              </ListItemButton>
-            )}
-
-            {/* Badges */}
-            {isAuthenticated && (
-              <ListItemButton component={Link} to="/badges">
-                <ListItemIcon>
-                  <TrophyIcon />
-                </ListItemIcon>
-                <ListItemText primary="Badges" />
-              </ListItemButton>
-            )}
-
-            {/* Titres */}
-            {isAuthenticated && (
-              <ListItemButton component={Link} to="/titres">
-                <ListItemIcon>
-                  <StarIcon />
-                </ListItemIcon>
-                <ListItemText primary="Titres" />
-              </ListItemButton>
-            )}
-
-            {/* Défis */}
-            {isAuthenticated && (
-              <ListItemButton component={Link} to="/defis">
-                <ListItemIcon>
-                  <FlagIcon />
-                </ListItemIcon>
-                <ListItemText primary="Défis" />
-              </ListItemButton>
-            )}
-
-            {/* Dashboard Professeur */}
-            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
-              <ListItemButton component={Link} to="/prof/dashboard">
-                <ListItemIcon>
-                  <SchoolIcon />
-                </ListItemIcon>
-                <ListItemText primary="Dashboard Prof" />
-              </ListItemButton>
-            )}
-
-            {/* Programmes Professeur */}
-            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
-              <ListItemButton component={Link} to="/prof/programmes">
-                <ListItemIcon>
-                  <AssignmentIcon />
-                </ListItemIcon>
-                <ListItemText primary="Programmes" />
-              </ListItemButton>
-            )}
-
-            {/* Administration */}
-            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
-              <ListItemButton component={Link} to="/admin">
-                <ListItemIcon>
-                  <AdminIcon />
-                </ListItemIcon>
-                <ListItemText primary="Administration" />
-              </ListItemButton>
-            )}
-
-            <Divider />
-
-            {/* Profil ou Connexion */}
             {isAuthenticated ? (
-              <ListItemButton component={Link} to="/profil">
-                <ListItemIcon>
-                  <PersonIcon />
-                </ListItemIcon>
-                <ListItemText primary="Mon Profil" />
-              </ListItemButton>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/profil">
+                  <ListItemIcon><PersonIcon /></ListItemIcon>
+                  <ListItemText primary="Mon Profil" />
+                </ListItemButton>
+              </ListItem>
             ) : (
-              <ListItemButton component={Link} to="/auth">
-                <ListItemIcon>
-                  <LoginIcon />
-                </ListItemIcon>
-                <ListItemText primary="Connexion / Inscription" />
-              </ListItemButton>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/auth">
+                  <ListItemIcon><LoginIcon /></ListItemIcon>
+                  <ListItemText primary="Se connecter" />
+                </ListItemButton>
+              </ListItem>
             )}
           </List>
         </Box>
