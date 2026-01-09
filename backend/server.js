@@ -16,7 +16,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for Material-UI
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", 'data:', 'https:'], // Allow images from HTTPS sources
-      connectSrc: ["'self'", 'http://localhost:*'], // Allow API calls to backend
+      connectSrc: ["'self'", 'http://localhost:*', 'http://192.168.0.50:*'], // Allow API calls from localhost and network IP
       fontSrc: ["'self'", 'data:'],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'", 'https:'], // Allow video/audio from HTTPS
@@ -27,9 +27,12 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' } // Allow cross-origin requests in dev
 }));
 
-// Middleware CORS - Configuration pour développement
+// Middleware CORS - Configuration pour développement et réseau local
 app.use(cors({
-  origin: 'http://localhost:3000', // Permet explicitement l'origine du frontend en développement
+  origin: [
+    'http://localhost:3000',
+    'http://192.168.0.50:3000' // Accès réseau local
+  ],
   credentials: true, // Permet l'envoi de cookies/credentials
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

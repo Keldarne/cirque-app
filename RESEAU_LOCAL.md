@@ -49,18 +49,27 @@ Adresse IPv4. . . . . . . . . . . . . .: 192.168.0.50
 
 ### ⚠️ Configuration Préalable (IMPORTANT)
 
-**Avant de démarrer**, modifiez `docker-compose.yml` ligne 66 :
+**Avant de démarrer**, modifiez 2 fichiers avec VOTRE IP locale :
 
+1. **`docker-compose.yml` ligne 66** :
 ```yaml
-# Remplacer localhost par VOTRE IP locale
+# Remplacer 192.168.0.50 par VOTRE IP locale
 REACT_APP_API_URL: http://192.168.0.50:4000  # ← Modifier ici
+```
+
+2. **`backend/server.js` lignes 32-35** :
+```javascript
+origin: [
+  'http://localhost:3000',
+  'http://192.168.0.50:3000' // ← Modifier ici avec VOTRE IP
+],
 ```
 
 **Trouver votre IP** : `ipconfig | findstr "IPv4"` (Windows)
 
 ### Avec Docker (Recommandé)
 ```bash
-# 1. Modifier docker-compose.yml avec votre IP locale (voir ci-dessus)
+# 1. Modifier les 2 fichiers avec votre IP locale (voir ci-dessus)
 
 # 2. Démarrer tous les services
 docker-compose up -d --build
