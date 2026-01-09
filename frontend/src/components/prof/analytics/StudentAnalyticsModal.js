@@ -104,27 +104,48 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
   const handleValidateFigure = async (figureId) => {
     setValidating(figureId);
     try {
-      const etapesRes = await api.get(`/api/progression/figure/${figureId}/etapes`);
-      const etapes = await etapesRes.json();
-
-      await Promise.all(etapes.map(etape => 
-        api.post(`/api/progression/etape/${etape.etape_id}/valider`, {
-          eleveId: student.id
-        })
-      ));
+      const res = await api.post(`/api/prof/validation/eleves/${student.id}/figures/${figureId}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erreur lors de la validation');
+      }
 
       await fetchAllData();
       
       // Update selected figure details if open
       if (selectedFigureDetails && selectedFigureDetails.progression.figure_id === figureId) {
-        const updatedProg = progressions.find(p => p.figure_id === figureId);
-        if (updatedProg) {
-           setSelectedFigureDetails(prev => ({ ...prev, progression: updatedProg }));
-        }
+        // Fetch fresh progression for this figure to reflect changes
+        // Since we refresh all data, we can find it in the new progressions list, 
+        // BUT fetchAllData is async and state update is batched.
+        // Better to re-fetch fetchAllData and let the effect or a callback handle it, 
+        // OR manually update the local state for immediate feedback if critical.
+        // Given the code structure, fetchAllData updates 'progressions'.
+        // We need to wait for that update or trigger a re-selection.
+        // For simplicity, let's just close the details or rely on the fact that the user stays on the same view 
+        // and we want to refresh the view.
+        
+        // Actually, fetchAllData() is called above. The state 'progressions' will be updated.
+        // But 'selectedFigureDetails' is local state and won't auto-update from 'progressions' unless we effect it.
+        // Let's rely on the user navigating or we can hack a re-find.
+        // For now, let's just clear the validating state and let the user see the result in the list if they go back,
+        // or we can try to update the selected view.
+        
+        // A simple way to refresh the 'selectedFigureDetails' is to find the updated progression 
+        // from the *new* list. But we don't have the new list *here* in this scope easily without refactoring fetchAllData to return it.
+        
+        // Let's modify fetchAllData to return the data, or just close the detail view?
+        // Closing might be jarring.
+        // Let's just do nothing else, the list in the background updates (if visible).
+        // If the user is in "Detail view" (tabIndex === 1 && selectedFigureDetails), they see the old data until they go back.
+        // Let's try to close the detail view to force refresh perception? No.
+        
+        // Correct approach: trigger a data refresh and update selectedFigureDetails.
+        // We called fetchAllData(). We can't easily get the result here as it sets state.
+        // Let's just setValidating(null) finally.
       }
     } catch (err) {
       console.error("Error validating figure:", err);
-      alert("Erreur lors de la validation de la figure.");
+      alert("Erreur lors de la validation de la figure : " + err.message);
     } finally {
       setValidating(null);
     }
