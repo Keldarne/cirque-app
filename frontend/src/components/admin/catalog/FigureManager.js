@@ -96,7 +96,7 @@ const FigureManager = () => {
       const [figRes, etapesRes, exercicesRes] = await Promise.all([
         api.get(`/api/figures/${id}`),
         api.get(`/api/figures/${id}/etapes`),
-        api.get(`/api/admin/figures/${id}/exercices`)
+        api.get(`/api/admin/exercices/figures/${id}/exercices`)
       ]);
       
       if (figRes.ok && etapesRes.ok) {
