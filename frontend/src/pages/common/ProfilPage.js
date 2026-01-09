@@ -218,7 +218,7 @@ function ProfilPage() {
               <Paper sx={{ p: 2, height: '100%', textAlign: 'center', border: `1px solid ${theme.palette.divider}` }}>
                 <PsychologyIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
                 <Typography variant="h4" fontWeight="bold">{grit?.grit_score || 0}</Typography>
-                <Typography variant="body2" color="textSecondary">Grit Score</Typography>
+                <Typography variant="body2" color="textSecondary">Score de Persévérance</Typography>
                 <Typography variant="caption" color="textSecondary" display="block">{grit?.interpretation || '-'}</Typography>
               </Paper>
             </Grid>

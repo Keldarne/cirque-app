@@ -354,7 +354,7 @@ function DashboardProfPage() {
                 <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
                   {analytics.meteo_classe.moyenne_grit ? analytics.meteo_classe.moyenne_grit.toFixed(1) : 'N/A'}
                 </Typography>
-                <Typography variant="body2">Grit Score Moyen</Typography>
+                <Typography variant="body2">Persévérance Moyenne</Typography>
               </Box>
             </Grid>
             <Grid item xs={12} md={4}>
