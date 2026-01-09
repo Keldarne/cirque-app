@@ -108,10 +108,12 @@ const DisciplineManager = ({ ecoleId }) => {
       
       const method = editingDiscipline ? 'PUT' : 'POST';
       
-      const res = await api.request(url, {
-        method,
-        body: JSON.stringify(formData)
-      });
+      let res;
+      if (method === 'POST') {
+        res = await api.post(url, formData);
+      } else {
+        res = await api.put(url, formData);
+      }
 
       if (!res.ok) throw new Error("Erreur lors de l'enregistrement");
 
