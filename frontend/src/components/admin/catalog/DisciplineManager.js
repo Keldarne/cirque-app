@@ -19,7 +19,9 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Tooltip
+  Tooltip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -30,6 +32,9 @@ const DisciplineManager = ({ ecoleId }) => {
   const [disciplines, setDisciplines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   
   // Dialog state
   const [openDialog, setOpenDialog] = useState(false);
@@ -155,7 +160,7 @@ const DisciplineManager = ({ ecoleId }) => {
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} mb={2} gap={2}>
         <Box>
           <Typography variant="h6" gutterBottom>
             Gestion des Disciplines
@@ -171,6 +176,7 @@ const DisciplineManager = ({ ecoleId }) => {
             variant="contained" 
             startIcon={<AddIcon />} 
             onClick={() => handleOpenDialog()}
+            fullWidth={fullScreen}
           >
             Ajouter
           </Button>
@@ -181,7 +187,7 @@ const DisciplineManager = ({ ecoleId }) => {
         {disciplines.map((discipline, index) => (
           <React.Fragment key={discipline.id}>
             {index > 0 && <Divider />}
-            <ListItem>
+            <ListItem sx={{ px: { xs: 0, sm: 2 } }}>
               <ListItemText
                 primary={
                   <Box display="flex" alignItems="center" gap={1}>
@@ -192,7 +198,7 @@ const DisciplineManager = ({ ecoleId }) => {
               />
               <ListItemSecondaryAction>
                 {isGlobalCatalog ? (
-                  <Box>
+                  <Box display="flex">
                     <Tooltip title="Modifier">
                       <IconButton onClick={() => handleOpenDialog(discipline)} size="small">
                         <EditIcon />
@@ -224,7 +230,13 @@ const DisciplineManager = ({ ecoleId }) => {
       </List>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={openDialog} 
+        onClose={() => setOpenDialog(false)} 
+        maxWidth="sm" 
+        fullWidth
+        fullScreen={fullScreen}
+      >
         <DialogTitle>{editingDiscipline ? 'Modifier la discipline' : 'Nouvelle discipline'}</DialogTitle>
         <DialogContent>
           <TextField
@@ -234,9 +246,10 @@ const DisciplineManager = ({ ecoleId }) => {
             fullWidth
             value={formData.nom}
             onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+            sx={{ mt: 2 }}
           />
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 3 }}>
           <Button onClick={() => setOpenDialog(false)}>Annuler</Button>
           <Button onClick={handleSave} variant="contained" disabled={saving}>
             {saving ? 'Enregistrement...' : 'Enregistrer'}

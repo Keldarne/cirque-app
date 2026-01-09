@@ -293,20 +293,20 @@ function MonProgrammePage() {
   ];
 
   return (
-    <Container sx={{ mt: 4, mb: 4 }}>
+    <Container sx={{ mt: { xs: 2, md: 4 }, mb: 4 }}>
       {/* En-tête */}
-      <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'start', md: 'center' }} mb={3} gap={2}>
-        <Typography variant="h3">
+      <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'center' }} mb={3} gap={2}>
+        <Typography variant="h3" sx={{ fontSize: { xs: '1.75rem', md: '2.125rem' }, fontWeight: 'bold' }}>
           Mon Programme
         </Typography>
         
-        <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+        <Box display="flex" gap={1} alignItems="center" flexWrap="wrap" justifyContent={{ xs: 'center', md: 'flex-end' }}>
           <ProgrammeSelector
             programmes={selectOptions}
             selectedId={selectedProgrammeId}
             onChange={setSelectedProgrammeId}
             userRole="eleve"
-            sx={{ minWidth: 250 }}
+            sx={{ minWidth: { xs: '100%', sm: 250 } }}
           />
           
           <Tooltip title="Créer un nouveau programme">

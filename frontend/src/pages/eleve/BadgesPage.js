@@ -207,10 +207,10 @@ function BadgesPage() {
   }
 
   return (
-    <Container maxWidth="lg" className="badges-container">
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       {/* En-tête */}
-      <Box className="badges-header">
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
           Collection de Badges
         </Typography>
         <Typography variant="body1" color="textSecondary">
@@ -219,10 +219,10 @@ function BadgesPage() {
       </Box>
 
       {/* Progression globale */}
-      <Paper className="badges-progress-section" sx={{ p: 3 }}>
+      <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6">Progression Globale</Typography>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2196F3' }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
             {nombreObtenus} / {badges.length}
           </Typography>
         </Box>
@@ -232,9 +232,8 @@ function BadgesPage() {
           sx={{
             height: 12,
             borderRadius: 6,
-            backgroundColor: '#E0E0E0',
+            backgroundColor: 'action.selected',
             '& .MuiLinearProgress-bar': {
-              backgroundColor: '#2196F3',
               borderRadius: 6
             }
           }}
@@ -245,8 +244,14 @@ function BadgesPage() {
       </Paper>
 
       {/* Filtres */}
-      <Paper className="badges-filters-section">
-        <Tabs value={onglet} onChange={(e, val) => setOnglet(val)} variant="fullWidth">
+      <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+        <Tabs 
+          value={onglet} 
+          onChange={(e, val) => setOnglet(val)} 
+          variant="scrollable" 
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+        >
           <Tab label={`Tous (${badges.length})`} />
           <Tab label={`Obtenus (${nombreObtenus})`} />
           <Tab label={`À obtenir (${badges.length - nombreObtenus})`} />
@@ -254,11 +259,12 @@ function BadgesPage() {
       </Paper>
 
       {/* Filtres catégories */}
-      <Box className="badges-categories-section" sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 4 }}>
         <Chip
           label="Tous"
           onClick={() => setCategorieFiltre('tous')}
           color={categorieFiltre === 'tous' ? 'primary' : 'default'}
+          sx={{ fontWeight: 'bold' }}
         />
         {Object.entries(CATEGORIES).map(([key, label]) => (
           <Chip
@@ -266,21 +272,22 @@ function BadgesPage() {
             label={label}
             onClick={() => setCategorieFiltre(key)}
             color={categorieFiltre === key ? 'primary' : 'default'}
+            sx={{ fontWeight: 'bold' }}
           />
         ))}
       </Box>
 
       {/* Grille de badges */}
       {badgesFiltres.length === 0 ? (
-        <Alert severity="info">Aucun badge ne correspond à ces filtres.</Alert>
+        <Alert severity="info" sx={{ borderRadius: 2 }}>Aucun badge ne correspond à ces filtres.</Alert>
       ) : (
-        <div className="badges-grid-wrapper">
+        <Grid container spacing={3}>
           {badgesFiltres.map((badge) => (
-            <div key={badge.id} className="badges-card-item">
+            <Grid item xs={12} sm={6} md={4} lg={3} key={badge.id}>
               <BadgeCard badge={badge} />
-            </div>
+            </Grid>
           ))}
-        </div>
+        </Grid>
       )}
     </Container>
   );

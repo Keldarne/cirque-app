@@ -133,18 +133,25 @@ function FiguresPage() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       {/* Bouton retour et titre */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' }, 
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        gap: 2, 
+        mb: 4 
+      }}>
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/')}
+          size="small"
         >
-          Retour aux disciplines
+          Retour
         </Button>
-        <Typography variant="h4">
-          Figures de la discipline {discipline ? discipline.nom : id}
+        <Typography variant="h4" sx={{ fontWeight: 'bold', fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
+          {discipline ? discipline.nom : 'Chargement...'}
         </Typography>
       </Box>
 
@@ -152,7 +159,9 @@ function FiguresPage() {
         {figures.map(fig => (
           <Grid
             item
-            xs={expandedFigure?.id === fig.id ? 12 : 6} // ✅ carte cliquée prend toute la largeur
+            xs={12} // Toujours 12 sur mobile
+            sm={expandedFigure?.id === fig.id ? 12 : 6} // S'étend sur 12 si ouvert sur tablette+
+            md={expandedFigure?.id === fig.id ? 12 : 4} // S'étend sur 12 si ouvert sur desktop+
             key={fig.id}
           >
             <Card
@@ -161,7 +170,10 @@ function FiguresPage() {
                 cursor: "pointer",
                 transition: "all 0.3s ease",
                 boxShadow: expandedFigure?.id === fig.id ? 6 : 2,
-                position: 'relative'
+                position: 'relative',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
               }}
             >
               {/* Badge d'état */}
@@ -182,7 +194,8 @@ function FiguresPage() {
                     position: 'absolute',
                     top: 10,
                     right: 10,
-                    zIndex: 1
+                    zIndex: 1,
+                    fontWeight: 'bold'
                   }}
                 />
               )}
@@ -190,30 +203,32 @@ function FiguresPage() {
               {fig.image_url && (
                 <CardMedia
                   component="img"
-                  height="200"
+                  height={expandedFigure?.id === fig.id ? 300 : 180}
                   image={fig.image_url}
                   alt={fig.nom}
+                  sx={{ transition: 'height 0.3s ease' }}
                 />
               )}
-              <CardContent>
-                <Typography variant="h6">{fig.nom}</Typography>
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" fontWeight="bold">{fig.nom}</Typography>
               </CardContent>
 
               <Collapse in={expandedFigure?.id === fig.id} timeout="auto" unmountOnExit>
-                <CardContent>
-                  <Typography variant="body2" paragraph>
+                <CardContent sx={{ pt: 0 }}>
+                  <Typography variant="body2" paragraph color="text.secondary">
                     {fig.descriptif}
                   </Typography>
                   {fig.video_url && (
-                    <video
-                      src={fig.video_url}
-                      controls
-                      style={{
-                        width: "100%",
-                        borderRadius: "8px",
-                        marginTop: "10px"
-                      }}
-                    />
+                    <Box sx={{ width: '100%', mt: 2, borderRadius: 2, overflow: 'hidden' }}>
+                      <video
+                        src={fig.video_url}
+                        controls
+                        style={{
+                          width: "100%",
+                          display: 'block'
+                        }}
+                      />
+                    </Box>
                   )}
 
                   <Button
@@ -222,7 +237,7 @@ function FiguresPage() {
                     startIcon={isInProgress(fig.id) ? <CheckIcon /> : <AddIcon />}
                     onClick={(e) => handleAddToProgress(e, fig.id)}
                     disabled={isInProgress(fig.id)}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 3 }}
                     fullWidth
                   >
                     {isInProgress(fig.id) ? 'Déjà dans votre liste' : 'Ajouter à ma liste'}
@@ -241,11 +256,11 @@ function FiguresPage() {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Container>
   );
 }
 

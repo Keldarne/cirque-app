@@ -230,10 +230,10 @@ function TitresPage() {
   }
 
   return (
-    <Container maxWidth="lg" className="titres-container">
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       {/* En-tête */}
-      <Box className="titres-header">
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
           Collection de Titres
         </Typography>
         <Typography variant="body1" color="textSecondary">
@@ -244,14 +244,15 @@ function TitresPage() {
       {/* Titre actuellement équipé */}
       {titreEquipe && (
         <Paper
-          className="titres-equipped-section"
           sx={{
             p: 3,
+            mb: 4,
             background: `linear-gradient(135deg, ${titreEquipe.couleur}20 0%, ${titreEquipe.couleur}05 100%)`,
-            border: `2px solid ${titreEquipe.couleur}`
+            border: `2px solid ${titreEquipe.couleur}`,
+            borderRadius: 2
           }}
         >
-          <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" gap={2}>
             <Box display="flex" alignItems="center">
               <StarIcon sx={{ fontSize: 48, color: titreEquipe.couleur, mr: 2 }} />
               <Box>
@@ -266,7 +267,13 @@ function TitresPage() {
                 </Typography>
               </Box>
             </Box>
-            <Button variant="outlined" color="error" onClick={desequiperTitre}>
+            <Button 
+              variant="outlined" 
+              color="error" 
+              onClick={desequiperTitre}
+              fullWidth={false}
+              sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}
+            >
               Déséquiper
             </Button>
           </Box>
@@ -274,46 +281,46 @@ function TitresPage() {
       )}
 
       {/* Statistiques */}
-      <Paper className="titres-stats-section" sx={{ p: 3 }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 3 }}>
-          <Box textAlign="center">
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#2196F3' }}>
+      <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={4} textAlign="center">
+            <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'primary.main', fontSize: { xs: '2rem', md: '3rem' } }}>
               {nombreObtenus}
             </Typography>
             <Typography variant="body2" color="textSecondary">
               Titres obtenus
             </Typography>
-          </Box>
-          <Box textAlign="center">
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#9E9E9E' }}>
+          </Grid>
+          <Grid item xs={12} sm={4} textAlign="center">
+            <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'text.disabled', fontSize: { xs: '2rem', md: '3rem' } }}>
               {titres.length - nombreObtenus}
             </Typography>
             <Typography variant="body2" color="textSecondary">
               Titres à débloquer
             </Typography>
-          </Box>
-          <Box textAlign="center">
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#FFD700' }}>
+          </Grid>
+          <Grid item xs={12} sm={4} textAlign="center">
+            <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'secondary.main', fontSize: { xs: '2rem', md: '3rem' } }}>
               {Math.round((nombreObtenus / titres.length) * 100)}%
             </Typography>
             <Typography variant="body2" color="textSecondary">
               Collection complète
             </Typography>
-          </Box>
-        </Box>
+          </Grid>
+        </Grid>
       </Paper>
 
       {/* Grille de titres */}
       {titres.length === 0 ? (
-        <Alert severity="info">Aucun titre disponible pour le moment.</Alert>
+        <Alert severity="info" sx={{ borderRadius: 2 }}>Aucun titre disponible pour le moment.</Alert>
       ) : (
-        <div className="titres-grid-wrapper">
+        <Grid container spacing={3}>
           {titres.map((titre) => (
-            <div key={titre.id} className="titres-card-item">
+            <Grid item xs={12} sm={6} md={4} key={titre.id}>
               <TitreCard titre={titre} />
-            </div>
+            </Grid>
           ))}
-        </div>
+        </Grid>
       )}
 
       {/* Snackbar */}
@@ -322,7 +329,7 @@ function TitresPage() {
         autoHideDuration={3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert severity={snackbar.severity}>
+        <Alert severity={snackbar.severity} sx={{ borderRadius: 2 }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

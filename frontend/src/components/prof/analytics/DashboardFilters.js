@@ -23,8 +23,10 @@ const DashboardFilters = ({
   onGroupChange
 }) => {
   return (
-    <Paper elevation={1} sx={{ p: 2, mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-      <FilterListIcon color="action" />
+    <Paper elevation={1} sx={{ p: 2, mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' } }}>
+      <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+        <FilterListIcon color="action" />
+      </Box>
       
       {/* Recherche Élève */}
       <TextField
@@ -39,11 +41,11 @@ const DashboardFilters = ({
             </InputAdornment>
           ),
         }}
-        sx={{ minWidth: 200 }}
+        sx={{ minWidth: { xs: '100%', sm: 200 }, flexGrow: 1 }}
       />
 
       {/* Filtre Groupe */}
-      <FormControl size="small" sx={{ minWidth: 150 }}>
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
         <InputLabel>Groupe</InputLabel>
         <Select
           value={selectedGroup || ''}
@@ -58,7 +60,7 @@ const DashboardFilters = ({
       </FormControl>
 
       {/* Filtre Discipline */}
-      <FormControl size="small" sx={{ minWidth: 150 }}>
+      <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
         <InputLabel>Discipline</InputLabel>
         <Select
           value={selectedDiscipline || ''}

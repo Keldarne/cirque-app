@@ -36,12 +36,12 @@ function DisciplinesPage() {
 
   // Rendu : grille de cartes cliquables vers chaque discipline
   return (
-    <div style={{ padding: "20px" }}>
-      <Typography variant="h4" gutterBottom>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 3, fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
         Disciplines
       </Typography>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         {disciplines.map(discipline => (
           <Grid item xs={12} sm={6} md={4} key={discipline.id}>
             <Link
@@ -50,9 +50,13 @@ function DisciplinesPage() {
             >
               <Card
                 sx={{
+                  height: '100%',
                   cursor: "pointer",
-                  transition: "transform 0.2s ease",
-                  "&:hover": { transform: "scale(1.05)" }
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": { 
+                    transform: "translateY(-4px)",
+                    boxShadow: 4
+                  }
                 }}
               >
                 {discipline.image_url && (
@@ -63,8 +67,8 @@ function DisciplinesPage() {
                     alt={discipline.nom}
                   />
                 )}
-                <CardContent>
-                  <Typography variant="h6" align="center">
+                <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Typography variant="h6" align="center" fontWeight="bold">
                     {discipline.nom}
                   </Typography>
                 </CardContent>
@@ -73,7 +77,7 @@ function DisciplinesPage() {
           </Grid>
         ))}
       </Grid>
-    </div>
+    </Container>
   );
 }
 

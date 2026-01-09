@@ -23,9 +23,9 @@ const CatalogAdminPage = () => {
   const ecoleId = user?.role === 'school_admin' ? user.ecole_id : null;
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
+        <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
           Administration du Catalogue
         </Typography>
         <Typography variant="body1" color="textSecondary">
@@ -41,6 +41,7 @@ const CatalogAdminPage = () => {
           textColor="primary"
           variant="scrollable"
           scrollButtons="auto"
+          allowScrollButtonsMobile
         >
           <Tab label="Figures & Contenu" />
           <Tab label="Disciplines" />

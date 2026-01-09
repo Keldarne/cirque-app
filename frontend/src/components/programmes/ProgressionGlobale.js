@@ -45,7 +45,7 @@ function ProgressionGlobale({
             </Typography>
           )}
         </Box>
-        <Typography variant="h2" sx={{ fontWeight: 'bold' }}>
+        <Typography variant="h2" sx={{ fontWeight: 'bold', fontSize: { xs: '2.5rem', md: '3.75rem' } }}>
           {Math.round(progressPercent)}%
         </Typography>
       </Box>
