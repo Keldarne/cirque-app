@@ -73,7 +73,7 @@ function DisciplineSection({
         </Box>
 
         {/* Bouton Ajouter (si actions activées) */}
-        {showActions && editMode && (
+        {showActions && editMode && onAddFigures && (
           <Button
             size="small"
             startIcon={<AddIcon />}
