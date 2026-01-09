@@ -28,6 +28,7 @@ import ProgrammeDetailPageProf from "./pages/prof/ProgrammeDetailPage";
 
 // Pages admin
 import AdminPage from "./pages/admin/AdminPage";
+import CatalogAdminPage from "./pages/admin/CatalogAdminPage";
 import NavigationBar from "./NavigationBar";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RefreshProvider } from "./contexts/RefreshContext";
@@ -55,6 +56,7 @@ function App() {
           <Route path="/mon-programme/:id" element={<ProgrammeDetailPageEleve />} />
           <Route path="/figure/:figureId" element={<FigureDetailPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/catalog" element={<CatalogAdminPage />} />
 
           {/* Routes Entraînement (Refactorisées pour être centrées sur les figures) */}
           <Route path="/entrainement/figure/:figureId" element={<EntrainementPage />} />

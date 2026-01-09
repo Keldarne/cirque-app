@@ -115,6 +115,14 @@ function NavigationBar() {
                 >
                   Admin
                 </Button>
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/admin/catalog"
+                  startIcon={<AdminIcon />}
+                >
+                  Catalogue
+                </Button>
               </>
             )}
 
