@@ -104,7 +104,8 @@ const StudentAnalyticsModal = ({ open, onClose, student }) => {
   const handleValidateFigure = async (figureId) => {
     setValidating(figureId);
     try {
-      const res = await api.post(`/api/prof/validation/eleves/${student.id}/figures/${figureId}`);
+      // Endpoint de validation en masse défini dans routes/prof/eleves.js
+      const res = await api.post(`/api/prof/eleves/${student.id}/figures/${figureId}/valider`);
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Erreur lors de la validation');
