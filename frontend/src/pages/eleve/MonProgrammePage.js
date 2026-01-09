@@ -88,7 +88,38 @@ function MonProgrammePage() {
   // 7. Calcul principal : Liste des figures à afficher
   const figuresToDisplay = useMemo(() => {
     if (selectedProgrammeId === 'personnel') {
-      return progression || [];
+      const allFiguresMap = new Map();
+
+      // 1. Ajouter les figures avec progression active
+      if (progression) {
+        progression.forEach(p => {
+          allFiguresMap.set(p.figure_id, p);
+        });
+      }
+
+      // 2. Ajouter les figures des programmes assignés (non commencées)
+      if (programmesAssignes) {
+        programmesAssignes.forEach(prog => {
+          if (prog.ProgrammesFigures) {
+            prog.ProgrammesFigures.forEach(pf => {
+              const fig = pf.Figure;
+              if (fig && !allFiguresMap.has(fig.id)) {
+                allFiguresMap.set(fig.id, {
+                  ...fig,
+                  figure_id: fig.id,
+                  figure_nom: fig.nom,
+                  figure_description: fig.description || fig.descriptif,
+                  discipline: fig.Discipline,
+                  etapes: [], // Pas de progression
+                  statut: 'non_commence'
+                });
+              }
+            });
+          }
+        });
+      }
+
+      return Array.from(allFiguresMap.values());
     }
 
     if (selectedProgramme && selectedProgramme.ProgrammesFigures) {
