@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
   Grid,
   Box,
   Typography,
@@ -20,7 +16,6 @@ import {
   Chip,
   Paper
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -39,6 +34,7 @@ import {
 } from 'recharts';
 
 import api from '../../../utils/api';
+import ResponsiveDrawer from '../../common/ResponsiveDrawer';
 
 import EngagementChart from './EngagementChart';
 import VolumeChart from './VolumeChart';
@@ -264,21 +260,12 @@ const StudentAnalyticsModal = ({ open, onClose, student, onValidation }) => {
   const figureStats = selectedFigureDetails ? calculateFigureStats(selectedFigureDetails.history) : null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h6">{student.prenom} {student.nom}</Typography>
-            <Typography variant="body2" color="textSecondary">
-              Tableau de bord de progression individuelle
-            </Typography>
-          </Box>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-      <DialogContent dividers>
+    <ResponsiveDrawer
+      open={open}
+      onClose={onClose}
+      title={`${student.prenom} ${student.nom}`}
+      maxWidth="md"
+    >
         {loading ? (
           <Box display="flex" justifyContent="center" p={4}>
             <CircularProgress />
@@ -287,6 +274,10 @@ const StudentAnalyticsModal = ({ open, onClose, student, onValidation }) => {
           <Alert severity="error">{error}</Alert>
         ) : (
           <Box>
+            <Typography variant="body2" color="textSecondary" align="center" sx={{ mb: 2 }}>
+              Tableau de bord de progression individuelle
+            </Typography>
+
             {/* --- Summary KPIs Section --- */}
             {studentStats && (
               <Box sx={{ mb: 4, mt: 1 }}>
@@ -340,7 +331,7 @@ const StudentAnalyticsModal = ({ open, onClose, student, onValidation }) => {
               </Box>
             )}
 
-            <Tabs value={tabIndex} onChange={handleTabChange} centered sx={{ mb: 3 }}>
+            <Tabs value={tabIndex} onChange={handleTabChange} centered sx={{ mb: 3 }} variant="fullWidth">
               <Tab label="Historique & Graphiques" />
               <Tab label="Validation Figures" />
             </Tabs>
@@ -527,8 +518,7 @@ const StudentAnalyticsModal = ({ open, onClose, student, onValidation }) => {
             )}
           </Box>
         )}
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDrawer>
   );
 };
 
