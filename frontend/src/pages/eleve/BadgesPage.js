@@ -12,7 +12,8 @@ import {
   Tab,
   Paper,
   Tooltip,
-  LinearProgress
+  LinearProgress,
+  Grid
 } from '@mui/material';
 import {
   EmojiEvents as TrophyIcon,

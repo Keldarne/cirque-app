@@ -5,7 +5,8 @@ import {
   CardContent,
   CardMedia,
   Typography,
-  Grid
+  Grid,
+  Container
 } from "@mui/material";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../utils/api";
