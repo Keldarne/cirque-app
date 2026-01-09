@@ -49,6 +49,25 @@ Ensuite, ouvrez votre navigateur :
 - **Frontend** : http://localhost:3000
 - **Backend API** : http://localhost:4000
 
+### 🌐 Accès Réseau Local
+
+Le frontend est accessible depuis **tout le réseau local** :
+- Sur votre PC : http://localhost:3000
+- Depuis un autre appareil : http://<VOTRE-IP>:3000
+
+**Trouver votre IP locale** :
+```bash
+# Windows
+ipconfig | findstr "IPv4"
+
+# Mac/Linux
+ifconfig | grep "inet " | grep -v 127.0.0.1
+
+# Exemple : http://192.168.1.10:3000
+```
+
+**Note** : Assurez-vous que le pare-feu autorise le port 3000 et 4000.
+
 ### 2. Comptes de Test
 
 Utilisez les comptes suivants pour vous connecter :

@@ -63,6 +63,7 @@ services:
       - "3000:3000"
     environment:
       REACT_APP_API_URL: http://localhost:4000
+      HOST: 0.0.0.0  # Écouter sur toutes les interfaces réseau
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
     volumes:
