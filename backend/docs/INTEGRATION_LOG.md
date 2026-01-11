@@ -4,6 +4,213 @@ Ce fichier documente les changements backend qui impactent le frontend et permet
 
 ---
 
+## ✅ [2026-01-12] SUPPRESSION SYSTÈME GAMIFICATION
+
+### 👤 Émetteur
+**Développeur**: Claude Code - Refactoring
+**Status**: ✅ **BACKEND NETTOYÉ** | ⚠️ **FRONTEND PARTIELLEMENT NETTOYÉ**
+
+### 📋 Contexte
+Suppression complète du système de gamification (badges, titres, classements, défis) du projet. Conservation uniquement des **Streaks**, **XP** et **Niveau**.
+
+---
+
+### ✅ Backend Nettoyé (100%)
+
+#### Modèles Supprimés
+- ❌ `Badge.js`
+- ❌ `BadgeUtilisateur.js`
+- ❌ `Titre.js`
+- ❌ `TitreUtilisateur.js`
+- ❌ `Defi.js`
+- ❌ `DefiUtilisateur.js`
+
+#### Routes Supprimées
+- ❌ `/api/gamification/badges` (toutes)
+- ❌ `/api/gamification/titres` (toutes)
+- ❌ `/api/gamification/classements` (toutes)
+- ❌ `/api/gamification/defis` (toutes)
+
+#### Service GamificationService Simplifié
+**Fichier**: [`backend/src/services/GamificationService.js`](../../backend/src/services/GamificationService.js)
+
+**Méthodes restantes**:
+- `getGamificationProfile(user)` - **MODIFIÉ** (voir ci-dessous)
+- `getUserStreakStatus(utilisateurId)` - inchangé
+
+**Nouvelle structure de `getGamificationProfile()`**:
+```javascript
+{
+  niveau: 5,                    // ✅ Conservé
+  xp_total: 1250,              // ✅ Conservé
+  streak: {                     // ✅ Conservé
+    jours_consecutifs: 7,
+    record_personnel: 12
+  }
+  // ❌ SUPPRIMÉ: badges (total, affiche)
+  // ❌ SUPPRIMÉ: titres (total, equipe)
+  // ❌ SUPPRIMÉ: defis_completes
+  // ❌ SUPPRIMÉ: classement_global
+}
+```
+
+#### Base de Données
+**Tables supprimées** (via reset-and-seed):
+- `Badges`
+- `BadgeUtilisateur`
+- `Titres`
+- `TitreUtilisateur`
+- `Defis`
+- `DefiUtilisateur`
+
+**Tables conservées**:
+- ✅ `Streaks` (complet)
+- ✅ `Utilisateurs` (avec `xp_total`, `niveau`)
+
+---
+
+### ⚠️ Frontend Partiellement Nettoyé
+
+#### ✅ Pages Supprimées
+- ❌ `frontend/src/pages/eleve/BadgesPage.js`
+- ❌ `frontend/src/pages/eleve/TitresPage.js`
+- ❌ `frontend/src/pages/common/LeaderboardPage.js`
+- ❌ `frontend/src/pages/eleve/ClassementsPage.js`
+
+#### ✅ Hooks Supprimés
+- ❌ `frontend/src/hooks/useLeaderboard.js`
+
+#### ✅ Navigation Nettoyée
+**Fichier**: [`frontend/src/NavigationBar.js`](../../frontend/src/NavigationBar.js)
+- Import `LeaderboardIcon` supprimé
+- Lien `/classements` supprimé (menu mobile)
+- Liens `/badges` et `/titres` déjà commentés
+
+#### ✅ Routing Nettoyé
+**Fichier**: [`frontend/src/App.js`](../../frontend/src/App.js)
+- Imports `BadgesPage`, `TitresPage`, `LeaderboardPage` supprimés
+- Routes `/badges`, `/titres`, `/classements` supprimées
+
+#### ⚠️ ProfilPage Simplifié (ATTENTION)
+**Fichier**: [`frontend/src/pages/common/ProfilPage.js`](../../frontend/src/pages/common/ProfilPage.js)
+
+**Modifications effectuées**:
+1. ❌ Suppression de l'affichage du `titre_equipe` (ligne ~158-164)
+2. ✅ Conservation des KPIs: Streak (jours), Grit Score, **Record Personnel** (remplace défis)
+3. ❌ Section Badges remplacée par section Progression (Niveau + XP Total)
+
+**Structure actuelle des KPIs**:
+```jsx
+<Grid item xs={12} sm={4}>
+  {/* Streak - jours_consecutifs */}
+</Grid>
+<Grid item xs={12} sm={4}>
+  {/* Grit Score (conservé, provient de /api/progression/grit-score) */}
+</Grid>
+<Grid item xs={12} sm={4}>
+  {/* Record Personnel (remplace défis_completes) */}
+  profil.streak?.record_personnel
+</Grid>
+```
+
+**⚠️ IMPORTANT**: La page charge toujours 3 endpoints en parallèle:
+```javascript
+const [profilRes, statsRes, gritRes] = await Promise.all([
+  api.get('/api/gamification/statistiques/utilisateur/profil-gamification'), // ✅ OK (simplifié)
+  api.get(`/api/statistiques/eleve/${user.id}/dashboard`),                   // ✅ OK (inchangé)
+  api.get('/api/progression/grit-score')                                      // ✅ OK (inchangé)
+]);
+```
+
+---
+
+### 🎯 Actions Requises Frontend (Gemini)
+
+#### 1. Vérifier l'affichage de ProfilPage
+**Tester que**:
+- Le profil s'affiche correctement sans erreurs
+- Les 3 KPIs sont bien affichés (Streak jours, Grit, Record)
+- La section "Progression" affiche Niveau et XP Total
+- Pas de références résiduelles à `badges`, `titres`, `defis_completes`, `classement_global`
+
+#### 2. Supprimer toute référence résiduelle
+**Vérifier dans tous les composants**:
+```bash
+# Rechercher les références restantes
+grep -r "badges" frontend/src/
+grep -r "titres" frontend/src/
+grep -r "classement" frontend/src/
+grep -r "defis_completes" frontend/src/
+grep -r "LeaderboardIcon" frontend/src/
+```
+
+#### 3. Ajuster les interfaces TypeScript (si utilisées)
+Si vous avez des interfaces pour le profil gamification:
+```typescript
+// AVANT
+interface GamificationProfile {
+  niveau: number;
+  xp_total: number;
+  badges: { total: number; affiche: Badge | null };
+  titres: { total: number; equipe: Titre | null };
+  streak: { jours_consecutifs: number; record_personnel: number };
+  defis_completes: number;
+  classement_global: number;
+}
+
+// APRÈS
+interface GamificationProfile {
+  niveau: number;
+  xp_total: number;
+  streak: { jours_consecutifs: number; record_personnel: number };
+}
+```
+
+#### 4. Tests UI recommandés
+- [ ] Profil utilisateur s'affiche sans erreur
+- [ ] Pas d'appels API vers endpoints supprimés
+- [ ] Navigation ne contient plus de liens vers badges/titres/classements
+- [ ] Aucune page orpheline accessible
+
+---
+
+### 📊 Impact Global
+
+**Fichiers supprimés**: 18
+- Backend: 10 (6 modèles + 4 routes)
+- Frontend: 5 (4 pages + 1 hook)
+- Tests: 3
+
+**Fichiers modifiés**: 9
+- Backend: 4 (models/index.js, GamificationService.js, seed, routes)
+- Frontend: 3 (App.js, NavigationBar.js, ProfilPage.js)
+- Seed: 2
+
+**Lignes de code supprimées**: ~2900
+
+---
+
+### ✅ Validation Technique
+
+**Backend**:
+- ✅ `npm run reset-and-seed` exécuté avec succès
+- ✅ DB créée sans tables gamification
+- ✅ Seed fonctionne (35 figures, 7 disciplines)
+- ✅ Aucune erreur de compilation
+
+**Frontend**:
+- ⏳ À tester: compilation React
+- ⏳ À tester: affichage ProfilPage
+- ⏳ À tester: navigation
+
+---
+
+### 🔗 Commits Associés
+- `83a5fa4` - Backup avant suppression système gamification
+- `a48b114` - Supprimer système gamification (badges, titres, classements, défis)
+
+---
+
 ## ✅ [2026-01-11] BACKEND COMPLET - Gestion Utilisateurs École
 
 ### 👤 Émetteur
