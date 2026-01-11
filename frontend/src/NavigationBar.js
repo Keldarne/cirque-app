@@ -27,8 +27,7 @@ import {
   Star as StarIcon,
   Flag as FlagIcon,
   Assignment as AssignmentIcon,
-  Lightbulb as LightbulbIcon,
-  Leaderboard as LeaderboardIcon
+  Lightbulb as LightbulbIcon
 } from "@mui/icons-material";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -225,12 +224,6 @@ function NavigationBar() {
                   <ListItemButton component={Link} to="/suggestions">
                     <ListItemIcon><LightbulbIcon color="primary" /></ListItemIcon>
                     <ListItemText primary="Suggestions" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton component={Link} to="/classements">
-                    <ListItemIcon><LeaderboardIcon color="primary" /></ListItemIcon>
-                    <ListItemText primary="Classements" />
                   </ListItemButton>
                 </ListItem>
                 */}

@@ -3,7 +3,7 @@
  *
  * Structure:
  * 1. Écoles (2 test schools)
- * 2. Catalogue Public (disciplines, figures, badges, titres, défis)
+ * 2. Catalogue Public (disciplines, figures)
  * 3. Users par école (professeurs, élèves)
  * 4. Données école-specific (progressions, groupes, relations)
  * 5. Solo users (utilisateurs sans école)
@@ -36,9 +36,6 @@ async function displaySummary(ecoles, catalogue, users, schoolFigures) {
   console.log('📚 CATALOGUE PUBLIC:');
   console.log(`  - ${catalogue.disciplines.length} disciplines`);
   console.log(`  - ${catalogue.figures.length} figures publiques`);
-  console.log(`  - ${catalogue.badges.length} badges`);
-  console.log(`  - ${catalogue.titres.length} titres`);
-  console.log(`  - ${catalogue.defis.length} défis`);
 
   // Statistiques exercices décomposés
   const totalRelations = await ExerciceFigure.count();

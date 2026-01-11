@@ -155,13 +155,6 @@ function ProfilPage() {
                 <EmailIcon sx={{ fontSize: 18, opacity: 0.8 }} />
                 <Typography variant="body1" sx={{ opacity: 0.8 }}>{user.email}</Typography>
               </Box>
-              {profil.titres?.equipe && (
-                <Chip 
-                  icon={<TrophyIcon style={{ color: '#FFD700' }} />} 
-                  label={profil.titres.equipe.nom} 
-                  sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 'bold' }} 
-                />
-              )}
             </Box>
           </Box>
           
@@ -224,9 +217,9 @@ function ProfilPage() {
             </Grid>
             <Grid item xs={12} sm={4}>
               <Paper sx={{ p: 2, height: '100%', textAlign: 'center', border: `1px solid ${theme.palette.divider}` }}>
-                <ShieldIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
-                <Typography variant="h4" fontWeight="bold">{profil.defis_completes || 0}</Typography>
-                <Typography variant="body2" color="textSecondary">Défis Réussis</Typography>
+                <TrophyIcon color="warning" sx={{ fontSize: 40, mb: 1 }} />
+                <Typography variant="h4" fontWeight="bold">{profil.streak?.record_personnel || 0}</Typography>
+                <Typography variant="body2" color="textSecondary">Record Personnel</Typography>
               </Paper>
             </Grid>
           </Grid>
@@ -260,26 +253,20 @@ function ProfilPage() {
             </Box>
           </Paper>
 
-          {/* Badges Récents */}
+          {/* Progression */}
           <Paper sx={{ p: 3 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6">Badges ({profil.badges.total})</Typography>
-              {profil.badges.affiche && (
-                <Chip 
-                  icon={<ShieldIcon />} 
-                  label={`Badge affiché: ${profil.badges.affiche.nom}`} 
-                  color="primary" 
-                  variant="outlined" 
-                />
-              )}
-            </Box>
+            <Typography variant="h6" gutterBottom>Progression</Typography>
             <Divider sx={{ mb: 2 }} />
-            {/* Ici on pourrait mapper les badges récents si l'API les renvoyait en détail */}
-            {/* 
-            <Typography variant="body2" color="textSecondary">
-              Consultez la section Badges pour voir toute votre collection.
-            </Typography>
-            */}
+            <Box display="flex" justifyContent="space-around" alignItems="center">
+              <Box textAlign="center">
+                <Typography variant="h3" fontWeight="bold" color="primary">{profil.niveau}</Typography>
+                <Typography variant="body2" color="textSecondary">Niveau</Typography>
+              </Box>
+              <Box textAlign="center">
+                <Typography variant="h3" fontWeight="bold" color="secondary">{profil.xp_total}</Typography>
+                <Typography variant="body2" color="textSecondary">XP Total</Typography>
+              </Box>
+            </Box>
           </Paper>
         </Grid>
 

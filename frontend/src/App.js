@@ -15,11 +15,8 @@ import MonProgrammePage from "./pages/eleve/MonProgrammePage";
 import ProgrammeDetailPageEleve from "./pages/eleve/ProgrammeDetailPage";
 import EntrainementPage from "./pages/eleve/EntrainementPage";
 import EntrainementSession from "./pages/eleve/EntrainementSession";
-import BadgesPage from "./pages/eleve/BadgesPage";
-import TitresPage from "./pages/eleve/TitresPage";
 import DefisPage from "./pages/eleve/DefisPage";
 import StudentSuggestionsPage from "./pages/eleve/StudentSuggestionsPage";
-import LeaderboardPage from "./pages/common/LeaderboardPage";
 
 // Pages professeur
 import TeacherDashboardPage from "./pages/prof/AdvancedDashboardPage";
@@ -72,11 +69,8 @@ function App() {
           <Route path="/prof/programmes/:id" element={<ProgrammeDetailPageProf />} />
 
           {/* Routes Gamification */}
-          {/* <Route path="/badges" element={<BadgesPage />} /> */}
-          {/* <Route path="/titres" element={<TitresPage />} /> */}
           <Route path="/defis" element={<DefisPage />} />
           {/* <Route path="/suggestions" element={<StudentSuggestionsPage />} /> */}
-          {/* <Route path="/classements" element={<LeaderboardPage />} /> */}
         </Routes>
         </ThemeProvider>
       </RefreshProvider>

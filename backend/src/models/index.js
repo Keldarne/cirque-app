@@ -5,13 +5,7 @@ const Discipline = require('./Discipline');
 const EtapeProgression = require('./EtapeProgression');
 const ProgressionEtape = require('./ProgressionEtape'); // Refactored
 const RelationProfEleve = require('./RelationProfEleve');
-const Badge = require('./Badge');
-const BadgeUtilisateur = require('./BadgeUtilisateur');
-const Defi = require('./Defi');
-const DefiUtilisateur = require('./DefiUtilisateur');
 const Streak = require('./Streak');
-const Titre = require('./Titre');
-const TitreUtilisateur = require('./TitreUtilisateur');
 const Groupe = require('./Groupe');
 const GroupeEleve = require('./GroupeEleve');
 const InteractionProfEleve = require('./InteractionProfEleve');
@@ -158,19 +152,7 @@ ProgrammePartage.belongsTo(Utilisateur, { foreignKey: 'annule_par', as: 'AnnuleP
 AssignationProgramme.belongsTo(ProgrammePartage, { foreignKey: 'source_partage_id', as: 'PartageSource' });
 ProgrammePartage.hasMany(AssignationProgramme, { foreignKey: 'source_partage_id', as: 'AssignationsDependantes' });
 
-// Gamification
-Badge.hasMany(BadgeUtilisateur, { foreignKey: 'badge_id' });
-BadgeUtilisateur.belongsTo(Badge, { foreignKey: 'badge_id' });
-Utilisateur.hasMany(BadgeUtilisateur, { foreignKey: 'utilisateur_id', as: 'badgesObtenus' });
-BadgeUtilisateur.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
-Titre.hasMany(TitreUtilisateur, { foreignKey: 'titre_id' });
-TitreUtilisateur.belongsTo(Titre, { foreignKey: 'titre_id' });
-Utilisateur.hasMany(TitreUtilisateur, { foreignKey: 'utilisateur_id', as: 'titresObtenus' });
-TitreUtilisateur.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
-Defi.hasMany(DefiUtilisateur, { foreignKey: 'defi_id' });
-DefiUtilisateur.belongsTo(Defi, { foreignKey: 'defi_id' });
-Utilisateur.hasMany(DefiUtilisateur, { foreignKey: 'utilisateur_id', as: 'defisUtilisateur' });
-DefiUtilisateur.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
+// Gamification - Streaks
 Utilisateur.hasOne(Streak, { foreignKey: 'utilisateur_id', as: 'streak' });
 Streak.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
 
@@ -216,13 +198,7 @@ module.exports = {
   EtapeProgression,
   ProgressionEtape, // Refactored
   RelationProfEleve,
-  Badge,
-  BadgeUtilisateur,
-  Defi,
-  DefiUtilisateur,
   Streak,
-  Titre,
-  TitreUtilisateur,
   Groupe,
   GroupeEleve,
   InteractionProfEleve,

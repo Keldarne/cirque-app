@@ -3,12 +3,9 @@
  * Création du catalogue partagé par toutes les écoles:
  * - Disciplines (globales, pas de ecole_id)
  * - Figures publiques (ecole_id = NULL, visibilite = 'public')
- * - Badges publics
- * - Titres publics
- * - Défis publics
  */
 
-const { Discipline, Figure, Badge, Titre, Defi, EtapeProgression } = require('../../src/models');
+const { Discipline, Figure, EtapeProgression } = require('../../src/models');
 const logger = require('../utils/logger');
 
 /**
@@ -79,101 +76,6 @@ const FIGURES_PUBLIQUES = {
   ]
 };
 
-/**
- * Badges publics - Matchent le schéma Badge model
- */
-const BADGES_PUBLICS = [
-  { nom: 'Premier Pas', description: 'Première figure validée', icone: 'trophy', couleur: '#FFC107', categorie: 'progression', condition_type: 'figures_validees', condition_valeur: 1, rarete: 'commun', xp_bonus: 10 },
-  { nom: 'Débutant', description: '5 figures validées', icone: 'star', couleur: '#4CAF50', categorie: 'progression', condition_type: 'figures_validees', condition_valeur: 5, rarete: 'commun', xp_bonus: 25 },
-  { nom: 'Intermédiaire', description: '20 figures validées', icone: 'stars', couleur: '#2196F3', categorie: 'progression', condition_type: 'figures_validees', condition_valeur: 20, rarete: 'rare', xp_bonus: 50 },
-  { nom: 'Avancé', description: '50 figures validées', icone: 'verified', couleur: '#9C27B0', categorie: 'progression', condition_type: 'figures_validees', condition_valeur: 50, rarete: 'epique', xp_bonus: 100 },
-  { nom: 'Expert', description: '100 figures validées', icone: 'military_tech', couleur: '#FF5722', categorie: 'progression', condition_type: 'figures_validees', condition_valeur: 100, rarete: 'legendaire', xp_bonus: 250 },
-  { nom: 'Jongleur', description: 'Maîtrise du jonglage', icone: 'sports_gymnastics', couleur: '#FF9800', categorie: 'maitrise', condition_type: 'discipline_complete', condition_valeur: 1, rarete: 'rare', xp_bonus: 75 },
-  { nom: 'Acrobate', description: 'Maîtrise de l\'acrobatie', icone: 'accessibility_new', couleur: '#E91E63', categorie: 'maitrise', condition_type: 'discipline_complete', condition_valeur: 2, rarete: 'rare', xp_bonus: 75 },
-  { nom: 'Séquence 7 jours', description: '7 jours consécutifs', icone: 'local_fire_department', couleur: '#FF5722', categorie: 'streak', condition_type: 'streak_jours', condition_valeur: 7, rarete: 'commun', xp_bonus: 30 },
-  { nom: 'Séquence 30 jours', description: '30 jours consécutifs', icone: 'whatshot', couleur: '#F44336', categorie: 'streak', condition_type: 'streak_jours', condition_valeur: 30, rarete: 'rare', xp_bonus: 100 },
-  { nom: 'Explorateur', description: 'Testé toutes les disciplines', icone: 'explore', couleur: '#00BCD4', categorie: 'maitrise', condition_type: 'manuel', condition_valeur: 0, rarete: 'rare', xp_bonus: 100 }
-];
-
-/**
- * Titres publics - Matchent le schéma Titre model
- */
-const TITRES_PUBLICS = [
-  { nom: 'Novice', description: 'Débute l\'aventure du cirque', couleur: '#757575', condition_type: 'niveau', condition_valeur: 1, rarete: 'commun' },
-  { nom: 'Apprenti Circassien', description: 'Progresse dans les arts du cirque', couleur: '#795548', condition_type: 'niveau', condition_valeur: 2, rarete: 'commun' },
-  { nom: 'Artiste en Herbe', description: 'Talent en développement', couleur: '#4CAF50', condition_type: 'niveau', condition_valeur: 5, rarete: 'rare' },
-  { nom: 'Circassien Confirmé', description: 'Maîtrise plusieurs disciplines', couleur: '#2196F3', condition_type: 'niveau', condition_valeur: 10, rarete: 'rare' },
-  { nom: 'Artiste de Cirque', description: 'Reconnu pour son talent', couleur: '#9C27B0', condition_type: 'niveau', condition_valeur: 15, rarete: 'epique' },
-  { nom: 'Virtuose', description: 'Excellence technique', couleur: '#E91E63', condition_type: 'niveau', condition_valeur: 20, rarete: 'epique' },
-  { nom: 'Maître Circassien', description: 'Maîtrise exceptionnelle', couleur: '#FF5722', condition_type: 'niveau', condition_valeur: 25, rarete: 'legendaire' },
-  { nom: 'Légende du Cirque', description: 'Légende vivante', couleur: '#FFC107', condition_type: 'xp_total', condition_valeur: 50000, rarete: 'legendaire' }
-];
-
-/**
- * Défis publics - Matchent le schéma Defi model
- */
-const DEFIS_PUBLICS = [
-  {
-    titre: 'Challenge Débutant',
-    description: 'Valider 3 figures de niveau 1-2 en 7 jours',
-    type: 'hebdomadaire',
-    objectif: 'Valider 3 figures faciles',
-    objectif_type: 'figures_validees',
-    objectif_valeur: 3,
-    xp_recompense: 50,
-    date_debut: new Date(),
-    date_fin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    actif: true
-  },
-  {
-    titre: 'Semaine du Jonglage',
-    description: 'Valider 5 figures de jonglage en 7 jours',
-    type: 'hebdomadaire',
-    objectif: 'Pratiquer le jonglage intensivement',
-    objectif_type: 'disciplines_pratiquees',
-    objectif_valeur: 5,
-    xp_recompense: 100,
-    date_debut: new Date(),
-    date_fin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    actif: true
-  },
-  {
-    titre: 'Marathon 30 Jours',
-    description: 'Se connecter 30 jours consécutifs',
-    type: 'evenement',
-    objectif: 'Maintenir une pratique régulière',
-    objectif_type: 'streak_maintenu',
-    objectif_valeur: 30,
-    xp_recompense: 500,
-    date_debut: new Date(),
-    date_fin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    actif: true
-  },
-  {
-    titre: 'Expert Niveau 5',
-    description: 'Valider 3 figures de niveau 5 (difficiles)',
-    type: 'evenement',
-    objectif: 'Défier les figures les plus difficiles',
-    objectif_type: 'figures_validees',
-    objectif_valeur: 3,
-    xp_recompense: 400,
-    date_debut: new Date(),
-    date_fin: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-    actif: true
-  },
-  {
-    titre: 'Quotidien - 3 Étapes',
-    description: 'Valider 3 étapes aujourd\'hui',
-    type: 'quotidien',
-    objectif: 'Pratiquer quotidiennement',
-    objectif_type: 'etapes_validees',
-    objectif_valeur: 3,
-    xp_recompense: 20,
-    date_debut: new Date(),
-    date_fin: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-    actif: true
-  }
-];
 
 /**
  * Seed du catalogue public
@@ -185,10 +87,7 @@ async function seedCataloguePublic() {
     disciplines: [],
     disciplineMap: {},
     figures: [],
-    figuresByDiscipline: {},
-    badges: [],
-    titres: [],
-    defis: []
+    figuresByDiscipline: {}
   };
 
   try {
@@ -250,45 +149,9 @@ async function seedCataloguePublic() {
       logger.success(`  ✓ ${disciplineName}: ${figures.length} figures`);
     }
 
-    // 3. Créer badges publics (ecole_id = NULL)
-    logger.info('\n🏅 Création badges publics...');
-    for (const badgeData of BADGES_PUBLICS) {
-      const badge = await Badge.create({
-        ...badgeData,
-        ecole_id: null  // Public
-      });
-      catalogueData.badges.push(badge);
-    }
-    logger.success(`  ✓ ${BADGES_PUBLICS.length} badges`);
-
-    // 4. Créer titres publics (ecole_id = NULL)
-    logger.info('\n👑 Création titres publics...');
-    for (const titreData of TITRES_PUBLICS) {
-      const titre = await Titre.create({
-        ...titreData,
-        ecole_id: null  // Public
-      });
-      catalogueData.titres.push(titre);
-    }
-    logger.success(`  ✓ ${TITRES_PUBLICS.length} titres`);
-
-    // 5. Créer défis publics (ecole_id = NULL)
-    logger.info('\n🎲 Création défis publics...');
-    for (const defiData of DEFIS_PUBLICS) {
-      const defi = await Defi.create({
-        ...defiData,
-        ecole_id: null  // Public
-      });
-      catalogueData.defis.push(defi);
-    }
-    logger.success(`  ✓ ${DEFIS_PUBLICS.length} défis`);
-
     logger.section('✅ Catalogue Public créé');
     logger.info(`  - ${catalogueData.disciplines.length} disciplines`);
-    logger.info(`  - ${catalogueData.figures.length} figures publiques`);
-    logger.info(`  - ${catalogueData.badges.length} badges`);
-    logger.info(`  - ${catalogueData.titres.length} titres`);
-    logger.info(`  - ${catalogueData.defis.length} défis\n`);
+    logger.info(`  - ${catalogueData.figures.length} figures publiques\n`);
 
     return catalogueData;
 
