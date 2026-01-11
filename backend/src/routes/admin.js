@@ -28,18 +28,20 @@ router.get('/ecoles', verifierToken, estAdmin, async (req, res) => {
 /**
  * GET /admin/figures
  * Récupère les figures par école ou les figures publiques.
- * Permissions: masteradmin uniquement
+ * Permissions: admin uniquement
+ * Note: Les professeurs doivent utiliser GET /api/prof/figures
  */
 router.get('/figures', verifierToken, estAdmin, async (req, res) => {
   try {
     const { ecole_id } = req.query;
     const where = {};
-    
+
     if (ecole_id && ecole_id !== 'null') {
       where.ecole_id = ecole_id;
-    } else {
+    } else if (ecole_id === 'null') {
       where.ecole_id = null;
     }
+    // Si pas de ecole_id spécifié, admin voit tout (pas de filtre)
 
     const figures = await Figure.findAll({ where, include: [Discipline] });
     res.json(figures);
@@ -62,7 +64,7 @@ router.get('/figures', verifierToken, estAdmin, async (req, res) => {
  * POST /admin/figures
  * Crée une nouvelle figure avec ses étapes de progression et ses prérequis
  */
-router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) => {
+router.post('/figures', verifierToken, estPersonnelAutorise, async (req, res) => {
   try {
     const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis } = req.body;
 
@@ -75,10 +77,23 @@ router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) =
       createur_id: req.user.id
     };
 
-    if (req.user.role === 'school_admin') {
-      figureData.ecole_id = req.user.ecole_id;
-    } else if (req.user.role === 'admin') {
-      figureData.ecole_id = ecole_id || null;
+    // Sécurité Multi-Tenant RENFORCÉE (Migration 2026-01-10): Forcer l'ecole_id
+    if (req.user.role === 'admin') {
+      // Admin master peut choisir: public (null) ou école spécifique
+      figureData.ecole_id = ecole_id !== undefined ? ecole_id : null;
+      figureData.visibilite = figureData.ecole_id === null ? 'public' : 'ecole';
+    } else if (req.user.role === 'school_admin' || req.user.role === 'professeur') {
+      // Personnel école: DOIT utiliser leur école
+      if (!req.user.ecole_id) {
+        return res.status(400).json({ error: 'Vous devez être rattaché à une école pour créer des figures' });
+      }
+      figureData.ecole_id = req.user.ecole_id; // Force l'ID école
+      figureData.visibilite = 'ecole';
+
+      // Logger si tentative de créer avec mauvais ecole_id
+      if (ecole_id && ecole_id !== req.user.ecole_id) {
+        console.warn(`[SECURITY] User ${req.user.id} (${req.user.role}) attempted to create figure with wrong ecole_id ${ecole_id} (should be ${req.user.ecole_id})`);
+      }
     }
 
     // Passer les prérequis au service (tableau d'IDs)
@@ -100,8 +115,20 @@ router.post('/figures', verifierToken, estAdminOuSchoolAdmin, async (req, res) =
 router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigure, async (req, res) => {
   try {
     // Le middleware peutModifierFigure a déjà vérifié les droits et attaché la figure
-    const figure = req.figure; // The Figure instance is passed from the middleware
+    const figure = req.figure; 
     const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis } = req.body;
+
+    // Renforcement Sécurité Multi-Tenant (Double Check)
+    if (req.user.role !== 'admin') {
+      // Interdire modification du catalogue public
+      if (figure.ecole_id === null) {
+        return res.status(403).json({ error: 'Vous ne pouvez pas modifier le catalogue public.' });
+      }
+      // Interdire modification d'une autre école (normalement géré par le middleware, mais ceinture + bretelles)
+      if (figure.ecole_id !== req.user.ecole_id) {
+        return res.status(403).json({ error: 'Vous ne pouvez pas modifier les figures d\'une autre école.' });
+      }
+    }
 
     if (!nom || !discipline_id) {
       return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
@@ -109,11 +136,12 @@ router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigu
 
     const updateData = { nom, descriptif, image_url, video_url, discipline_id };
 
-    // Gérer l'ecole_id en fonction du rôle
-    if (req.user.role === 'school_admin') {
-      updateData.ecole_id = req.user.ecole_id;
-    } else if (req.user.role === 'admin') {
+    // Gérer l'ecole_id : non-admin ne peut pas changer l'école (reste la sienne)
+    if (req.user.role === 'admin') {
       updateData.ecole_id = ecole_id;
+    } else {
+      // On s'assure que l'ecole_id reste celui de l'utilisateur (ou de la figure existante, qui est la même)
+      updateData.ecole_id = req.user.ecole_id;
     }
 
     // Passer les prérequis au service (tableau d'IDs, ou undefined si non fourni)
@@ -191,6 +219,17 @@ router.get('/figures/:id/exercices', verifierToken, async (req, res) => {
 router.delete('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigure, async (req, res) => {
   try {
     const figure = req.figure; // Attaché par peutModifierFigure
+    
+    // Renforcement Sécurité Multi-Tenant
+    if (req.user.role !== 'admin') {
+      if (figure.ecole_id === null) {
+        return res.status(403).json({ error: 'Vous ne pouvez pas supprimer une figure du catalogue public.' });
+      }
+      if (figure.ecole_id !== req.user.ecole_id) {
+        return res.status(403).json({ error: 'Vous ne pouvez pas supprimer les figures d\'une autre école.' });
+      }
+    }
+
     const figureId = figure.id;
 
     // 1. Récupérer les IDs des étapes de cette figure

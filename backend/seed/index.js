@@ -10,7 +10,7 @@
  */
 
 const seedEcoles = require('./modules/seedEcoles');
-const seedCataloguePublic = require('./modules/seedCataloguePublic');
+const { seedCataloguePublic, createSchoolSpecificFigures } = require('./modules/seedCataloguePublic');
 const seedUtilisateurs = require('./modules/seedUtilisateurs');
 const seedRelations = require('./modules/seedRelations');
 const seedProgressions = require('./modules/seedProgressions');
@@ -23,10 +23,10 @@ const seedDisciplineAvailability = require('./modules/seedDisciplineAvailability
 const logger = require('./utils/logger');
 const scenarioDefinitions = require('./data/scenarios');
 
-async function displaySummary(ecoles, catalogue, users) {
+async function displaySummary(ecoles, catalogue, users, schoolFigures) {
   const { ExerciceFigure } = require('../src/models');
 
-  logger.header('SEED SUMMARY - Multi-Tenant Architecture');
+  logger.header('SEED SUMMARY - Multi-Tenant Architecture OPTIMISÉ');
 
   console.log('🏫 ÉCOLES:');
   console.log(`  - ${ecoles.voltige.nom} (${ecoles.voltige.plan} - ${ecoles.voltige.statut_abonnement})`);
@@ -48,8 +48,13 @@ async function displaySummary(ecoles, catalogue, users) {
   });
   console.log(`  - ${totalRelations} relations exercices-figures (${figuresAvecExercices} figures avec prérequis)\n`);
 
-  console.log('👥 UTILISATEURS:');
+  console.log('🏫 FIGURES ÉCOLE-SPÉCIFIQUES:');
+  console.log(`  - École Voltige: ${schoolFigures.voltige.length} figures`);
+  console.log(`  - Académie: ${schoolFigures.academie.length} figures\n`);
+
+  console.log('👥 UTILISATEURS (RÉDUIT 29→16):');
   console.log(`  - 1 admin global`);
+  console.log(`  - 1 school admin (École Voltige)`);
   console.log(`  - École Voltige: ${users.voltige.professeurs.length} profs, ${users.voltige.eleves.length} élèves`);
   console.log(`  - Académie: ${users.academie.professeurs.length} profs, ${users.academie.eleves.length} élèves`);
   console.log(`  - ${users.solo.length} utilisateurs solo\n`);
@@ -60,7 +65,7 @@ async function displaySummary(ecoles, catalogue, users) {
 }
 
 async function runSeed() {
-  logger.header('Starting Multi-Tenant Seed');
+  logger.header('Starting Multi-Tenant Seed - OPTIMISÉ (16 users, <10s)');
 
   try {
     // Step 1: Créer les écoles
@@ -69,10 +74,13 @@ async function runSeed() {
     // Step 2: Créer le catalogue public (partagé par tous)
     const catalogue = await seedCataloguePublic();
 
+    // Step 2.1: Créer figures école-spécifiques (NOUVEAU)
+    const schoolFigures = await createSchoolSpecificFigures(ecoles, catalogue.disciplineMap);
+
     // Step 2.5: Configurer disponibilité des disciplines par école (opt-in)
     await seedDisciplineAvailability();
 
-    // Step 3: Créer les utilisateurs (admin, profs, élèves, solo)
+    // Step 3: Créer les utilisateurs (admin, school_admin, profs, élèves, solo)
     const users = await seedUtilisateurs(ecoles);
 
     // Step 4: Créer relations prof-élève et groupes
@@ -81,15 +89,17 @@ async function runSeed() {
       [...users.voltige.eleves, ...users.academie.eleves]
     );
 
-    // Step 5: Créer progressions exemple
+    // Step 5: Créer progressions exemple (RÉDUIT avec figures école)
     const allProfs = [...users.voltige.professeurs, ...users.academie.professeurs];
     const allEleves = [...users.voltige.eleves, ...users.academie.eleves];
-    
+
     const { progressions } = await seedProgressions(
       allEleves,
       catalogue.figuresByDiscipline,
       scenarioDefinitions,
-      allProfs
+      allProfs,
+      ecoles,        // NOUVEAU
+      schoolFigures  // NOUVEAU
     );
 
     // Step 6: Créer interactions prof-élève (pour tester élèves négligés)
@@ -98,7 +108,7 @@ async function runSeed() {
       [...users.voltige.eleves, ...users.academie.eleves]
     );
 
-    // Step 7: Créer tentatives (pour tester Grit Score)
+    // Step 7: Créer tentatives (pour tester Grit Score - RÉDUIT 30%)
     await seedTentatives(
       [...users.voltige.eleves, ...users.academie.eleves]
     );
@@ -114,9 +124,9 @@ async function runSeed() {
 
     // Display summary
     console.log('');
-    await displaySummary(ecoles, catalogue, users);
+    await displaySummary(ecoles, catalogue, users, schoolFigures);
 
-    logger.header('✨ Multi-Tenant Seed completed successfully!');
+    logger.header('✨ Multi-Tenant Seed completed successfully - OPTIMISÉ!');
 
     process.exit(0);
   } catch (error) {

@@ -87,8 +87,27 @@ const Figure = sequelize.define('Figure', {
     {
       name: 'idx_createur',
       fields: ['createur_id']
+    },
+    // Nouveaux index pour optimisation multi-tenant (Migration 002)
+    {
+      name: 'idx_ecole_discipline',
+      fields: ['ecole_id', 'discipline_id']
+    },
+    {
+      name: 'idx_ecole_createur',
+      fields: ['ecole_id', 'createur_id']
     }
-  ]
+  ],
+  validate: {
+    visibiliteConsistency() {
+      if (this.ecole_id === null && this.visibilite !== 'public') {
+        throw new Error('Figures publiques doivent avoir visibilite=public');
+      }
+      if (this.ecole_id !== null && this.visibilite !== 'ecole') {
+        throw new Error('Figures d\'école doivent avoir visibilite=ecole');
+      }
+    }
+  }
 });
 
 module.exports = Figure;

@@ -11,9 +11,9 @@ const setProfs = (allProfs) => {
 const getRandomProf = () => profs[Math.floor(Math.random() * profs.length)];
 
 
-async function seedProgressions(students, figuresByDiscipline, scenarioDefinitions, allProfs) {
+async function seedProgressions(students, figuresByDiscipline, scenarioDefinitions, allProfs, ecoles, schoolFigures) {
   setProfs(allProfs);
-  logger.section('Création des progressions (modèle refactorisé)');
+  logger.section('Création des progressions (modèle refactorisé - RÉDUIT)');
 
   let totalEtapeProgressions = 0;
 
@@ -28,30 +28,45 @@ async function seedProgressions(students, figuresByDiscipline, scenarioDefinitio
 
     logger.info(`Traitement de ${student.prenom} ${student.nom} (${scenario})`);
 
+    // Figures école-spécifiques pour cet élève
+    let schoolSpecificFigs = [];
+    if (ecoles && schoolFigures) {
+      if (student.ecole_id === ecoles.voltige.id && schoolFigures.voltige) {
+        schoolSpecificFigs = schoolFigures.voltige;
+      } else if (student.ecole_id === ecoles.academie.id && schoolFigures.academie) {
+        schoolSpecificFigs = schoolFigures.academie;
+      }
+    }
+
     let selectedFigures = [];
-    // Logique de sélection des figures (mise à jour pour les nouvelles disciplines)
-    if (scenario === 'at_risk' || scenario === 'stable' || scenario === 'progressing') {
-      selectedFigures = selectRandomFigures(figuresByDiscipline, 10);
+    // Logique de sélection RÉDUITE (5-10 figures au lieu de 10-20)
+    if (scenario === 'at_risk') {
+      selectedFigures = selectRandomFigures(figuresByDiscipline, 5); // Was 10
+    } else if (scenario === 'stable') {
+      selectedFigures = selectRandomFigures(figuresByDiscipline, 7); // Was 10
+    } else if (scenario === 'progressing') {
+      selectedFigures = selectRandomFigures(figuresByDiscipline, 8); // Was 10
     } else if (scenario === 'specialist_juggling') {
-      selectedFigures = [
-        ...getRandomFromDiscipline(figuresByDiscipline, 'Jonglage', 5)
-      ];
+      const publicJonglage = getRandomFromDiscipline(figuresByDiscipline, 'Jonglage', 6); // Was 5, +1 for school
+      const schoolJonglage = schoolSpecificFigs.filter(f => f.nom.includes('Jonglage')).slice(0, 1);
+      selectedFigures = [...publicJonglage, ...schoolJonglage];
     } else if (scenario === 'specialist_aerial') {
-      selectedFigures = [
-        ...getRandomFromDiscipline(figuresByDiscipline, 'Aérien', 5)
-      ];
+      const publicAerien = getRandomFromDiscipline(figuresByDiscipline, 'Aérien', 6); // Was 5, +1 for school
+      const schoolAerien = schoolSpecificFigs.filter(f => f.nom.includes('Aérienne')).slice(0, 1);
+      selectedFigures = [...publicAerien, ...schoolAerien];
     } else if (scenario === 'balanced') {
       selectedFigures = [
-        ...getRandomFromDiscipline(figuresByDiscipline, 'Jonglage', 2),
-        ...getRandomFromDiscipline(figuresByDiscipline, 'Aérien', 2),
-        ...getRandomFromDiscipline(figuresByDiscipline, 'Acrobatie', 2),
-        ...getRandomFromDiscipline(figuresByDiscipline, 'Équilibre', 2),
-        ...getRandomFromDiscipline(figuresByDiscipline, 'Manipulation d\'Objets', 2)
-      ];
+        ...getRandomFromDiscipline(figuresByDiscipline, 'Jonglage', 1), // Was 2
+        ...getRandomFromDiscipline(figuresByDiscipline, 'Aérien', 1), // Was 2
+        ...getRandomFromDiscipline(figuresByDiscipline, 'Acrobatie', 2), // Same
+        ...getRandomFromDiscipline(figuresByDiscipline, 'Équilibre', 1), // Was 2
+        ...getRandomFromDiscipline(figuresByDiscipline, 'Manipulation d\'Objets', 1), // Was 2
+        ...schoolSpecificFigs.slice(0, 1) // 1 figure école
+      ]; // Total: 7
     } else if (scenario === 'low_safety') {
-      const artistiques = selectRandomFigures(figuresByDiscipline, 18, 'artistique');
-      const renforcements = selectRandomFigures(figuresByDiscipline, 2, 'renforcement');
-      selectedFigures = [...artistiques, ...renforcements];
+      const artistiques = selectRandomFigures(figuresByDiscipline, 9, 'artistique'); // Was 18
+      const renforcements = selectRandomFigures(figuresByDiscipline, 1, 'renforcement'); // Was 2
+      selectedFigures = [...artistiques, ...renforcements]; // Total: 10
     }
 
     const figureIds = selectedFigures.map(f => f.id);
@@ -93,22 +108,21 @@ async function seedProgressions(students, figuresByDiscipline, scenarioDefinitio
     let statsStudent = { valide: 0, en_cours: 0, non_commence: 0 };
 
     for (const [figureId, etapes] of Object.entries(etapesByFigure)) {
-       // Déterminer le niveau de maîtrise (0.0 à 1.0) basé sur le scénario
+       // Déterminer le niveau de maîtrise (0.0 à 1.0) basé sur le scénario - RÉDUIT DE 30%
        let mastery = 0;
-       
+
        if (scenario === 'at_risk') {
-         // Faible progression: 0% à 40% des étapes validées
-         // Lucas Leroy spécifique: parfois rien (0), parfois un peu
-         mastery = Math.random() * 0.4; 
+         // Faible progression: 0% à 30% (était 0-40%)
+         mastery = Math.random() * 0.3;
        } else if (scenario === 'stable') {
-         // Moyen: 30% à 80%
-         mastery = 0.3 + Math.random() * 0.5;
+         // Moyen: 20% à 60% (était 30-80%)
+         mastery = 0.2 + Math.random() * 0.4;
        } else if (scenario === 'progressing') {
-         // Bon: 50% à 95%
-         mastery = 0.5 + Math.random() * 0.45;
+         // Bon: 40% à 75% (était 50-95%)
+         mastery = 0.4 + Math.random() * 0.35;
        } else {
-         // Spécialistes / Balanced: 70% à 100%
-         mastery = 0.7 + Math.random() * 0.3;
+         // Spécialistes / Balanced: 50% à 80% (était 70-100%)
+         mastery = 0.5 + Math.random() * 0.3;
        }
 
        const stepsToValidate = Math.floor(etapes.length * mastery);

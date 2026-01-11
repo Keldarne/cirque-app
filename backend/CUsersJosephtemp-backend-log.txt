@@ -1,0 +1,67 @@
+
+> cirque-app-backend@1.0.0 start
+> node server.js
+
+[dotenv@17.2.3] injecting env (11) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[PROF-INDEX] Loading prof routes...
+[PROF-INDEX] ✓ Eleves route loaded
+[PROF-FIGURES] Module chargé ✓
+[PROF-INDEX] ✓ Figures route loaded
+[PROF-INDEX] All prof routes loaded successfully
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Ecoles' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Ecoles`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Utilisateurs' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Utilisateurs`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Disciplines' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Disciplines`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Figures' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Figures`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'EtapeProgressions' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `EtapeProgressions`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'ProgressionEtapes' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `ProgressionEtapes`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'RelationProfEleve' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `RelationProfEleve`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Badges' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Badges`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'BadgeUtilisateur' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `BadgeUtilisateur`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Defis' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Defis`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'DefiUtilisateur' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `DefiUtilisateur`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Streaks' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Streaks`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Titres' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Titres`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'TitreUtilisateur' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `TitreUtilisateur`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'Groupes' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `Groupes`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'GroupeEleve' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `GroupeEleve`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'InteractionProfEleves' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `InteractionProfEleves`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'TentativeEtapes' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `TentativeEtapes`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'ProgrammesProf' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `ProgrammesProf`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'ProgrammesFigures' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `ProgrammesFigures`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'ProgrammesPartages' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `ProgrammesPartages`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'AssignationsProgramme' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `AssignationsProgramme`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'AssignationsGroupeProgramme' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `AssignationsGroupeProgramme`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'ExercicesFigure' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `ExercicesFigure`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'SuggestionsFigure' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `SuggestionsFigure`
+Executing (default): SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = 'discipline_availability' AND TABLE_SCHEMA = 'cirque_app_dev'
+Executing (default): SHOW INDEX FROM `discipline_availability`
+✅ Base de données synchronisée
+🚀 Serveur lancé sur http://localhost:4000
+🌐 Accessible sur le réseau via http://<votre-ip>:4000
+⏰ Tâche planifiée de mise à jour du déclin mémoriel activée (tous les jours à 2h).
+⏰ Tâche planifiée de rafraîchissement des suggestions activée (tous les jours à 3h).

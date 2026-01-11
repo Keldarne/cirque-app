@@ -817,6 +817,137 @@ Authorization: Bearer <token>
 
 ---
 
+#### POST `/api/prof/eleves/import` 🆕
+**Accès**: Professeur, School Admin (avec école)
+**Description**: Import en masse d'élèves via fichier CSV
+
+**Format**: `multipart/form-data`
+
+**Paramètres**:
+- `file` (required): Fichier CSV avec colonnes `Prénom,Nom[,Email]`
+
+**Format CSV**:
+```csv
+Prénom,Nom
+Lucas,Moreau
+Emma,Bernard
+Louis,Thomas
+```
+
+**Avec email optionnel**:
+```csv
+Prénom,Nom,Email
+Lucas,Moreau,
+Emma,Bernard,emma.b@parent.fr
+Louis,Thomas,
+```
+
+**Génération automatique**:
+- **Pseudo**: `{prefix}-prenom.nom` (ex: `vol-lucas.moreau`)
+  - Préfixe = 3 premières lettres du mot significatif du nom d'école
+  - Exemple: "École de Cirque Voltige" → préfixe `vol`
+- **Email**: `prenom.nom@{domaine}.fr` (si non fourni dans CSV)
+  - Domaine extrait du nom d'école
+  - Exemple: "École de Cirque Voltige" → `lucas.moreau@voltige.fr`
+- **Mot de passe**: `{NomÉcole}{Année}!` (ex: `Voltige2026!`)
+  - Même mot de passe pour tous les élèves importés
+  - À distribuer aux élèves (ils pourront le changer après)
+
+**Limites**:
+- Max 100 élèves par import
+- Ne doit pas dépasser `max_eleves` de l'école
+- Pseudos et emails doivent être uniques
+- Fichier CSV max 1MB
+
+**Réponse 201 Created**:
+```json
+{
+  "success": true,
+  "created": 3,
+  "failed": 0,
+  "errors": [],
+  "students": [
+    {
+      "id": 123,
+      "pseudo": "vol-lucas.moreau",
+      "nom": "Moreau",
+      "prenom": "Lucas",
+      "email": "lucas.moreau@voltige.fr"
+    },
+    {
+      "id": 124,
+      "pseudo": "vol-emma.bernard",
+      "nom": "Bernard",
+      "prenom": "Emma",
+      "email": "emma.bernard@voltige.fr"
+    },
+    {
+      "id": 125,
+      "pseudo": "vol-louis.thomas",
+      "nom": "Thomas",
+      "prenom": "Louis",
+      "email": "louis.thomas@voltige.fr"
+    }
+  ],
+  "defaultPassword": "Voltige2026!",
+  "prefixePseudo": "vol"
+}
+```
+
+**Réponse 400 Bad Request** (erreurs de validation):
+```json
+{
+  "error": "Erreurs lors de l'import",
+  "details": [
+    {
+      "row": 3,
+      "prenom": "Marie",
+      "nom": "D",
+      "error": "Nom doit contenir au moins 2 caractères"
+    }
+  ],
+  "created": [],
+  "failed": [...]
+}
+```
+
+**Réponse 403 Forbidden** (limite dépassée):
+```json
+{
+  "error": "Import dépasserait la limite d'élèves (48 + 5 > 50)"
+}
+```
+
+**Réponse 409 Conflict** (doublons):
+```json
+{
+  "error": "Utilisateurs déjà existants: vol-lucas.moreau, vol-emma.bernard"
+}
+```
+
+**Exemple d'utilisation (curl)**:
+```bash
+curl -X POST http://localhost:4000/api/prof/eleves/import \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@eleves.csv"
+```
+
+**Notes importantes**:
+- ✅ Les élèves peuvent se connecter immédiatement avec leur pseudo généré
+- ✅ Login accepte PSEUDO ou EMAIL (détection automatique via '@')
+- ✅ Transaction atomique: tout ou rien (si une erreur, aucun élève n'est créé)
+- ✅ Les élèves sont automatiquement visibles par tous les profs de l'école
+- ⚠️ Le mot de passe par défaut doit être distribué aux élèves de manière sécurisée
+- ⚠️ Encourager les élèves à changer leur mot de passe après première connexion
+
+**Cas d'usage**:
+- Import de liste de classe en début d'année
+- Ajout rapide d'élèves pour ateliers/stages
+- Migration depuis autre système
+- Élèves jeunes sans adresse email
+
+---
+
 #### POST `/api/prof/eleves/:id/programmes/assigner`
 **Accès**: Professeur (ses élèves), Admin
 **Description**: Assigner un programme à un élève

@@ -10,6 +10,7 @@ async function seedUtilisateurs(ecoles) {
 
   const users = {
     admin: null,
+    schoolAdmin: null,
     voltige: { professeurs: [], eleves: [] },
     academie: { professeurs: [], eleves: [] },
     solo: []
@@ -31,6 +32,22 @@ async function seedUtilisateurs(ecoles) {
   });
   logger.success(`✓ Admin: ${users.admin.email} / Admin123!`);
 
+  // ========== SCHOOL ADMIN (École Voltige) ==========
+  logger.info('Creating school admin for École Voltige...');
+  users.schoolAdmin = await Utilisateur.create({
+    pseudo: 'admin_voltige',
+    nom: 'Admin',
+    prenom: 'École',
+    email: 'admin.voltige@voltige.fr',
+    mot_de_passe: 'Password123!',
+    role: 'school_admin',
+    ecole_id: ecoles.voltige.id,
+    niveau: 5,
+    xp_total: 1500,
+    actif: true
+  });
+  logger.success(`✓ School Admin: ${users.schoolAdmin.email} / Password123!`);
+
   // ========== ÉCOLE VOLTIGE (Basic) ==========
   logger.info('Creating users for École Voltige...');
   const profsVoltige = [
@@ -42,23 +59,27 @@ async function seedUtilisateurs(ecoles) {
     users.voltige.professeurs.push(prof);
   }
 
-  const nomsEleves = ['Moreau', 'Bernard', 'Thomas', 'Petit', 'Robert', 'Richard', 'Durand', 'Leroy', 'Simon', 'Laurent'];
-  const prenomsEleves = ['Lucas', 'Emma', 'Louis', 'Chloé', 'Hugo', 'Léa', 'Arthur', 'Manon', 'Jules', 'Camille'];
-  for (let i = 0; i < 10; i++) {
+  // Élèves Voltige avec scénarios ASSIGNÉS (pas random)
+  const elevesVoltigeData = [
+    { nom: 'Moreau', prenom: 'Lucas', scenario: 'at_risk', niveau: 2, xp: 300 },
+    { nom: 'Bernard', prenom: 'Emma', scenario: 'stable', niveau: 3, xp: 600 },
+    { nom: 'Thomas', prenom: 'Louis', scenario: 'progressing', niveau: 4, xp: 850 },
+    { nom: 'Petit', prenom: 'Chloé', scenario: 'balanced', niveau: 3, xp: 550 }
+  ];
+  for (const eleveData of elevesVoltigeData) {
     const eleve = await Utilisateur.create({
-      pseudo: `${prenomsEleves[i].toLowerCase()}_${nomsEleves[i].toLowerCase()}`,
-      nom: nomsEleves[i],
-      prenom: prenomsEleves[i],
-      email: `${prenomsEleves[i].toLowerCase()}.${nomsEleves[i].toLowerCase()}@voltige.fr`,
+      pseudo: `${eleveData.prenom.toLowerCase()}_${eleveData.nom.toLowerCase()}`,
+      nom: eleveData.nom,
+      prenom: eleveData.prenom,
+      email: `${eleveData.prenom.toLowerCase()}.${eleveData.nom.toLowerCase()}@voltige.fr`,
       mot_de_passe: 'Password123!',
       role: 'eleve',
       ecole_id: ecoles.voltige.id,
-      niveau: Math.floor(Math.random() * 5) + 1,
-      xp_total: Math.floor(Math.random() * 1000),
+      niveau: eleveData.niveau,
+      xp_total: eleveData.xp,
       actif: true
     });
-    // Assign scenario
-    eleve.scenario = scenarioKeys[Math.floor(Math.random() * scenarioKeys.length)];
+    eleve.scenario = eleveData.scenario; // Assigned, not random
     users.voltige.eleves.push(eleve);
   }
   logger.success(`✓ École Voltige: ${users.voltige.professeurs.length} profs, ${users.voltige.eleves.length} élèves`);
@@ -74,37 +95,40 @@ async function seedUtilisateurs(ecoles) {
     users.academie.professeurs.push(prof);
   }
 
-  const nomsElevesAcad = ['Garnier', 'Faure', 'Rousseau', 'Blanc', 'Guerin', 'Boyer', 'Roux', 'Lambert', 'Girard', 'Bonnet'];
-  const prenomsElevesAcad = ['Gabriel', 'Alice', 'Raphaël', 'Zoé', 'Nathan', 'Clara', 'Thomas', 'Inès', 'Alexandre', 'Sarah'];
-  for (let i = 0; i < 10; i++) {
+  // Élèves Académie avec scénarios ASSIGNÉS (pas random)
+  const elevesAcademieData = [
+    { nom: 'Garnier', prenom: 'Gabriel', scenario: 'balanced', niveau: 4, xp: 700 },
+    { nom: 'Faure', prenom: 'Alice', scenario: 'specialist_juggling', niveau: 5, xp: 950 },
+    { nom: 'Rousseau', prenom: 'Raphaël', scenario: 'specialist_aerial', niveau: 5, xp: 1100 },
+    { nom: 'Blanc', prenom: 'Zoé', scenario: 'low_safety', niveau: 3, xp: 450 }
+  ];
+  for (const eleveData of elevesAcademieData) {
     const eleve = await Utilisateur.create({
-      pseudo: `${prenomsElevesAcad[i].toLowerCase()}_${nomsElevesAcad[i].toLowerCase()}_acad`,
-      nom: nomsElevesAcad[i],
-      prenom: prenomsElevesAcad[i],
-      email: `${prenomsElevesAcad[i].toLowerCase()}.${nomsElevesAcad[i].toLowerCase()}@academie.fr`,
+      pseudo: `${eleveData.prenom.toLowerCase()}_${eleveData.nom.toLowerCase()}_acad`,
+      nom: eleveData.nom,
+      prenom: eleveData.prenom,
+      email: `${eleveData.prenom.toLowerCase()}.${eleveData.nom.toLowerCase()}@academie.fr`,
       mot_de_passe: 'Password123!',
       role: 'eleve',
       ecole_id: ecoles.academie.id,
-      niveau: Math.floor(Math.random() * 6) + 1,
-      xp_total: Math.floor(Math.random() * 1500),
+      niveau: eleveData.niveau,
+      xp_total: eleveData.xp,
       actif: true
     });
-     // Assign scenario
-    eleve.scenario = scenarioKeys[Math.floor(Math.random() * scenarioKeys.length)];
+    eleve.scenario = eleveData.scenario; // Assigned, not random
     users.academie.eleves.push(eleve);
   }
   logger.success(`✓ Académie: ${users.academie.professeurs.length} profs, ${users.academie.eleves.length} élèves`);
 
-  // ========== UTILISATEURS SOLO ==========
+  // ========== UTILISATEURS SOLO (Réduit: 3→2) ==========
   logger.info('Creating solo users (no school)...');
   const soloUsers = [
     { pseudo: 'alex_mercier', nom: 'Mercier', prenom: 'Alex', email: 'alex.mercier@gmail.com', niveau: 3, xp_total: 500 },
-    { pseudo: 'julie_fontaine', nom: 'Fontaine', prenom: 'Julie', email: 'julie.fontaine@gmail.com', niveau: 2, xp_total: 250 },
-    { pseudo: 'marc_chevalier', nom: 'Chevalier', prenom: 'Marc', email: 'marc.chevalier@gmail.com', niveau: 4, xp_total: 800 }
+    { pseudo: 'julie_fontaine', nom: 'Fontaine', prenom: 'Julie', email: 'julie.fontaine@gmail.com', niveau: 2, xp_total: 250 }
   ];
   for (const soloData of soloUsers) {
     const solo = await Utilisateur.create({ ...soloData, mot_de_passe: 'Password123!', role: 'eleve', ecole_id: null, actif: true });
-    // Assign scenario
+    // Random scenario for solo users (they're for edge cases)
     solo.scenario = scenarioKeys[Math.floor(Math.random() * scenarioKeys.length)];
     users.solo.push(solo);
   }

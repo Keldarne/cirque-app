@@ -298,4 +298,143 @@ async function seedCataloguePublic() {
   }
 }
 
-module.exports = seedCataloguePublic;
+/**
+ * Crée des figures école-spécifiques pour tester l'isolation multi-tenant
+ * @param {Object} ecoles - Object contenant voltige et academie
+ * @param {Object} disciplineMap - Map des disciplines par nom
+ * @returns {Object} schoolFigures avec tableaux voltige et academie
+ */
+async function createSchoolSpecificFigures(ecoles, disciplineMap) {
+  logger.info('\n🏫 Création figures école-spécifiques...');
+
+  const schoolFigures = { voltige: [], academie: [] };
+
+  try {
+    // École Voltige: 2 figures
+    const voltigeSpecs = [
+      {
+        nom: 'Pyramide Humaine École',
+        descriptif: 'Figure spécifique à l\'École Voltige pour acrobatie en groupe. Technique exclusive de construction pyramidale enseignée selon la méthode maison.',
+        discipline: 'Acrobatie',
+        difficulty_level: 4,
+        type: 'artistique'
+      },
+      {
+        nom: 'Jonglage Feu - Technique Voltige',
+        descriptif: 'Méthode propriétaire de l\'école pour le jonglage de feu. Approche sécuritaire et progressive développée par l\'École Voltige.',
+        discipline: 'Jonglage',
+        difficulty_level: 5,
+        type: 'artistique'
+      }
+    ];
+
+    for (const spec of voltigeSpecs) {
+      const figure = await Figure.create({
+        nom: spec.nom,
+        descriptif: spec.descriptif,
+        difficulty_level: spec.difficulty_level,
+        type: spec.type,
+        discipline_id: disciplineMap[spec.discipline].id,
+        ecole_id: ecoles.voltige.id,
+        visibilite: 'ecole',
+        createur_id: null  // Catalogue école
+      });
+
+      // 3 étapes standard
+      await EtapeProgression.bulkCreate([
+        {
+          figure_id: figure.id,
+          ordre: 1,
+          titre: 'Découverte',
+          description: 'Comprendre la technique',
+          xp: 5
+        },
+        {
+          figure_id: figure.id,
+          ordre: 2,
+          titre: 'Pratique',
+          description: 'Entraînement assisté',
+          xp: 10
+        },
+        {
+          figure_id: figure.id,
+          ordre: 3,
+          titre: 'Maîtrise',
+          description: 'Réalisation autonome',
+          xp: 20
+        }
+      ]);
+
+      schoolFigures.voltige.push(figure);
+    }
+
+    // Académie: 2 figures
+    const academieSpecs = [
+      {
+        nom: 'Contorsion Aérienne Avancée',
+        descriptif: 'Technique exclusive de l\'Académie combinant tissu aérien et contorsion. Programme avancé réservé aux élèves de l\'Académie.',
+        discipline: 'Aérien',
+        difficulty_level: 5,
+        type: 'artistique'
+      },
+      {
+        nom: 'Acrobatie Portée - Méthode Académie',
+        descriptif: 'Portés acrobatiques selon la pédagogie de l\'Académie. Technique de partenaires développée en exclusivité pour nos élèves.',
+        discipline: 'Acrobatie',
+        difficulty_level: 4,
+        type: 'artistique'
+      }
+    ];
+
+    for (const spec of academieSpecs) {
+      const figure = await Figure.create({
+        nom: spec.nom,
+        descriptif: spec.descriptif,
+        difficulty_level: spec.difficulty_level,
+        type: spec.type,
+        discipline_id: disciplineMap[spec.discipline].id,
+        ecole_id: ecoles.academie.id,
+        visibilite: 'ecole',
+        createur_id: null  // Catalogue école
+      });
+
+      // 3 étapes standard
+      await EtapeProgression.bulkCreate([
+        {
+          figure_id: figure.id,
+          ordre: 1,
+          titre: 'Découverte',
+          description: 'Comprendre la technique',
+          xp: 5
+        },
+        {
+          figure_id: figure.id,
+          ordre: 2,
+          titre: 'Pratique',
+          description: 'Entraînement assisté',
+          xp: 10
+        },
+        {
+          figure_id: figure.id,
+          ordre: 3,
+          titre: 'Maîtrise',
+          description: 'Réalisation autonome',
+          xp: 20
+        }
+      ]);
+
+      schoolFigures.academie.push(figure);
+    }
+
+    logger.success(`  ✓ École Voltige: ${schoolFigures.voltige.length} figures`);
+    logger.success(`  ✓ Académie: ${schoolFigures.academie.length} figures`);
+
+    return schoolFigures;
+
+  } catch (error) {
+    logger.error(`Erreur création figures école-spécifiques: ${error.message}`);
+    throw error;
+  }
+}
+
+module.exports = { seedCataloguePublic, createSchoolSpecificFigures };

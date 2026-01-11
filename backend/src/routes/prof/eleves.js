@@ -3,8 +3,26 @@ const router = express.Router();
 const { verifierToken, estProfesseurOuAdmin } = require('../../middleware/auth');
 const { verifierRelationProfEleve } = require('../../middleware/profAuth');
 const ProfService = require('../../services/ProfService');
-const { RelationProfEleve, AssignationProgramme, ProgrammeProf, ProgressionEtape, EtapeProgression, Figure } = require('../../models');
+const { RelationProfEleve, AssignationProgramme, ProgrammeProf, ProgressionEtape, EtapeProgression, Figure, Ecole } = require('../../models');
 const sequelize = require('../../../db');
+const multer = require('multer');
+const fs = require('fs');
+const ImportElevesService = require('../../services/ImportElevesService');
+
+// Configuration multer pour upload de fichiers
+const upload = multer({
+  dest: 'uploads/',
+  limits: {
+    fileSize: 1024 * 1024 // 1MB max
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers CSV sont acceptés'));
+    }
+  }
+});
 
 // Obtenir la liste de tous les élèves d'un professeur
 router.get('', verifierToken, estProfesseurOuAdmin, async (req, res) => {
@@ -14,6 +32,142 @@ router.get('', verifierToken, estProfesseurOuAdmin, async (req, res) => {
   } catch (error) {
     console.error('Erreur GET /api/prof/eleves:', error);
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+/**
+ * POST /api/prof/eleves/import
+ * Import en masse d'élèves via fichier CSV
+ * @access  Private (Professeur ou School Admin avec école)
+ * NOTE: Cette route DOIT être avant /:id pour éviter qu'Express ne la traite comme un paramètre
+ */
+router.post('/import', verifierToken, estProfesseurOuAdmin, upload.single('file'), async (req, res) => {
+  try {
+    // 1. Vérifier que l'utilisateur a une école
+    if (!req.user.ecole_id) {
+      return res.status(403).json({
+        error: 'Import réservé aux enseignants affiliés à une école'
+      });
+    }
+
+    // 2. Vérifier que fichier existe
+    if (!req.file) {
+      return res.status(400).json({ error: 'Fichier CSV requis' });
+    }
+
+    // 3. Parser le CSV
+    let elevesData;
+    try {
+      elevesData = await ImportElevesService.parseCSV(req.file.path);
+    } catch (parseError) {
+      // Cleanup file
+      fs.unlinkSync(req.file.path);
+      return res.status(parseError.status || 400).json({
+        error: parseError.message,
+        details: parseError.errors
+      });
+    }
+
+    // Vérifier limite de 100 élèves par import
+    if (elevesData.length > 100) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        error: `Maximum 100 élèves par import (${elevesData.length} fournis)`
+      });
+    }
+
+    // 4. Récupérer l'école
+    const ecole = await Ecole.findByPk(req.user.ecole_id);
+    if (!ecole) {
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ error: 'École non trouvée' });
+    }
+
+    // 5. Vérifier limite école
+    try {
+      await ImportElevesService.verifierLimiteEcole(
+        req.user.ecole_id,
+        elevesData.length
+      );
+    } catch (limiteError) {
+      fs.unlinkSync(req.file.path);
+      return res.status(limiteError.status || 403).json({
+        error: limiteError.message
+      });
+    }
+
+    // 6. Générer pseudos/emails/passwords
+    const prefixeEcole = ImportElevesService.genererPrefixeEcole(ecole.nom);
+    const domaineEcole = ImportElevesService.extraireDomaine(ecole.nom);
+    const motDePasseDefaut = ImportElevesService.genererMotDePasseEcole(ecole.nom);
+
+    const elevesAvecCredentials = elevesData.map(eleve => ({
+      ...eleve,
+      pseudo: ImportElevesService.genererPseudo(
+        eleve.prenom,
+        eleve.nom,
+        prefixeEcole
+      ),
+      email: eleve.email || ImportElevesService.genererEmail(
+        eleve.prenom,
+        eleve.nom,
+        domaineEcole
+      ),
+      mot_de_passe: motDePasseDefaut
+    }));
+
+    // 7. Vérifier doublons
+    try {
+      await ImportElevesService.verifierDoublons(elevesAvecCredentials);
+    } catch (doublonError) {
+      fs.unlinkSync(req.file.path);
+      return res.status(doublonError.status || 409).json({
+        error: doublonError.message
+      });
+    }
+
+    // 8. Importer
+    let resultat;
+    try {
+      resultat = await ImportElevesService.importerEleves(
+        elevesAvecCredentials,
+        req.user.ecole_id
+      );
+    } catch (importError) {
+      fs.unlinkSync(req.file.path);
+      return res.status(importError.status || 500).json({
+        error: importError.message,
+        details: importError.errors,
+        created: importError.created || [],
+        failed: importError.failed || []
+      });
+    }
+
+    // 9. Nettoyer le fichier uploadé
+    fs.unlinkSync(req.file.path);
+
+    // 10. Retourner rapport
+    res.status(201).json({
+      success: true,
+      created: resultat.created.length,
+      failed: resultat.failed.length,
+      errors: resultat.errors,
+      students: resultat.created,
+      defaultPassword: motDePasseDefaut,
+      prefixePseudo: prefixeEcole
+    });
+
+  } catch (error) {
+    console.error('Erreur POST /api/prof/eleves/import:', error);
+
+    // Cleanup file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(error.status || 500).json({
+      error: error.message || 'Erreur serveur lors de l\'import'
+    });
   }
 });
 

@@ -86,7 +86,9 @@ const estPersonnelAutorise = (req, res, next) => {
   }
   const rolesAutorises = ['professeur', 'school_admin', 'admin'];
   if (!rolesAutorises.includes(req.user.role)) {
-    return res.status(403).json({ error: 'Accès refusé.' });
+    return res.status(403).json({
+      error: 'Accès refusé - Réservé aux professeurs et admins'
+    });
   }
   next();
 };
@@ -115,16 +117,16 @@ const peutModifierFigure = async (req, res, next) => {
         break;
       
       case 'school_admin':
-        // Le school_admin peut modifier les figures de son école
-        // (y compris les figures publiques qu'il voudrait 'importer' en les modifiant)
-        if (figure.ecole_id === user.ecole_id || figure.ecole_id === null) {
+        // Le school_admin peut modifier UNIQUEMENT les figures de son école
+        // Le catalogue public est en lecture seule
+        if (figure.ecole_id && figure.ecole_id === user.ecole_id) {
           hasPermission = true;
         }
         break;
       
       case 'professeur':
-        // Le professeur peut modifier les figures qu'il a créées
-        if (figure.createur_id === user.id) {
+        // Le professeur peut modifier UNIQUEMENT les figures de son école qu'il a créées
+        if (figure.createur_id === user.id && figure.ecole_id && figure.ecole_id === user.ecole_id) {
           hasPermission = true;
         }
         break;

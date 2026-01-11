@@ -21,16 +21,18 @@ router.get('/', verifierToken, async (req, res) => {
       }
     }
     
-    // Filtre multi-tenant:
-    // Un utilisateur voit les figures publiques (ecole_id: null) ET celles de son école.
+    // Filtre multi-tenant STRICT (Migration sécurité 2026-01-10):
+    // - Admin: voit TOUT (public + toutes écoles)
+    // - Professeurs/Élèves: UNIQUEMENT leur école (pas de catalogue public)
+    // - Solo: UNIQUEMENT catalogue public
     const userEcoleId = req.user.ecole_id;
-    if (userEcoleId) {
-      where[Op.or] = [
-        { ecole_id: null },
-        { ecole_id: userEcoleId }
-      ];
+    if (req.user.role === 'admin') {
+      // Admin voit tout - pas de filtre
+    } else if (userEcoleId) {
+      // Utilisateurs d'école: UNIQUEMENT figures de leur école
+      where.ecole_id = userEcoleId;
     } else {
-      // Si l'utilisateur n'est pas rattaché à une école (admin, solo), il ne voit que le catalogue public.
+      // Utilisateurs solo: UNIQUEMENT catalogue public
       where.ecole_id = null;
     }
 

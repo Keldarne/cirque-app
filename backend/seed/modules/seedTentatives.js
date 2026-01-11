@@ -49,7 +49,7 @@ function generateAttemptTimestamps(nbTentatives, daysAgo = 30) {
 }
 
 async function seedTentatives(students) {
-  logger.section('Création des tentatives enrichies (4 modes) - Version Journal Riche');
+  logger.section('Création des tentatives enrichies (4 modes) - Version RÉDUITE (~30%)');
 
   let totalTentatives = 0;
   const scenarios = { high_grit: 0, talent_naturel: 0, normal: 0 };
@@ -68,26 +68,26 @@ async function seedTentatives(students) {
     switch (scenario) {
       case 'high_grit':
         config = {
-          minTentatives: 8,
-          maxTentatives: 20,
+          minTentatives: 5,   // Was 8 (-37%)
+          maxTentatives: 15,  // Was 20 (-25%)
           tauxEchec: 0.6,
-          percentageWithAttempts: 0.8 // 80% des progressions ont des tentatives
+          percentageWithAttempts: 0.6 // Was 0.8 (-25%)
         };
         break;
       case 'talent_naturel':
         config = {
-          minTentatives: 1,
-          maxTentatives: 4,
+          minTentatives: 1,   // Same (already minimal)
+          maxTentatives: 3,   // Was 4 (-25%)
           tauxEchec: 0.15,
-          percentageWithAttempts: 0.6
+          percentageWithAttempts: 0.4 // Was 0.6 (-33%)
         };
         break;
       default: // normal
         config = {
-          minTentatives: 3,
-          maxTentatives: 12,
+          minTentatives: 2,   // Was 3 (-33%)
+          maxTentatives: 8,   // Was 12 (-33%)
           tauxEchec: 0.4,
-          percentageWithAttempts: 0.7
+          percentageWithAttempts: 0.5 // Was 0.7 (-28%)
         };
     }
 
@@ -218,10 +218,10 @@ async function seedTentatives(students) {
     }
   }
 
-  logger.success(`✓ Total: ${totalTentatives} tentatives créées`);
-  logger.info(`   - High Grit: ${scenarios.high_grit} élèves (8-20 tentatives/étape, 80% progressions)`);
-  logger.info(`   - Talent Naturel: ${scenarios.talent_naturel} élèves (1-4 tentatives/étape, 60% progressions)`);
-  logger.info(`   - Normal: ${scenarios.normal} élèves (3-12 tentatives/étape, 70% progressions)`);
+  logger.success(`✓ Total: ${totalTentatives} tentatives créées (RÉDUIT ~30%)`);
+  logger.info(`   - High Grit: ${scenarios.high_grit} élèves (5-15 tentatives/étape, 60% progressions)`);
+  logger.info(`   - Talent Naturel: ${scenarios.talent_naturel} élèves (1-3 tentatives/étape, 40% progressions)`);
+  logger.info(`   - Normal: ${scenarios.normal} élèves (2-8 tentatives/étape, 50% progressions)`);
   logger.info(`\n   Distribution des modes:`);
   logger.info(`   - Binaire: ${modeDistribution.binaire}`);
   logger.info(`   - Evaluation: ${modeDistribution.evaluation}`);

@@ -9,5 +9,6 @@ router.use('/programmes', require('./programmes'));
 router.use('/dashboard', require('./dashboard'));
 router.use('/suggestions', require('./suggestions'));
 router.use('/validation', require('./validation'));
+router.use('/figures', require('./figures')); // Gestion catalogue figures
 
 module.exports = router;
