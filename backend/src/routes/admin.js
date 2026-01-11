@@ -369,4 +369,9 @@ router.put('/ecoles/:ecoleId/disciplines/bulk',
 // ═══════════════════════════════════════════════════════════════════
 router.use('/exercices', require('./admin/exercices'));
 
+// ═══════════════════════════════════════════════════════════════════
+// Routes Administration Système (Monitoring, Logs, Backups, Analytics)
+// ═══════════════════════════════════════════════════════════════════
+router.use('/system', require('./admin/system'));
+
 module.exports = router;

@@ -69,7 +69,14 @@ const Defi = sequelize.define('Defi', {
       name: 'idx_actif_dates',
       fields: ['actif', 'date_debut', 'date_fin']
     }
-  ]
+  ],
+  validate: {
+    datesValides() {
+      if (this.date_fin && this.date_debut && this.date_fin <= this.date_debut) {
+        throw new Error('La date de fin doit être après la date de début');
+      }
+    }
+  }
 });
 
 module.exports = Defi;

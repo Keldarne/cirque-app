@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifierToken, estAdmin } = require('../../middleware/auth');
 const { Figure, ExerciceFigure } = require('../../models');
 const SuggestionService = require('../../services/SuggestionService');
+const FigureService = require('../../services/FigureService');
 
 /**
  * Routes pour la gestion des exercices décomposés (admins).
@@ -64,16 +65,20 @@ router.post('/figures/:figureId/exercices', verifierToken, estAdmin, async (req,
     }
 
     // Validation: éviter cycles (figure A → B → A)
-    const hasCycle = await SuggestionService.detecterCycle(figureId, exercice_figure_id);
-    if (hasCycle) {
-      return res.status(400).json({
-        error: 'Cycle détecté: un exercice ne peut pas référencer directement ou indirectement sa figure parente',
-        type: 'CYCLE_DETECTED',
-        details: {
-          figure_parente: figureParente.nom,
-          figure_exercice: figureExercice.nom
-        }
-      });
+    try {
+      await FigureService.validateExerciceHierarchy(figureId, exercice_figure_id);
+    } catch (validationError) {
+      if (validationError.name === 'ValidationError') {
+        return res.status(400).json({
+          error: validationError.message,
+          type: 'CYCLE_DETECTED',
+          details: {
+            figure_parente: figureParente.nom,
+            figure_exercice: figureExercice.nom
+          }
+        });
+      }
+      throw validationError; // Re-throw if not a validation error
     }
 
     // Déterminer l'ordre si non fourni

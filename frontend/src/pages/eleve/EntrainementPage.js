@@ -41,7 +41,8 @@ function EntrainementPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  const [tabIndex, setTabIndex] = useState(0); // 0: Détails, 1: Étapes, 2: Journal
+  const [tabIndex, setTabIndex] = useState(1); // 0: Détails, 1: Étapes, 2: Journal
+  const [selectedEtapes, setSelectedEtapes] = useState([]); // Pour le filtrage des étapes d'entraînement
 
   const { figure, etapes, loading, error } = useEntrainementFigure(figureId);
 
@@ -49,7 +50,22 @@ function EntrainementPage() {
   // J'ajoute l'import manquant dans les dépendances
   
   const handleStartSession = (mode) => {
-    navigate(`/entrainement/session/${figureId}`, { state: { mode } });
+    // Si des étapes sont sélectionnées, on les passe au state, sinon null (tout)
+    const sessionState = { 
+      mode,
+      selectedStepIds: selectedEtapes.length > 0 ? selectedEtapes : null
+    };
+    navigate(`/entrainement/session/${figureId}`, { state: sessionState });
+  };
+
+  const handleToggleStep = (etapeId) => {
+    setSelectedEtapes(prev => {
+      if (prev.includes(etapeId)) {
+        return prev.filter(id => id !== etapeId);
+      } else {
+        return [...prev, etapeId];
+      }
+    });
   };
 
   const handleBack = () => {
@@ -142,6 +158,12 @@ function EntrainementPage() {
                   />
                 </Box>
 
+                {selectedEtapes.length > 0 && (
+                  <Alert severity="info" sx={{ mb: 2, textAlign: 'left' }}>
+                    <strong>{selectedEtapes.length}</strong> étape{selectedEtapes.length > 1 ? 's' : ''} sélectionnée{selectedEtapes.length > 1 ? 's' : ''} pour cette session.
+                  </Alert>
+                )}
+
                 <ModeSelector onSelectMode={handleStartSession} />
 
               </CardContent>
@@ -223,12 +245,20 @@ function EntrainementPage() {
 
                 {/* ONGLET 1 : ÉTAPES */}
                 {tabIndex === 1 && (
-                  <EtapesProgressionList
-                    etapes={etapesTheoriques}
-                    etapesUtilisateur={etapesUtilisateur}
-                    editable={false}
-                    showCheckboxes={true}
-                  />
+                  <Box>
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                      Sélectionnez les étapes que vous souhaitez travailler spécifiquement aujourd'hui, ou lancez la session directement pour tout réviser.
+                    </Alert>
+                    <EtapesProgressionList
+                      etapes={etapesTheoriques}
+                      etapesUtilisateur={etapesUtilisateur}
+                      editable={false}
+                      showCheckboxes={true}
+                      selectionMode={true}
+                      selectedIds={selectedEtapes}
+                      onToggleSelection={handleToggleStep}
+                    />
+                  </Box>
                 )}
 
                 {/* ONGLET 2 : JOURNAL */}

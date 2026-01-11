@@ -46,7 +46,23 @@ function FiguresPage() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setFigures(data);
+          // Filtrage selon les règles métier demandées:
+          // 1. Un prof / élève ne voit QUE son école.
+          // 2. Le catalogue public (ecole_id: null) n'est visible que par l'admin (propriétaire).
+          let filtered = data;
+          
+          if (user?.role === 'admin') {
+            // L'admin est le propriétaire, il voit tout
+            filtered = data;
+          } else if (user?.ecole_id) {
+            // Les utilisateurs rattachés voient uniquement leur école (exclut le public)
+            filtered = data.filter(f => f.ecole_id === user.ecole_id);
+          } else {
+            // Utilisateur sans école et non-admin: Ne voit rien (protection catalogue public)
+            filtered = [];
+          }
+          
+          setFigures(filtered);
         } else {
           console.error("Les figures ne sont pas un tableau:", data);
           setFigures([]);

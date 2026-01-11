@@ -38,6 +38,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../utils/api';
 import AssignProgramModal from '../../components/prof/AssignProgramModal';
+import SuggestionPanel from '../../components/prof/SuggestionPanel';
 import { useRefresh } from '../../contexts/RefreshContext';
 
 function MesElevesPage() {
@@ -267,6 +268,21 @@ function MesElevesPage() {
                   </Box>
                 </Paper>
               )}
+              
+              <Paper sx={{ p: 2, mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>Suggestions Intelligentes</Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                   Figures recommandées basées sur la progression actuelle de l'élève.
+                </Typography>
+                <SuggestionPanel 
+                  eleveId={eleveSelectionne.eleve.id} 
+                  onAssign={() => {
+                    afficherSnackbar('Figure assignée avec succès !');
+                    triggerRefresh();
+                  }}
+                />
+              </Paper>
+
               <Paper sx={{ p: 2 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Vos Notes</Typography>

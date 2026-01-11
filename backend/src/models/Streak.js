@@ -33,7 +33,13 @@ const Streak = sequelize.define('Streak', {
   }
 }, {
   tableName: 'Streaks',
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    {
+      name: 'idx_derniere_activite',
+      fields: ['derniere_activite']
+    }
+  ]
 });
 
 // Méthode pour vérifier et mettre à jour le streak

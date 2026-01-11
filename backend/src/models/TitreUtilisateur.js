@@ -1,6 +1,6 @@
 // Modèle TitreUtilisateur
 // Représente un titre obtenu et possiblement équipé par un utilisateur
-const { DataTypes } = require('sequelize');
+const { DataTypes, Op } = require('sequelize');
 const sequelize = require('../../db');
 
 const TitreUtilisateur = sequelize.define('TitreUtilisateur', {
@@ -37,7 +37,38 @@ const TitreUtilisateur = sequelize.define('TitreUtilisateur', {
       unique: true,
       fields: ['utilisateur_id', 'titre_id']
     }
-  ]
+  ],
+  hooks: {
+    async beforeCreate(titreUser, options) {
+      if (titreUser.equipe) {
+        await TitreUtilisateur.update(
+          { equipe: false },
+          {
+            where: {
+              utilisateur_id: titreUser.utilisateur_id,
+              equipe: true
+            },
+            transaction: options.transaction
+          }
+        );
+      }
+    },
+    async beforeUpdate(titreUser, options) {
+      if (titreUser.changed('equipe') && titreUser.equipe) {
+        await TitreUtilisateur.update(
+          { equipe: false },
+          {
+            where: {
+              utilisateur_id: titreUser.utilisateur_id,
+              equipe: true,
+              id: { [Op.ne]: titreUser.id }
+            },
+            transaction: options.transaction
+          }
+        );
+      }
+    }
+  }
 });
 
 module.exports = TitreUtilisateur;

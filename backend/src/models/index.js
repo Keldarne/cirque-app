@@ -24,6 +24,9 @@ const ProgrammePartage = require('./ProgrammePartage');
 const ExerciceFigure = require('./ExerciceFigure');
 const SuggestionFigure = require('./SuggestionFigure');
 const DisciplineAvailability = require('./DisciplineAvailability');
+const SystemLog = require('./SystemLog');
+const SystemBackup = require('./SystemBackup');
+const InteractionSummary = require('./InteractionSummary');
 
 // ═══════════════════════════════════════════════════════════════════
 // Relations
@@ -187,6 +190,22 @@ Groupe.hasMany(SuggestionFigure, { foreignKey: 'groupe_id', as: 'suggestions' })
 SuggestionFigure.belongsTo(Figure, { foreignKey: 'figure_id', as: 'figure' });
 Figure.hasMany(SuggestionFigure, { foreignKey: 'figure_id', as: 'suggestionsPour' });
 
+// ──────────────────────────────────────────────────────────────────
+// ADMINISTRATION SYSTÈME
+// ──────────────────────────────────────────────────────────────────
+
+// SystemBackup peut être créé par un utilisateur (null si automatique)
+SystemBackup.belongsTo(Utilisateur, { foreignKey: 'created_by', as: 'creator' });
+Utilisateur.hasMany(SystemBackup, { foreignKey: 'created_by', as: 'backups' });
+
+// SystemLog n'a pas de relation directe (metadata JSON contient utilisateur_id si besoin)
+
+// InteractionSummary - Résumé mensuel des interactions prof-élève
+InteractionSummary.belongsTo(Utilisateur, { foreignKey: 'professeur_id', as: 'professeur' });
+InteractionSummary.belongsTo(Utilisateur, { foreignKey: 'eleve_id', as: 'eleve' });
+Utilisateur.hasMany(InteractionSummary, { foreignKey: 'professeur_id', as: 'interactionsSummaryProfesseur' });
+Utilisateur.hasMany(InteractionSummary, { foreignKey: 'eleve_id', as: 'interactionsSummaryEleve' });
+
 // ... (autres relations inchangées)
 
 module.exports = {
@@ -215,5 +234,8 @@ module.exports = {
   ProgrammePartage,
   ExerciceFigure,
   SuggestionFigure,
-  DisciplineAvailability
+  DisciplineAvailability,
+  SystemLog,
+  SystemBackup,
+  InteractionSummary
 };

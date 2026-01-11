@@ -1,77 +1,45 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 
-export function useSuggestions() {
+export function useSuggestions(eleveId, groupeId = null, filters = {}) {
   const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchSuggestions = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/api/suggestions');
-      const data = await response.json();
-      setSuggestions(data.suggestions || []);
-      setError(null);
-    } catch (err) {
-      console.error('Erreur fetch suggestions:', err);
-      // Gérer le cas où l'API n'existe pas encore ou renvoie une erreur
-      setError(err.message || 'Erreur de chargement');
-      setSuggestions([]); 
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchSuggestions();
-  }, [fetchSuggestions]);
+    const fetchSuggestions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const endpoint = groupeId
+          ? `/api/prof/suggestions/groupe/${groupeId}`
+          : `/api/prof/suggestions/eleve/${eleveId}`;
 
-  const accepterSuggestion = async (figureId) => {
-    try {
-      const response = await api.post(`/api/suggestions/${figureId}/accepter`);
-      if (!response.ok) throw new Error('Erreur lors de l\'acceptation');
-      fetchSuggestions(); // Rafraîchir
-      return { success: true };
-    } catch (err) {
-      console.error('Erreur accepter suggestion:', err);
-      return {
-        success: false,
-        error: err.message || 'Erreur inconnue'
-      };
+        const params = new URLSearchParams();
+        if (filters.niveau) params.append('niveau', filters.niveau);
+        if (filters.limit) params.append('limit', filters.limit);
+
+        const res = await api.get(`${endpoint}?${params}`);
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Erreur chargement suggestions');
+        }
+
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+      } catch (err) {
+        console.error('Erreur useSuggestions:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (eleveId || groupeId) {
+      fetchSuggestions();
     }
-  };
+  }, [eleveId, groupeId, filters.niveau, filters.limit]);
 
-  const dismisserSuggestion = async (figureId) => {
-    try {
-      const response = await api.post(`/api/suggestions/${figureId}/dismisser`);
-      if (!response.ok) throw new Error('Erreur lors du masquage');
-      // Retirer immédiatement de l'affichage localement pour meilleure réactivité
-      setSuggestions(prev => prev.filter(s => s.figure_id !== figureId));
-      return { success: true };
-    } catch (err) {
-      console.error('Erreur dismisser suggestion:', err);
-      return { success: false };
-    }
-  };
-
-  const obtenirDetails = async (figureId) => {
-    try {
-      const response = await api.get(`/api/suggestions/${figureId}/details`);
-      return await response.json();
-    } catch (err) {
-      console.error('Erreur détails suggestion:', err);
-      return null;
-    }
-  };
-
-  return {
-    suggestions,
-    loading,
-    error,
-    accepterSuggestion,
-    dismisserSuggestion,
-    obtenirDetails,
-    refresh: fetchSuggestions
-  };
+  return { suggestions, loading, error };
 }

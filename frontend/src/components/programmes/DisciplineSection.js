@@ -109,7 +109,7 @@ function DisciplineSection({
           Aucune figure dans cette discipline
         </Typography>
       ) : (
-        <Grid container spacing={isMobile ? 1 : 2}>
+        <Grid container spacing={1}>
           {figures.map((figureData, index) => {
             // Transform API data structure to match FigureCard expectations
             const figureId = figureData.figure_id || figureData.id;
@@ -121,7 +121,8 @@ function DisciplineSection({
               descriptif: figureData.figure_description || figureData.descriptif || figureData.description,
               nb_etapes: figureData.etapes ? figureData.etapes.length : 0,
               image_url: figureData.image_url,
-              discipline: figureData.discipline
+              discipline: figureData.discipline,
+              difficulty_level: figureData.difficulty_level || figureData.Figure?.difficulty_level
             };
 
             // Build progression object from etapes data
@@ -173,7 +174,7 @@ function DisciplineSection({
             }
 
             return (
-              <Grid item xs={12} sm="auto" md="auto" key={figureId}>
+              <Grid item xs={12} sm={6} md={3} key={figureId}>
                 <FigureCard
                   figure={figure}
                   progression={progression}

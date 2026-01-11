@@ -26,7 +26,9 @@ import {
   EmojiEvents as TrophyIcon,
   Star as StarIcon,
   Flag as FlagIcon,
-  Assignment as AssignmentIcon
+  Assignment as AssignmentIcon,
+  Lightbulb as LightbulbIcon,
+  Leaderboard as LeaderboardIcon
 } from "@mui/icons-material";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -79,17 +81,37 @@ function NavigationBar() {
           {/* Section Droite : Liens Desktop */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
             {isAuthenticated && (
-              <Button
-                color="inherit"
-                component={Link}
-                to="/mon-programme"
-                startIcon={<FitnessCenterIcon />}
-              >
-                Mon Programme
-              </Button>
+              <>
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/mon-programme"
+                  startIcon={<FitnessCenterIcon />}
+                >
+                  Mon Programme
+                </Button>
+                {/* 
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/suggestions"
+                  startIcon={<LightbulbIcon />}
+                >
+                  Suggestions
+                </Button>
+                <Button
+                  color="inherit"
+                  component={Link}
+                  to="/classements"
+                  startIcon={<LeaderboardIcon />}
+                >
+                  Classements
+                </Button>
+                */}
+              </>
             )}
 
-            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
+            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'school_admin' || user?.role === 'admin') && (
               <>
                 <Button
                   color="inherit"
@@ -113,15 +135,7 @@ function NavigationBar() {
                   to="/admin"
                   startIcon={<AdminIcon />}
                 >
-                  Admin
-                </Button>
-                <Button
-                  color="inherit"
-                  component={Link}
-                  to="/admin/catalog"
-                  startIcon={<AdminIcon />}
-                >
-                  Catalogue
+                  Administration
                 </Button>
               </>
             )}
@@ -199,14 +213,31 @@ function NavigationBar() {
 
           <List>
             {isAuthenticated && (
-              <ListItem disablePadding>
-                <ListItemButton component={Link} to="/mon-programme">
-                  <ListItemIcon><FitnessCenterIcon color="primary" /></ListItemIcon>
-                  <ListItemText primary="Mon Programme" />
-                </ListItemButton>
-              </ListItem>
+              <>
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/mon-programme">
+                    <ListItemIcon><FitnessCenterIcon color="primary" /></ListItemIcon>
+                    <ListItemText primary="Mon Programme" />
+                  </ListItemButton>
+                </ListItem>
+                {/* 
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/suggestions">
+                    <ListItemIcon><LightbulbIcon color="primary" /></ListItemIcon>
+                    <ListItemText primary="Suggestions" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/classements">
+                    <ListItemIcon><LeaderboardIcon color="primary" /></ListItemIcon>
+                    <ListItemText primary="Classements" />
+                  </ListItemButton>
+                </ListItem>
+                */}
+              </>
             )}
 
+            {/* 
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/badges">
                 <ListItemIcon><TrophyIcon sx={{ color: '#FFD700' }} /></ListItemIcon>
@@ -220,6 +251,7 @@ function NavigationBar() {
                 <ListItemText primary="Titres" />
               </ListItemButton>
             </ListItem>
+            */}
 
             <ListItem disablePadding>
               <ListItemButton component={Link} to="/defis">
@@ -230,7 +262,7 @@ function NavigationBar() {
 
             <Divider sx={{ my: 1 }} />
 
-            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'admin') && (
+            {isAuthenticated && (user?.role === 'professeur' || user?.role === 'school_admin' || user?.role === 'admin') && (
               <>
                 <ListItem disablePadding>
                   <ListItemButton component={Link} to="/prof/dashboard">

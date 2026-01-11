@@ -2,6 +2,14 @@ const { Figure, EtapeProgression, Discipline, ExerciceFigure } = require('../mod
 const sequelize = require('../../db');
 const { Op } = require('sequelize');
 
+// Validation error class
+class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 class FigureService {
 
   /**
@@ -197,6 +205,46 @@ class FigureService {
       await transaction.rollback();
       throw error;
     }
+  }
+
+  /**
+   * Valide qu'il n'y a pas de dépendance circulaire dans la hiérarchie des exercices.
+   * Utilise BFS (Breadth-First Search) pour détecter les cycles.
+   * @param {number} figureId - ID de la figure parente
+   * @param {number} exerciceFigureId - ID de la figure exercice à ajouter
+   * @throws {ValidationError} Si une dépendance circulaire est détectée
+   * @returns {Promise<boolean>} true si la validation réussit
+   */
+  static async validateExerciceHierarchy(figureId, exerciceFigureId) {
+    // Auto-référence
+    if (figureId === exerciceFigureId) {
+      throw new ValidationError('Une figure ne peut être son propre exercice');
+    }
+
+    // Détection cycle via BFS
+    const visited = new Set();
+    const queue = [exerciceFigureId];
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+
+      if (currentId === figureId) {
+        throw new ValidationError('Dépendance circulaire détectée: cette relation créerait un cycle');
+      }
+
+      if (visited.has(currentId)) continue;
+      visited.add(currentId);
+
+      const children = await ExerciceFigure.findAll({
+        where: { figure_id: currentId },
+        attributes: ['exercice_figure_id'],
+        raw: true
+      });
+
+      queue.push(...children.map(c => c.exercice_figure_id));
+    }
+
+    return true;
   }
 }
 

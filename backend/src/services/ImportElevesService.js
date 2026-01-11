@@ -238,7 +238,7 @@ class ImportElevesService {
    */
   static async verifierDoublons(eleves) {
     const pseudos = eleves.map(e => e.pseudo);
-    const emails = eleves.map(e => e.email);
+    const emails = eleves.map(e => e.email).filter(email => email !== null);
 
     // Vérifier doublons dans le fichier CSV lui-même
     const pseudosUniques = new Set(pseudos);
@@ -246,18 +246,32 @@ class ImportElevesService {
       const doublonsPseudos = pseudos.filter((item, index) => pseudos.indexOf(item) !== index);
       throw {
         status: 400,
-        message: `Doublons détectés dans le CSV: ${[...new Set(doublonsPseudos)].join(', ')}`
+        message: `Doublons détectés dans le CSV (pseudo): ${[...new Set(doublonsPseudos)].join(', ')}`
+      };
+    }
+
+    const emailsUniques = new Set(emails);
+    if (emailsUniques.size !== emails.length) {
+      const doublonsEmails = emails.filter((item, index) => emails.indexOf(item) !== index);
+      throw {
+        status: 400,
+        message: `Doublons détectés dans le CSV (email): ${[...new Set(doublonsEmails)].join(', ')}`
       };
     }
 
     // Vérifier dans la base de données
+    const whereClause = {
+      [Op.or]: [
+        { pseudo: { [Op.in]: pseudos } }
+      ]
+    };
+
+    if (emails.length > 0) {
+      whereClause[Op.or].push({ email: { [Op.in]: emails } });
+    }
+
     const existing = await Utilisateur.findAll({
-      where: {
-        [Op.or]: [
-          { pseudo: { [Op.in]: pseudos } },
-          { email: { [Op.in]: emails } }
-        ]
-      },
+      where: whereClause,
       attributes: ['pseudo', 'email']
     });
 

@@ -1,91 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, useMediaQuery, useTheme } from '@mui/material';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import TimerIcon from '@mui/icons-material/Timer';
 
-/**
- * Real-time session stats
- */
 function SessionStats({ stats, startTime, compact = false }) {
   const [elapsed, setElapsed] = useState(0);
+  const theme = useTheme();
 
   useEffect(() => {
-    const interval = setInterval(() => setElapsed(Date.now() - startTime), 1000);
-    return () => clearInterval(interval);
+    const i = setInterval(() => setElapsed(Date.now() - startTime), 1000);
+    return () => clearInterval(i);
   }, [startTime]);
 
   const formatTime = (ms) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const m = Math.floor(totalSeconds / 60);
-    const s = totalSeconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   };
 
-  if (compact) {
-    return (
-      <Paper
-        elevation={0}
-        sx={{
-          position: 'fixed', bottom: 0, left: 0, right: 0,
-          p: 1.5,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-          borderRadius: 0,
-          zIndex: 1100,
-          bgcolor: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(10px)',
-          borderTop: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        <StatItem icon={<LocalFireDepartmentIcon color="warning" />} value={stats.streak} label="STREAK" />
-        <StatItem icon={<CheckCircleIcon color="success" />} value={stats.totalReussites} label="RÉUSSI" />
-        <StatItem icon={<CancelIcon color="error" />} value={stats.totalEchecs} label="ÉCHECS" />
-        <StatItem icon={<TimerIcon color="action" />} value={formatTime(elapsed)} label="TEMPS" />
-      </Paper>
-    );
-  }
+  const containerStyle = compact ? {
+    position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+    width: '90%', maxWidth: 400,
+    bgcolor: 'transparent', // Totally transparent
+    color: 'text.primary', // Switch to primary text color for readability
+    borderRadius: 50,
+    p: '8px 24px',
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    zIndex: 1200, boxShadow: 'none' // Remove shadow
+  } : {
+    p: 3, borderRadius: 4, bgcolor: 'white', border: '1px solid', borderColor: 'divider'
+  };
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3, mb: 2,
-        borderRadius: 4,
-        border: '1px solid',
-        borderColor: 'divider',
-        bgcolor: 'white'
-      }}
-    >
-      <Typography variant="overline" sx={{ fontWeight: 'bold', opacity: 0.5, mb: 2, display: 'block' }}>
-        PERFORMANCES LIVE
-      </Typography>
-
-      <Box display="flex" flexDirection="column" gap={2.5}>
-        <DetailItem icon={<LocalFireDepartmentIcon sx={{ color: '#ff9800' }} />} label="Série actuelle" value={stats.streak} />
-        <DetailItem icon={<CheckCircleIcon sx={{ color: '#4caf50' }} />} label="Réussites" value={stats.totalReussites} />
-        <DetailItem icon={<CancelIcon sx={{ color: '#f44336' }} />} label="Échecs" value={stats.totalEchecs} />
-        <DetailItem icon={<TimerIcon sx={{ color: '#757575' }} />} label="Temps écoulé" value={formatTime(elapsed)} />
-      </Box>
+    <Paper elevation={0} sx={containerStyle}>
+      <StatItem icon={<LocalFireDepartmentIcon sx={{ color: '#FF9100' }} />} value={stats.streak} label={compact ? null : "Série"} />
+      {compact && <Box sx={{ width: 1, height: 20, bgcolor: 'rgba(0,0,0,0.1)' }} />}
+      {!compact && <Box sx={{ width: 1, height: 20, bgcolor: 'rgba(255,255,255,0.2)' }} />}
+      <StatItem icon={<CheckCircleIcon sx={{ color: '#00E676' }} />} value={stats.totalReussites} label={compact ? null : "Réussites"} />
+      {compact && <Box sx={{ width: 1, height: 20, bgcolor: 'rgba(0,0,0,0.1)' }} />}
+      {!compact && <Box sx={{ width: 1, height: 20, bgcolor: 'rgba(255,255,255,0.2)' }} />}
+      <StatItem icon={<TimerIcon sx={{ color: compact ? 'text.secondary' : 'text.secondary' }} />} value={formatTime(elapsed)} label={compact ? null : "Temps"} />
     </Paper>
   );
 }
 
 const StatItem = ({ icon, value, label }) => (
-  <Box display="flex" flexDirection="column" alignItems="center">
+  <Box display="flex" alignItems="center" gap={1} flexDirection={label ? 'row' : 'row'}>
     {icon}
-    <Typography variant="caption" fontWeight="900" sx={{ mt: 0.5 }}>{value}</Typography>
-  </Box>
-);
-
-const DetailItem = ({ icon, label, value }) => (
-  <Box display="flex" justifyContent="space-between" alignItems="center">
-    <Box display="flex" alignItems="center" gap={1.5}>
-      {icon}
-      <Typography variant="body2" fontWeight="bold" color="text.secondary">{label}</Typography>
+    <Box>
+      <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1 }}>{value}</Typography>
+      {label && <Typography variant="caption" display="block" color="text.secondary">{label}</Typography>}
     </Box>
-    <Typography variant="body1" fontWeight="900">{value}</Typography>
   </Box>
 );
 

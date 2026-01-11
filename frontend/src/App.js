@@ -18,6 +18,8 @@ import EntrainementSession from "./pages/eleve/EntrainementSession";
 import BadgesPage from "./pages/eleve/BadgesPage";
 import TitresPage from "./pages/eleve/TitresPage";
 import DefisPage from "./pages/eleve/DefisPage";
+import StudentSuggestionsPage from "./pages/eleve/StudentSuggestionsPage";
+import LeaderboardPage from "./pages/common/LeaderboardPage";
 
 // Pages professeur
 import TeacherDashboardPage from "./pages/prof/AdvancedDashboardPage";
@@ -28,7 +30,6 @@ import ProgrammeDetailPageProf from "./pages/prof/ProgrammeDetailPage";
 
 // Pages admin
 import AdminPage from "./pages/admin/AdminPage";
-import CatalogAdminPage from "./pages/admin/CatalogAdminPage";
 import NavigationBar from "./NavigationBar";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RefreshProvider } from "./contexts/RefreshContext";
@@ -56,7 +57,6 @@ function App() {
           <Route path="/mon-programme/:id" element={<ProgrammeDetailPageEleve />} />
           <Route path="/figure/:figureId" element={<FigureDetailPage />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/admin/catalog" element={<CatalogAdminPage />} />
 
           {/* Routes Entraînement (Refactorisées pour être centrées sur les figures) */}
           <Route path="/entrainement/figure/:figureId" element={<EntrainementPage />} />
@@ -72,9 +72,11 @@ function App() {
           <Route path="/prof/programmes/:id" element={<ProgrammeDetailPageProf />} />
 
           {/* Routes Gamification */}
-          <Route path="/badges" element={<BadgesPage />} />
-          <Route path="/titres" element={<TitresPage />} />
+          {/* <Route path="/badges" element={<BadgesPage />} /> */}
+          {/* <Route path="/titres" element={<TitresPage />} /> */}
           <Route path="/defis" element={<DefisPage />} />
+          {/* <Route path="/suggestions" element={<StudentSuggestionsPage />} /> */}
+          {/* <Route path="/classements" element={<LeaderboardPage />} /> */}
         </Routes>
         </ThemeProvider>
       </RefreshProvider>

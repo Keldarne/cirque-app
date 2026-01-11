@@ -40,6 +40,10 @@ const DefiUtilisateur = sequelize.define('DefiUtilisateur', {
     {
       unique: true,
       fields: ['utilisateur_id', 'defi_id']
+    },
+    {
+      name: 'idx_complete_date',
+      fields: ['complete', 'date_completion']
     }
   ]
 });

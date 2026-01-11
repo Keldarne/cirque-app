@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Divider, Alert, CircularProgress, Chip } from '@mui/material';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Box, Typography, Divider, Alert, CircularProgress, Chip, Grid, Paper } from '@mui/material';
 import { 
   CalendarToday as CalendarIcon, 
   Schedule as ScheduleIcon, 
@@ -7,7 +7,8 @@ import {
   Timer as TimerIcon,
   Visibility as VisibilityIcon,
   Bolt as BoltIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  Star as StarIcon
 } from '@mui/icons-material';
 import ProgressBar from '../common/ProgressBar';
 import { calculateDecayLevel } from '../../utils/memoryDecay';
@@ -82,42 +83,31 @@ function JournalProgression({
     fetchHistorique();
   }, [figure]);
 
-  if (!progression) {
-    return (
-      <Alert severity="info" sx={sx}>
-        Aucune donnée de progression disponible.
-      </Alert>
-    );
-  }
-
-  const derniereValidation = progression.date_derniere_validation || progression.date_validation;
-  const decayInfo = calculateDecayLevel(derniereValidation);
-
-  // Calculer prochaine révision recommandée (30 jours après validation)
-  const calculateProchaineRevision = () => {
-    if (!derniereValidation) return null;
-
-    const dateValidation = new Date(derniereValidation);
-    const prochaineRevision = new Date(dateValidation);
-    prochaineRevision.setDate(prochaineRevision.getDate() + DECAY_CONFIG.FRESH_DAYS);
-
-    return prochaineRevision;
-  };
-
-  const prochaineRevision = calculateProchaineRevision();
-
-  // Calculer jours restants
-  const joursRestants = () => {
-    if (!prochaineRevision) return 0;
-
-    const maintenant = new Date();
-    const diffTime = prochaineRevision - maintenant;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays > 0 ? diffDays : 0;
-  };
-
-  const jours = joursRestants();
+  // Calculer les statistiques par étape basées sur l'historique
+  const statsParEtape = useMemo(() => {
+    const stats = {};
+    historique.forEach(t => {
+      if (!stats[t.etapeNom]) {
+        stats[t.etapeNom] = {
+          nom: t.etapeNom,
+          totalDuration: 0,
+          countDuration: 0,
+          totalScore: 0,
+          countScore: 0
+        };
+      }
+      const s = stats[t.etapeNom];
+      if (t.duree_secondes) {
+        s.totalDuration += t.duree_secondes;
+        s.countDuration++;
+      }
+      if (t.score) {
+        s.totalScore += t.score;
+        s.countScore++;
+      }
+    });
+    return Object.values(stats);
+  }, [historique]);
 
   // Helper pour afficher le détail d'une tentative
   const renderTentativeDetails = (t) => {
@@ -196,6 +186,43 @@ function JournalProgression({
     );
   };
 
+  if (!progression) {
+    return (
+      <Alert severity="info" sx={sx}>
+        Aucune donnée de progression disponible.
+      </Alert>
+    );
+  }
+
+  const derniereValidation = progression.date_derniere_validation || progression.date_validation;
+  const decayInfo = calculateDecayLevel(derniereValidation);
+
+  // Calculer prochaine révision recommandée (30 jours après validation)
+  const calculateProchaineRevision = () => {
+    if (!derniereValidation) return null;
+
+    const dateValidation = new Date(derniereValidation);
+    const date = new Date(dateValidation);
+    date.setDate(date.getDate() + DECAY_CONFIG.FRESH_DAYS);
+
+    return date;
+  };
+
+  const prochaineRevision = calculateProchaineRevision();
+
+  // Calculer jours restants
+  const joursRestants = () => {
+    if (!prochaineRevision) return 0;
+
+    const maintenant = new Date();
+    const diffTime = prochaineRevision - maintenant;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  const jours = joursRestants();
+
   return (
     <Box sx={sx}>
       <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1}>
@@ -255,10 +282,49 @@ function JournalProgression({
         </Alert>
       )}
 
+      {/* Résumé des performances par étape */}
+      {!loading && statsParEtape.length > 0 && (
+        <Box mb={4}>
+          <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1}>
+            <TrendingIcon /> Performance par étape
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Grid container spacing={1.5}>
+            {statsParEtape.map((s) => (
+              <Grid item xs={12} sm={6} key={s.nom}>
+                <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'background.paper', borderRadius: 2 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" noWrap sx={{ color: 'primary.main' }}>
+                    {s.nom}
+                  </Typography>
+                  <Box display="flex" gap={2} mt={0.5}>
+                    {s.countDuration > 0 && (
+                      <Box display="flex" alignItems="center" gap={0.5}>
+                        <TimerIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        <Typography variant="caption" fontWeight="bold">
+                          {Math.round(s.totalDuration / s.countDuration)}s <Typography component="span" variant="caption" color="text.disabled" sx={{ fontWeight: 'normal' }}>(moy)</Typography>
+                        </Typography>
+                      </Box>
+                    )}
+                    {s.countScore > 0 && (
+                      <Box display="flex" alignItems="center" gap={0.5}>
+                        <StarIcon sx={{ fontSize: 16, color: '#FFD700' }} />
+                        <Typography variant="caption" fontWeight="bold">
+                          {(s.totalScore / s.countScore).toFixed(1)}/3 <Typography component="span" variant="caption" color="text.disabled" sx={{ fontWeight: 'normal' }}>(sent)</Typography>
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
+
       {/* Historique Réel */}
       <Box>
         <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1}>
-          <TrendingIcon /> Historique d'entraînement
+          <TrendingIcon /> Historique récent
         </Typography>
         <Divider sx={{ mb: 2 }} />
 
@@ -271,26 +337,50 @@ function JournalProgression({
             Aucune session récente enregistrée.
           </Typography>
         ) : (
-          <Box sx={{ maxHeight: 300, overflowY: 'auto', pr: 1 }}>
+          <Box sx={{ 
+            maxHeight: 400, 
+            overflowY: 'auto', 
+            pr: 1,
+            // Hide scrollbar but keep functionality
+            '&::-webkit-scrollbar': { display: 'none' },
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}>
             {historique.map((entry) => (
               <Box 
                 key={entry.id} 
                 mb={1.5} 
                 p={1.5} 
                 bgcolor="grey.50" 
-                borderRadius={1}
+                borderRadius={2}
                 borderLeft={`4px solid ${entry.reussie ? '#4caf50' : '#f44336'}`}
+                sx={{ transition: 'background-color 0.2s', '&:hover': { bgcolor: 'grey.100' } }}
               >
-                <Box display="flex" justifyContent="space-between" alignItems="start" mb={0.5}>
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    {entry.etapeNom}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(entry.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  </Typography>
+                <Box display="flex" justifyContent="space-between" alignItems="start" mb={1}>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight="bold" sx={{ color: 'text.primary' }}>
+                      {entry.etapeNom}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {new Date(entry.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                    </Typography>
+                  </Box>
+                  
+                  {/* Status Indicator */}
+                  <Chip 
+                    label={entry.reussie ? "RÉUSSI" : "À REVOIR"} 
+                    size="small" 
+                    color={entry.reussie ? "success" : "error"}
+                    variant="filled"
+                    sx={{ fontWeight: 'bold', height: 20, fontSize: '0.65rem' }}
+                  />
                 </Box>
                 
-                {renderTentativeDetails(entry)}
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box display="flex" gap={1}>
+                    {renderTentativeDetails(entry)}
+                  </Box>
+                </Box>
               </Box>
             ))}
           </Box>

@@ -108,11 +108,7 @@ router.post('/import', verifierToken, estProfesseurOuAdmin, upload.single('file'
         eleve.nom,
         prefixeEcole
       ),
-      email: eleve.email || ImportElevesService.genererEmail(
-        eleve.prenom,
-        eleve.nom,
-        domaineEcole
-      ),
+      email: eleve.email || null,
       mot_de_passe: motDePasseDefaut
     }));
 

@@ -61,6 +61,10 @@ const ProgressionEtape = sequelize.define('ProgressionEtape', {
     {
       name: 'idx_decay_level',
       fields: ['decay_level']
+    },
+    {
+      name: 'idx_lateralite_statut',
+      fields: ['lateralite', 'statut']
     }
   ]
 });

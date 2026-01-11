@@ -14,10 +14,12 @@ import EtapeEditorStep from './EtapeEditorStep';
 import ExerciceSelectionStep from './ExerciceSelectionStep';
 import ReviewStep from './ReviewStep';
 import { api } from '../../../utils/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const steps = ['Infos Générales', 'Étapes', 'Pré-requis', 'Validation'];
 
 const FigureWizard = ({ initialData, onClose, onSaveSuccess }) => {
+  const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState(initialData || {
     nom: '',
@@ -68,25 +70,42 @@ const FigureWizard = ({ initialData, onClose, onSaveSuccess }) => {
     setSaving(true);
     try {
       const isEdit = !!formData.id;
-      const url = isEdit ? `/api/admin/figures/${formData.id}` : '/api/admin/figures';
+
+      // Utiliser l'endpoint approprié selon le rôle
+      const baseEndpoint = (user?.role === 'professeur' || user?.role === 'school_admin')
+        ? '/api/prof/figures'
+        : '/api/admin/figures';
+
+      const url = isEdit ? `${baseEndpoint}/${formData.id}` : baseEndpoint;
       const method = isEdit ? 'PUT' : 'POST';
+
+      // Sécurité: Si pas admin, forcer l'ecole_id de l'utilisateur
+      const finalData = { ...formData };
+      if (user?.role !== 'admin' && user?.ecole_id) {
+        finalData.ecole_id = user.ecole_id;
+      }
 
       let res;
       if (method === 'POST') {
-        res = await api.post(url, formData);
+        res = await api.post(url, finalData);
       } else {
-        res = await api.put(url, formData);
+        res = await api.put(url, finalData);
       }
 
-      if (!res.ok) throw new Error("Erreur lors de l'enregistrement");
+      if (!res.ok) {
+        const errorData = await res.json();
+        const errorMessage = errorData.error || errorData.message || "Erreur lors de l'enregistrement";
+        const debugInfo = errorData.debug ? `\n\nDétails: ${errorData.debug}` : '';
+        throw new Error(errorMessage + debugInfo);
+      }
 
       const savedFigure = await res.json();
       if (onSaveSuccess) onSaveSuccess(savedFigure);
       if (onClose) onClose();
 
     } catch (err) {
-      console.error(err);
-      alert("Une erreur est survenue lors de l'enregistrement.");
+      console.error('Erreur enregistrement figure:', err);
+      alert("Une erreur est survenue lors de l'enregistrement.\n\n" + err.message);
     } finally {
       setSaving(false);
     }

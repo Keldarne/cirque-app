@@ -37,7 +37,8 @@ router.get('/', verifierToken, async (req, res) => {
       attributes: ['id', 'pseudo', 'prenom', 'nom', 'email', 'role', 'ecole_id', 'niveau', 'xp_total', 'actif', 'createdAt'],
       include: [{
         model: Ecole,
-        attributes: ['id', 'nom', 'code_acces']
+        as: 'Ecole',
+        attributes: ['id', 'nom']
       }],
       order: [['role', 'ASC'], ['nom', 'ASC'], ['prenom', 'ASC']]
     });
@@ -56,13 +57,21 @@ router.get('/', verifierToken, async (req, res) => {
  */
 router.post('/', verifierToken, async (req, res) => {
   try {
-    const { prenom, nom, email, role, password } = req.body;
+    const { prenom, nom, role, password } = req.body;
+    let { email } = req.body;
     const { role: userRole, ecole_id: userEcoleId } = req.user;
 
+    // Normaliser l'email (vide ou espaces -> null)
+    if (typeof email === 'string' && email.trim() === '') {
+      email = null;
+    } else if (typeof email === 'string') {
+      email = email.trim();
+    }
+
     // Validations
-    if (!prenom || !nom || !email || !role) {
+    if (!prenom || !nom || !role) {
       return res.status(400).json({
-        error: 'Prénom, nom, email et rôle sont requis'
+        error: 'Prénom, nom et rôle sont requis'
       });
     }
 
@@ -70,6 +79,22 @@ router.post('/', verifierToken, async (req, res) => {
       return res.status(400).json({
         error: 'Le rôle doit être "eleve" ou "professeur"'
       });
+    }
+
+    // Validation format email strict (si fourni)
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          error: 'Format d\'email invalide'
+        });
+      }
+
+      // Vérifier unicité email
+      const existingEmail = await Utilisateur.findOne({ where: { email } });
+      if (existingEmail) {
+        return res.status(409).json({ error: 'Cet email est déjà utilisé' });
+      }
     }
 
     // Déterminer ecole_id (sécurité: forcer celle du créateur sauf admin)
@@ -102,12 +127,6 @@ router.post('/', verifierToken, async (req, res) => {
           error: `Limite d'élèves atteinte pour cette école (${ecole.max_eleves} max)`
         });
       }
-    }
-
-    // Vérifier unicité email
-    const existingEmail = await Utilisateur.findOne({ where: { email } });
-    if (existingEmail) {
-      return res.status(409).json({ error: 'Cet email est déjà utilisé' });
     }
 
     // Générer pseudo si non fourni
@@ -145,7 +164,7 @@ router.post('/', verifierToken, async (req, res) => {
       prenom,
       nom,
       email,
-      password: hashedPassword,
+      mot_de_passe: hashedPassword,
       role,
       ecole_id,
       niveau: 1,
@@ -181,8 +200,16 @@ router.post('/', verifierToken, async (req, res) => {
 router.put('/:id', verifierToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { prenom, nom, email, role } = req.body;
+    const { prenom, nom, role } = req.body;
+    let { email } = req.body;
     const { role: userRole, ecole_id: userEcoleId } = req.user;
+
+    // Normaliser l'email (vide ou espaces -> null)
+    if (typeof email === 'string' && email.trim() === '') {
+      email = null;
+    } else if (typeof email === 'string') {
+      email = email.trim();
+    }
 
     const utilisateur = await Utilisateur.findByPk(id);
     if (!utilisateur) {
@@ -196,8 +223,22 @@ router.put('/:id', verifierToken, async (req, res) => {
       });
     }
 
-    // Empêcher modification role vers admin (sécurité)
-    if (role === 'admin' && userRole !== 'admin') {
+    // Empêcher modification admin global (sauf par admin global)
+    if (utilisateur.role === 'admin' && userRole !== 'admin') {
+      return res.status(403).json({
+        error: 'Seul un admin peut modifier un administrateur'
+      });
+    }
+
+    // Empêcher modification school_admin par un professeur
+    if (utilisateur.role === 'school_admin' && userRole === 'professeur') {
+      return res.status(403).json({
+        error: 'Un professeur ne peut pas modifier un administrateur d\'école'
+      });
+    }
+
+    // Empêcher modification role vers admin ou school_admin (sécurité)
+    if ((role === 'admin' || role === 'school_admin') && userRole !== 'admin') {
       return res.status(403).json({
         error: 'Seul un admin peut créer des administrateurs'
       });
@@ -205,6 +246,13 @@ router.put('/:id', verifierToken, async (req, res) => {
 
     // Vérifier unicité email si changé
     if (email && email !== utilisateur.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          error: 'Format d\'email invalide'
+        });
+      }
+
       const existingEmail = await Utilisateur.findOne({
         where: { email, id: { [Op.ne]: id } }
       });
@@ -268,10 +316,17 @@ router.delete('/:id', verifierToken, async (req, res) => {
       });
     }
 
-    // Empêcher suppression admin (sauf par admin)
+    // Empêcher suppression admin global (sauf par admin global)
     if (utilisateur.role === 'admin' && userRole !== 'admin') {
       return res.status(403).json({
         error: 'Seul un admin peut supprimer un administrateur'
+      });
+    }
+
+    // Empêcher suppression school_admin par un professeur
+    if (utilisateur.role === 'school_admin' && userRole === 'professeur') {
+      return res.status(403).json({
+        error: 'Un professeur ne peut pas supprimer un administrateur d\'école'
       });
     }
 
@@ -307,6 +362,20 @@ router.post('/:id/archive', verifierToken, async (req, res) => {
     if (userRole !== 'admin' && utilisateur.ecole_id !== userEcoleId) {
       return res.status(403).json({
         error: 'Vous ne pouvez archiver que les utilisateurs de votre école'
+      });
+    }
+
+    // Empêcher archivage admin global (sauf par admin global)
+    if (utilisateur.role === 'admin' && userRole !== 'admin') {
+      return res.status(403).json({
+        error: 'Seul un admin peut archiver un administrateur'
+      });
+    }
+
+    // Empêcher archivage school_admin par un professeur
+    if (utilisateur.role === 'school_admin' && userRole === 'professeur') {
+      return res.status(403).json({
+        error: 'Un professeur ne peut pas archiver un administrateur d\'école'
       });
     }
 

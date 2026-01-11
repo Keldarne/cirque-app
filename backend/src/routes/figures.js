@@ -29,8 +29,11 @@ router.get('/', verifierToken, async (req, res) => {
     if (req.user.role === 'admin') {
       // Admin voit tout - pas de filtre
     } else if (userEcoleId) {
-      // Utilisateurs d'école: UNIQUEMENT figures de leur école
-      where.ecole_id = userEcoleId;
+      // Utilisateurs d'école: Figures de leur école OU Catalogue Public
+      where[Op.or] = [
+        { ecole_id: userEcoleId },
+        { ecole_id: null }
+      ];
     } else {
       // Utilisateurs solo: UNIQUEMENT catalogue public
       where.ecole_id = null;

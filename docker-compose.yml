@@ -78,6 +78,22 @@ services:
     stdin_open: true
     tty: true
 
+  # WhoDB - Interface graphique de gestion de base de données
+  whodb:
+    image: clidey/whodb
+    container_name: cirque-whodb
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Pré-configuration de la connexion MySQL
+      WHODB_MYSQL: '[{"host":"db","user":"cirque_user","password":"motdepassefort","database":"cirque_app_dev","port":"3306"}]'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cirque-network
+
 networks:
   cirque-network:
     driver: bridge

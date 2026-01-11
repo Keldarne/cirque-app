@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Hook pour charger les programmes d'un professeur
@@ -279,6 +280,7 @@ export const useFigures = () => {
   const [figures, setFigures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth(); // Utiliser le contexte auth pour filtrage
 
   useEffect(() => {
     const fetchFigures = async () => {
@@ -288,7 +290,30 @@ export const useFigures = () => {
         const response = await api.get('/api/figures');
         if (!response.ok) throw new Error('Erreur chargement figures');
         const data = await response.json();
-        setFigures(Array.isArray(data) ? data : []);
+        
+        if (Array.isArray(data)) {
+          // Filtrage selon les règles métier:
+          // 1. Admin (Propriétaire): Voit tout le catalogue (public + écoles)
+          // 2. Autres (Prof/Eleve): Uniquement les figures de leur école (ecole_id match)
+          // 3. Le catalogue public (ecole_id null) est réservé aux admins.
+          
+          let filtered = data;
+          
+          if (user?.role === 'admin') {
+            // L'admin est le propriétaire, il voit tout
+            filtered = data;
+          } else if (user?.ecole_id) {
+            // Les utilisateurs rattachés voient uniquement leur école (exclut le public)
+            filtered = data.filter(f => f.ecole_id === user.ecole_id);
+          } else {
+            // Utilisateur sans école et non-admin: Ne voit rien (protection catalogue public)
+            filtered = [];
+          }
+          
+          setFigures(filtered);
+        } else {
+          setFigures([]);
+        }
       } catch (err) {
         console.error('Erreur useFigures:', err);
         setError(err.message);
@@ -297,7 +322,7 @@ export const useFigures = () => {
       }
     };
     fetchFigures();
-  }, []);
+  }, [user]);
 
   return { figures, loading, error };
 };

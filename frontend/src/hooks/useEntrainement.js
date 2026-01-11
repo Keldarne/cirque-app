@@ -9,7 +9,7 @@ export function useEntrainement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const startSession = useCallback(async (figureId) => {
+  const startSession = useCallback(async (figureId, selectedStepIds = null) => {
     setLoading(true);
     setError(null);
 
@@ -27,7 +27,18 @@ export function useEntrainement() {
         throw new Error('Aucune étape trouvée pour cette figure');
       }
 
-      const etapesQueue = etapesData.map(etape => ({
+      // Filter steps if selectedStepIds is provided
+      let etapesToUse = etapesData;
+      if (selectedStepIds && selectedStepIds.length > 0) {
+        etapesToUse = etapesData.filter(e => selectedStepIds.includes(e.id));
+        // If selection is invalid (e.g., outdated IDs), fallback to all
+        if (etapesToUse.length === 0) {
+            console.warn("Selected steps not found, falling back to all steps");
+            etapesToUse = etapesData;
+        }
+      }
+
+      const etapesQueue = etapesToUse.map(etape => ({
         ...etape,
         figureId: figure.id,
         figureNom: figure.nom,

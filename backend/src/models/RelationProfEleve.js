@@ -40,6 +40,11 @@ const RelationProfEleve = sequelize.define('RelationProfEleve', {
     type: DataTypes.DATE,
     allowNull: true
   },
+  invitation_expiration_date: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Code expire après 30 jours'
+  },
   actif: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
@@ -63,7 +68,17 @@ const RelationProfEleve = sequelize.define('RelationProfEleve', {
         code_invitation: { [sequelize.Sequelize.Op.ne]: null }
       }
     }
-  ]
+  ],
+  hooks: {
+    beforeCreate(relation) {
+      if (relation.code_invitation && !relation.invitation_expiration_date) {
+        // 30 jours
+        relation.invitation_expiration_date = new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        );
+      }
+    }
+  }
 });
 
 // Méthode statique pour générer un code d'invitation unique

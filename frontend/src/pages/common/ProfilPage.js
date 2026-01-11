@@ -275,9 +275,11 @@ function ProfilPage() {
             </Box>
             <Divider sx={{ mb: 2 }} />
             {/* Ici on pourrait mapper les badges récents si l'API les renvoyait en détail */}
+            {/* 
             <Typography variant="body2" color="textSecondary">
               Consultez la section Badges pour voir toute votre collection.
             </Typography>
+            */}
           </Paper>
         </Grid>
 
@@ -348,9 +350,11 @@ function ProfilPage() {
               <Typography variant="h6" gutterBottom>Titres Débloqués</Typography>
               <Typography variant="h3" color="secondary.main">{profil.titres.total}</Typography>
               <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>titres obtenus</Typography>
+              {/* 
               <Button variant="outlined" fullWidth onClick={() => navigate('/titres')}>
                 Gérer mes titres
               </Button>
+              */}
             </CardContent>
           </Card>
         </Grid>

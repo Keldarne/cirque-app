@@ -51,22 +51,21 @@ function FigureCard({
 
   const decayStyles = decayInfo ? getDecayBorderStyles(progression.date_derniere_validation, theme) : {};
 
-  // Dimensions selon variant
+  // Dimensions selon variant (réduites d'un tiers)
   const dimensions = {
-    minimal: { width: 150, height: 200 },
-    compact: { width: 200, height: 300 },
-    detailed: { width: 300, height: 400 }
+    minimal: { width: 150, height: 135 },
+    compact: { width: 200, height: 200 },
+    detailed: { width: 300, height: 270 }
   };
 
   let { width, height } = dimensions[variant] || dimensions.compact;
 
   // Ajustements responsifs
+  width = '100%'; // Toujours 100% pour remplir la cellule de la Grid
+  
   if (isMobile) {
-    width = '100%';
-    height = 'auto'; // Hauteur dynamique pour accommoder le texte qui wrap
+    height = 'auto';
   } else {
-    // Sur desktop, on passe aussi en hauteur auto pour voir toute la description
-    // tout en gardant une largeur fixe selon le variant
     height = 'auto';
   }
 
@@ -76,7 +75,7 @@ function FigureCard({
       sx={{
         width: width,
         height: height,
-        minHeight: isMobile ? 120 : (dimensions[variant]?.height || 300),
+        minHeight: isMobile ? 80 : (dimensions[variant]?.height || 170), // Hauteur min réduite d'un tiers
         display: 'flex',
         flexDirection: isMobile ? 'row' : 'column', // Layout horizontal sur mobile
         cursor: onClick ? 'pointer' : 'default',
@@ -101,7 +100,7 @@ function FigureCard({
         />
       )}
 
-      {/* Image */}
+      {/* Image (hauteur réduite d'un tiers) */}
       {figure.image_url && (
         <CardMedia
           component="img"
@@ -111,7 +110,7 @@ function FigureCard({
             objectFit: 'cover',
             width: isMobile ? '100px' : '100%',
             alignSelf: 'stretch',
-            height: isMobile ? 'auto' : (variant === 'compact' ? '150px' : '200px')
+            height: isMobile ? 'auto' : (variant === 'compact' ? '100px' : '135px')
           }}
         />
       )}
@@ -126,17 +125,25 @@ function FigureCard({
       }}>
         {/* Titre et Badge d'état */}
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={0.5}>
-          <Typography 
-            variant={isMobile ? "subtitle1" : "h6"} 
-            sx={{ 
-              flexGrow: 1, 
-              fontSize: isMobile ? '0.95rem' : (variant === 'minimal' ? '0.9rem' : '1.25rem'),
-              fontWeight: 'bold',
-              lineHeight: 1.2
-            }}
-          >
-            {figure.nom}
-          </Typography>
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography 
+              variant={isMobile ? "subtitle1" : "h6"} 
+              sx={{ 
+                fontSize: isMobile ? '0.95rem' : (variant === 'minimal' ? '0.9rem' : '1.1rem'),
+                fontWeight: 'bold',
+                lineHeight: 1.2,
+                whiteSpace: 'normal',
+                wordBreak: 'break-word'
+              }}
+            >
+              {figure.nom}
+            </Typography>
+            {figure.difficulty_level && (
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold', display: 'block', mt: -0.5 }}>
+                Niveau {figure.difficulty_level}
+              </Typography>
+            )}
+          </Box>
           {progression && (
             <StateBadge
               etat={progression.etat}
@@ -145,24 +152,6 @@ function FigureCard({
             />
           )}
         </Box>
-
-        {/* Description */}
-        {variant !== 'minimal' && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mb: 1,
-              display: 'block',
-              overflow: 'visible',
-              fontSize: isMobile ? '0.75rem' : '0.875rem',
-              wordBreak: 'break-word',
-              lineHeight: 1.4
-            }}
-          >
-            {figure.descriptif}
-          </Typography>
-        )}
 
         {/* Barre de progression */}
         {showProgress && progression && (

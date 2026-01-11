@@ -65,6 +65,12 @@ const Ecole = sequelize.define('Ecole', {
   montant_mensuel: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
+    validate: {
+      min: {
+        args: [0],
+        msg: 'Le montant mensuel doit être positif'
+      }
+    },
     comment: 'Montant mensuel en euros'
   },
   max_eleves: {

@@ -24,7 +24,7 @@ import { api } from "../../utils/api";
 function FigureDetailPage() {
   const { figureId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, setUser, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, setUser, loading: authLoading } = useAuth();
 
   const [figure, setFigure] = useState(null);
   const [progressionEtapes, setProgressionEtapes] = useState([]);
@@ -57,8 +57,18 @@ function FigureDetailPage() {
           throw new Error('Erreur lors du chargement de la progression');
         }
 
-        const figureData = await figureRes.json();
+        const figureDataRaw = await figureRes.json();
+        const figureData = figureDataRaw.figure || figureDataRaw;
         const progressionData = await progressionRes.json();
+
+        // Vérification de sécurité frontend (Filtre Stricte)
+        const isPublic = figureData.ecole_id === null;
+        const canSee = user?.role === 'admin' || 
+                      (!isPublic && user?.ecole_id && figureData.ecole_id === user.ecole_id);
+
+        if (!canSee) {
+          throw new Error('Vous n\'avez pas accès à cette figure (Contenu réservé)');
+        }
 
         setFigure(figureData);
         setProgressionEtapes(Array.isArray(progressionData) ? progressionData : []);

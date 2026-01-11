@@ -81,6 +81,11 @@ const Figure = sequelize.define('Figure', {
   timestamps: true,
   indexes: [
     {
+      unique: true,
+      name: 'unique_nom_discipline_ecole',
+      fields: ['nom', 'discipline_id', 'ecole_id']
+    },
+    {
       name: 'idx_discipline_ecole_visibilite',
       fields: ['discipline_id', 'ecole_id', 'visibilite']
     },

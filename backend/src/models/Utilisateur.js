@@ -27,7 +27,7 @@ const Utilisateur = sequelize.define('Utilisateur', {
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     unique: true,
     validate: { isEmail: true }
   },
@@ -72,6 +72,13 @@ const Utilisateur = sequelize.define('Utilisateur', {
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
     comment: 'NULL = solo user ou admin global, sinon ID de l\'école'
+  },
+  // Statut actif/archivé (pour archiver un utilisateur sans le supprimer)
+  actif: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+    comment: 'false = utilisateur archivé, true = utilisateur actif'
   }
 }, {
   tableName: 'Utilisateurs',

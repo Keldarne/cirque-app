@@ -34,14 +34,18 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import { api } from '../../../utils/api';
 import FigureWizard from './FigureWizard';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const FigureManager = () => {
+  const { user } = useAuth();
   const [figures, setFigures] = useState([]);
   const [disciplines, setDisciplines] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [filteredFigures, setFilteredFigures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisciplineId, setSelectedDisciplineId] = useState('all');
+  const [selectedSchoolId, setSelectedSchoolId] = useState('all');
   
   const [openWizard, setOpenWizard] = useState(false);
   const [selectedFigure, setSelectedFigure] = useState(null);
@@ -50,8 +54,10 @@ const FigureManager = () => {
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   useEffect(() => {
     let result = figures;
@@ -70,22 +76,56 @@ const FigureManager = () => {
       result = result.filter(f => f.discipline_id === selectedDisciplineId);
     }
 
+    // Filter by school/catalog
+    if (selectedSchoolId !== 'all') {
+      if (selectedSchoolId === 'public') {
+        result = result.filter(f => f.ecole_id === null || f.ecole_id === undefined);
+      } else if (selectedSchoolId === 'my_school') {
+        if (user?.ecole_id) {
+           result = result.filter(f => f.ecole_id === user.ecole_id);
+        }
+      } else if (user?.role === 'admin') {
+        result = result.filter(f => f.ecole_id === parseInt(selectedSchoolId));
+      }
+    }
+
     setFilteredFigures(result);
-  }, [searchQuery, selectedDisciplineId, figures]);
+  }, [searchQuery, selectedDisciplineId, selectedSchoolId, figures, user]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [figuresRes, disciplinesRes] = await Promise.all([
-        api.get('/api/figures'),
+      // Utiliser l'endpoint approprié selon le rôle
+      const figuresEndpoint = (user?.role === 'professeur' || user?.role === 'school_admin')
+        ? '/api/prof/figures'
+        : '/api/figures';
+
+      const promises = [
+        api.get(figuresEndpoint),
         api.get('/api/disciplines')
-      ]);
+      ];
+
+      // Fetch schools only for admin
+      if (user?.role === 'admin') {
+        promises.push(api.get('/api/admin/ecoles'));
+      }
+
+      const results = await Promise.all(promises);
+      const figuresRes = results[0];
+      const disciplinesRes = results[1];
+      const schoolsRes = user?.role === 'admin' ? results[2] : null;
 
       if (figuresRes.ok) {
-        setFigures(await figuresRes.json());
+        const data = await figuresRes.json();
+        if (Array.isArray(data)) {
+          setFigures(data);
+        }
       }
       if (disciplinesRes.ok) {
         setDisciplines(await disciplinesRes.json());
+      }
+      if (schoolsRes && schoolsRes.ok) {
+        setSchools(await schoolsRes.json());
       }
     } catch (err) {
       console.error("Error fetching data", err);
@@ -148,10 +188,22 @@ const FigureManager = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette figure ?")) {
       try {
-        await api.delete(`/api/admin/figures/${id}`);
+        // Utiliser l'endpoint approprié selon le rôle
+        const endpoint = (user?.role === 'professeur' || user?.role === 'school_admin')
+          ? `/api/prof/figures/${id}`
+          : `/api/admin/figures/${id}`;
+
+        const res = await api.delete(endpoint);
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Erreur lors de la suppression');
+        }
+
         fetchData(); // Refresh both lists
       } catch (err) {
         console.error("Error deleting figure", err);
+        alert(`Impossible de supprimer la figure: ${err.message}`);
       }
     }
   };
@@ -174,7 +226,9 @@ const FigureManager = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">Catalogue des Figures</Typography>
+        <Typography variant="h6">
+          {user?.role === 'admin' ? "Catalogue Global" : "Catalogue de mon École"}
+        </Typography>
         <Button 
           variant="contained" 
           startIcon={<AddIcon />} 
@@ -185,7 +239,7 @@ const FigureManager = () => {
       </Box>
 
       <Paper sx={{ mb: 3, p: 2 }}>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={2} flexWrap="wrap">
           <TextField
             fullWidth
             variant="outlined"
@@ -200,7 +254,9 @@ const FigureManager = () => {
               ),
             }}
             size="small"
+            sx={{ flex: 1, minWidth: 200 }}
           />
+          
           <FormControl sx={{ minWidth: 200 }} size="small">
             <InputLabel>Discipline</InputLabel>
             <Select
@@ -214,6 +270,36 @@ const FigureManager = () => {
               ))}
             </Select>
           </FormControl>
+
+          {user?.role === 'admin' ? (
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel>École / Catalogue</InputLabel>
+              <Select
+                value={selectedSchoolId}
+                label="École / Catalogue"
+                onChange={(e) => setSelectedSchoolId(e.target.value)}
+              >
+                <MenuItem value="all">Tout voir</MenuItem>
+                <MenuItem value="public">Catalogue Public</MenuItem>
+                {schools.map((s) => (
+                  <MenuItem key={s.id} value={s.id}>{s.nom}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : (
+             <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel>Catalogue</InputLabel>
+              <Select
+                value={selectedSchoolId}
+                label="Catalogue"
+                onChange={(e) => setSelectedSchoolId(e.target.value)}
+              >
+                <MenuItem value="all">Tout voir</MenuItem>
+                <MenuItem value="public">Catalogue Public</MenuItem>
+                <MenuItem value="my_school">Mon École</MenuItem>
+              </Select>
+            </FormControl>
+          )}
         </Box>
       </Paper>
 
@@ -222,6 +308,7 @@ const FigureManager = () => {
           <TableHead>
             <TableRow>
               <TableCell>Nom</TableCell>
+              {user?.role === 'admin' && <TableCell>École</TableCell>}
               <TableCell>Niveau</TableCell>
               <TableCell>Type</TableCell>
               <TableCell align="right">Actions</TableCell>
@@ -231,41 +318,87 @@ const FigureManager = () => {
             {sortedDisciplineNames.map(disciplineName => (
               <React.Fragment key={disciplineName}>
                 <TableRow sx={{ bgcolor: 'action.hover' }}>
-                  <TableCell colSpan={4} sx={{ fontWeight: 'bold' }}>
+                  <TableCell colSpan={user?.role === 'admin' ? 5 : 4} sx={{ fontWeight: 'bold' }}>
                     {disciplineName} ({groupedFigures[disciplineName].length})
                   </TableCell>
                 </TableRow>
-                {groupedFigures[disciplineName].map((figure) => (
-                  <TableRow key={figure.id} hover>
-                    <TableCell component="th" scope="row" sx={{ pl: 4 }}>
-                      <Typography variant="body2">{figure.nom}</Typography>
-                    </TableCell>
-                    <TableCell>{figure.difficulty_level}/10</TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                        {figure.type}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Modifier">
-                        <IconButton size="small" onClick={() => handleEdit(figure)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Supprimer">
-                        <IconButton size="small" color="error" onClick={() => handleDelete(figure.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {groupedFigures[disciplineName].map((figure) => {
+                  // Logique de permission pour l'édition/suppression
+                  const isPublic = figure.ecole_id === null;
+                  const isMySchool = user?.ecole_id && figure.ecole_id === user.ecole_id;
+                  const isAdmin = user?.role === 'admin';
+                  
+                  // On peut modifier si on est Admin OU si la figure appartient à notre école
+                  const canEdit = isAdmin || isMySchool;
+
+                  // Find school name for admin
+                  let schoolName = 'Public';
+                  if (user?.role === 'admin' && figure.ecole_id) {
+                     const school = schools.find(s => s.id === figure.ecole_id);
+                     schoolName = school ? school.nom : 'École Inconnue';
+                  }
+
+                  return (
+                    <TableRow key={figure.id} hover>
+                      <TableCell component="th" scope="row" sx={{ pl: 4 }}>
+                        <Box>
+                          <Typography variant="body2">{figure.nom}</Typography>
+                          {!isAdmin && isPublic && (
+                            <Chip label="Public" size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem', ml: 1 }} />
+                          )}
+                        </Box>
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <Chip 
+                            label={schoolName} 
+                            size="small" 
+                            color={isPublic ? "primary" : "default"}
+                            variant={isPublic ? "filled" : "outlined"}
+                            sx={{ height: 24, fontSize: '0.75rem' }} 
+                          />
+                        </TableCell>
+                      )}
+                      <TableCell>{figure.difficulty_level}/10</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                          {figure.type}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title={canEdit ? "Modifier" : "Lecture seule (Catalogue Public)"}>
+                          <span>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleEdit(figure)}
+                              disabled={!canEdit}
+                            >
+                              <EditIcon color={canEdit ? "action" : "disabled"} />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title={canEdit ? "Supprimer" : "Impossible de supprimer une figure publique"}>
+                          <span>
+                            <IconButton 
+                              size="small" 
+                              color={canEdit ? "error" : "disabled"} 
+                              onClick={() => handleDelete(figure.id)}
+                              disabled={!canEdit}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </React.Fragment>
             ))}
             
             {filteredFigures.length === 0 && (
                <TableRow>
-                 <TableCell colSpan={4} align="center">
+                 <TableCell colSpan={user?.role === 'admin' ? 5 : 4} align="center">
                    Aucune figure trouvée
                  </TableCell>
                </TableRow>

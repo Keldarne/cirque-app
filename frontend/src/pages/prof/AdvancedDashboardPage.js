@@ -8,8 +8,19 @@ import {
   Divider,
   Paper,
   Tabs,
-  Tab
+  Tab,
+  Grid,
+  Card,
+  CardContent
 } from '@mui/material';
+import {
+  People as PeopleIcon,
+  Group as GroupIcon,
+  EmojiEvents as TrophyIcon,
+  TrendingUp as TrendingUpIcon,
+  CheckCircle as CheckCircleIcon,
+  Speed as SpeedIcon
+} from '@mui/icons-material';
 import { api } from '../../utils/api';
 
 // Nouveaux composants d'analytics
@@ -29,6 +40,7 @@ function TeacherDashboardPage() {
   const [disciplines, setDisciplines] = useState([]);
   const [figures, setFigures] = useState([]);
   const [globalStats, setGlobalStats] = useState(null);
+  const [kpiStats, setKpiStats] = useState(null);
 
   // Filtres
   const [selectedGroup, setSelectedGroup] = useState('');
@@ -70,11 +82,21 @@ function TeacherDashboardPage() {
   const chargerStatsGlobales = useCallback(async () => {
     setStatsLoading(true);
     try {
-      const res = await api.get('/api/prof/dashboard/stats-globales');
-      const data = await res.json();
-      setGlobalStats(data);
+      // Charger stats graphiques (existantes)
+      const resGlobal = await api.get('/api/prof/dashboard/stats-globales');
+      if (resGlobal.ok) {
+        const dataGlobal = await resGlobal.json();
+        setGlobalStats(dataGlobal);
+      }
+
+      // Charger KPIs (nouveau)
+      const resKpi = await api.get('/api/prof/statistiques');
+      if (resKpi.ok) {
+        const dataKpi = await resKpi.json();
+        setKpiStats(dataKpi);
+      }
     } catch (err) {
-      console.error('Erreur stats globales:', err);
+      console.error('Erreur stats:', err);
     } finally {
       setStatsLoading(false);
     }
@@ -104,6 +126,24 @@ function TeacherDashboardPage() {
     return selectedDiscipline === '' || fig.discipline_id === parseInt(selectedDiscipline);
   });
 
+  const KpiCard = ({ title, value, icon, color }) => (
+    <Card elevation={2}>
+      <CardContent sx={{ display: 'flex', alignItems: 'center', p: 2, '&:last-child': { pb: 2 } }}>
+        <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${color}15`, color: color, mr: 2 }}>
+          {icon}
+        </Box>
+        <Box>
+          <Typography variant="body2" color="textSecondary" fontWeight="bold">
+            {title}
+          </Typography>
+          <Typography variant="h5" fontWeight="bold">
+            {value !== undefined ? value : '-'}
+          </Typography>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -122,6 +162,60 @@ function TeacherDashboardPage() {
           Analyse de la progression collective et individuelle
         </Typography>
       </Box>
+
+      {/* KPIs */}
+      {kpiStats && (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={4} lg={2}>
+            <KpiCard 
+              title="Total Élèves" 
+              value={kpiStats.totalEleves} 
+              icon={<PeopleIcon />} 
+              color="#2196F3" 
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4} lg={2}>
+            <KpiCard 
+              title="Groupes" 
+              value={kpiStats.totalGroupes} 
+              icon={<GroupIcon />} 
+              color="#9C27B0" 
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4} lg={2}>
+            <KpiCard 
+              title="Élèves Actifs" 
+              value={kpiStats.elevesActifs} 
+              icon={<SpeedIcon />} 
+              color="#4CAF50" 
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4} lg={2}>
+            <KpiCard 
+              title="XP Total" 
+              value={kpiStats.xpTotal?.toLocaleString()} 
+              icon={<TrophyIcon />} 
+              color="#FFC107" 
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4} lg={2}>
+            <KpiCard 
+              title="Fig. Validées" 
+              value={kpiStats.figuresValidees} 
+              icon={<CheckCircleIcon />} 
+              color="#FF5722" 
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4} lg={2}>
+            <KpiCard 
+              title="Taux Activité" 
+              value={`${kpiStats.tauxActivite || 0}%`} 
+              icon={<TrendingUpIcon />} 
+              color="#00BCD4" 
+            />
+          </Grid>
+        </Grid>
+      )}
 
       {/* 1. Statistiques Globales (Moyennes de la classe) */}
       <Typography variant="h5" sx={{ mb: 2, fontWeight: 'medium' }}>📊 Aperçu Global</Typography>

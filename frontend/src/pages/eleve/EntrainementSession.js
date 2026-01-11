@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
-  Container,
   Box,
   AppBar,
   Toolbar,
@@ -11,9 +10,10 @@ import {
   Alert,
   useMediaQuery,
   useTheme,
-  LinearProgress
+  LinearProgress,
+  Container
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import confetti from 'canvas-confetti';
 import { useEntrainement } from '../../hooks/useEntrainement';
 import SessionStats from '../../components/entrainement/SessionStats';
@@ -21,17 +21,6 @@ import SessionSummary from '../../components/entrainement/SessionSummary';
 import FocusView from '../../components/entrainement/FocusView';
 import TimerView from '../../components/entrainement/TimerView';
 
-/**
- * Page de session d'entraînement active
- *
- * URL: /entrainement/session/:figureId
- *
- * Affiche:
- * - Header avec bouton retour et stats
- * - Vue adaptée au mode (Focus ou Chrono)
- * - Bottom stats bar (mobile)
- * - SessionSummary modal en fin de session
- */
 function EntrainementSession() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,6 +29,7 @@ function EntrainementSession() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const mode = location.state?.mode || 'focus';
+  const selectedStepIds = location.state?.selectedStepIds || null;
 
   const {
     session,
@@ -55,21 +45,16 @@ function EntrainementSession() {
   } = useEntrainement();
 
   const [processing, setProcessing] = useState(false);
-  const [protectionDelay, setProtectionDelay] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [sessionSummary, setSessionSummary] = useState(null);
 
   useEffect(() => {
-    if (figureId) {
-      startSession(figureId);
-    }
-  }, [figureId, startSession]);
+    if (figureId) startSession(figureId, selectedStepIds);
+  }, [figureId, startSession, selectedStepIds]);
 
   const handleResult = async (resultData) => {
-    if (processing || protectionDelay) return;
+    if (processing) return;
     setProcessing(true);
-    setProtectionDelay(true);
-    setTimeout(() => setProtectionDelay(false), 1000);
     
     let payload = typeof resultData === 'boolean' ? { reussie: resultData, typeSaisie: 'binaire' } : resultData;
     const result = await recordTentative(payload);
@@ -79,18 +64,8 @@ function EntrainementSession() {
       return;
     }
 
-    if (result.updatedProgression?.idempotent) {
-        setProcessing(false);
-        return; 
-    }
-
-    if (payload.reussie) {
-      confetti({
-        particleCount: 40,
-        spread: 50,
-        origin: { y: 0.7 },
-        colors: ['#4CAF50', '#8BC34A', '#CDDC39']
-      });
+    if (!result.updatedProgression?.idempotent && payload.reussie) {
+      confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 }, colors: ['#4CAF50', '#8BC34A', '#CDDC39'] });
     }
 
     setTimeout(() => {
@@ -106,24 +81,7 @@ function EntrainementSession() {
   };
 
   const handleBack = () => {
-    if (session) {
-      if (window.confirm('Quitter la session ? Votre progression actuelle ne sera pas sauvegardée.')) {
-        navigate(-1);
-      }
-    } else {
-      navigate(-1);
-    }
-  };
-
-  const handleRetry = () => {
-    setShowSummary(false);
-    setSessionSummary(null);
-    if (figureId) startSession(figureId);
-  };
-
-  const handleCloseSummary = () => {
-    setShowSummary(false);
-    navigate(-1);
+    if (window.confirm('Quitter la session en cours ?')) navigate(-1);
   };
 
   const currentEtape = getCurrentEtape();
@@ -132,119 +90,77 @@ function EntrainementSession() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        bgcolor: '#f8f9fa',
+        // Ajustement pour la hauteur de la barre de navigation (56px mobile, 64px desktop)
+        height: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+        bgcolor: '#f4f6f8',
         display: 'flex',
         flexDirection: 'column',
-        position: 'fixed',
-        top: 0, left: 0, right: 0, bottom: 0,
         overflow: 'hidden'
       }}
     >
       {/* Immersive Header */}
-      <AppBar 
-        position="static" 
-        color="transparent" 
-        elevation={0} 
-        sx={{ 
-          bgcolor: 'white', 
-          borderBottom: '1px solid', 
-          borderColor: 'divider' 
-        }}
-      >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <IconButton edge="start" onClick={handleBack}>
-            <ArrowBackIcon />
+      <AppBar position="static" color="transparent" elevation={0} sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+        <Toolbar sx={{ justifyContent: 'space-between', minHeight: '64px' }}>
+          <IconButton edge="start" onClick={handleBack} sx={{ color: 'text.primary' }}>
+            <ArrowBackIosNewIcon fontSize="small" />
           </IconButton>
           
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ opacity: 0.6, letterSpacing: 1 }}>
-              {mode.toUpperCase()}
+          <Box textAlign="center">
+            <Typography variant="overline" display="block" sx={{ lineHeight: 1, fontWeight: 800, color: 'text.secondary', letterSpacing: 2 }}>
+              {mode === 'timer' ? 'CHRONO' : 'FOCUS'}
             </Typography>
-            <Typography variant="body2" fontWeight="900" color="primary">
-              {stats?.progress.current || 0} / {stats?.progress.total || 0}
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              ÉTAPE {stats?.progress.current} / {stats?.progress.total}
             </Typography>
           </Box>
 
-          <Box sx={{ width: 48 }} /> {/* Spacer */}
+          <Box width={40} /> {/* Spacer pour centrer le titre */}
         </Toolbar>
-        
-        {/* Progress bar at the very top of the app bar */}
         <LinearProgress 
           variant="determinate" 
           value={stats?.progress.percent || 0} 
-          sx={{ height: 4, bgcolor: 'rgba(0,0,0,0.05)' }}
+          sx={{ height: 3, bgcolor: 'transparent', '& .MuiLinearProgress-bar': { borderRadius: 3 } }}
         />
       </AppBar>
 
-      {/* Main content area */}
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          p: isMobile ? 2 : 4,
-          overflowY: 'auto'
-        }}
-      >
+      {/* ZONE DE TRAVAIL */}
+      <Container maxWidth="md" sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, position: 'relative' }}>
         {loading ? (
-          <Box sx={{ textAlign: 'center' }}>
-            <CircularProgress size={60} thickness={4} />
-            <Typography sx={{ mt: 2, fontWeight: 'bold', opacity: 0.5 }}>PRÉPARATION...</Typography>
-          </Box>
+          <CircularProgress />
         ) : error ? (
-          <Alert severity="error" variant="filled" sx={{ borderRadius: 4 }}>{error}</Alert>
-        ) : (
-          session && currentEtape && (
-            <Box sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              {mode === 'timer' || mode === 'combined' ? (
-                <TimerView
-                  key={currentEtape.id}
-                  etape={currentEtape}
-                  onResult={handleResult}
-                  disabled={processing || protectionDelay}
-                  mode={mode}
-                />
-              ) : (
-                <FocusView
-                  key={currentEtape.id}
-                  etape={currentEtape}
-                  onResult={handleResult}
-                  disabled={processing || protectionDelay}
-                />
-              )}
-            </Box>
-          )
+          <Alert severity="error">{error}</Alert>
+        ) : session && currentEtape && (
+          <Box width="100%" height="100%" display="flex" justifyContent="center">
+            {mode === 'timer' || mode === 'combined' ? (
+              <TimerView
+                key={currentEtape.id}
+                etape={currentEtape}
+                onResult={handleResult}
+                disabled={processing}
+                mode={mode}
+              />
+            ) : (
+              <FocusView
+                key={currentEtape.id}
+                etape={currentEtape}
+                onResult={handleResult}
+                disabled={processing}
+              />
+            )}
+          </Box>
         )}
-      </Box>
+      </Container>
 
-      {/* Real-time stats footer (Mobile only) */}
-      {isMobile && session && stats && !showSummary && (
-        <SessionStats
-          stats={stats}
-          startTime={session.stats.startTime}
-          compact={true}
-        />
-      )}
-
-      {/* Stats side-panel or header (Desktop only) */}
-      {!isMobile && session && stats && !showSummary && (
-        <Box sx={{ position: 'absolute', top: 100, right: 40, width: 280 }}>
-          <SessionStats
-            stats={stats}
-            startTime={session.stats.startTime}
-            compact={false}
-          />
-        </Box>
+      {/* FOOTER STATS (Mobile) ou SIDEBAR (Desktop) */}
+      {session && stats && !showSummary && (
+        <SessionStats stats={stats} startTime={session.stats.startTime} compact={isMobile} />
       )}
 
       <SessionSummary
         open={showSummary}
-        onClose={handleCloseSummary}
+        onClose={() => navigate(-1)}
         summary={sessionSummary}
-        onRetry={handleRetry}
+        onRetry={() => { setShowSummary(false); startSession(figureId, selectedStepIds); }}
       />
     </Box>
   );

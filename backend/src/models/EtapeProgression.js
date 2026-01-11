@@ -56,6 +56,11 @@ const EtapeProgression = sequelize.define('EtapeProgression', {
   tableName: 'EtapeProgressions',
   indexes: [
     {
+      unique: true,
+      name: 'unique_figure_ordre',
+      fields: ['figure_id', 'ordre']
+    },
+    {
       name: 'idx_figure_ordre',
       fields: ['figure_id', 'ordre']
     }

@@ -348,6 +348,7 @@ function MonProgrammePage() {
       />
 
       {/* Suggestions */}
+      {/* 
       {!loadingSuggestions && suggestions.length > 0 && selectedProgrammeId === 'personnel' && (
         <Box mb={4} p={3} component={Card} sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
           <Typography variant="h5" gutterBottom display="flex" alignItems="center" gap={1} sx={{ color: 'text.primary', fontWeight: 600 }}>
@@ -417,6 +418,7 @@ function MonProgrammePage() {
           </Grid>
         </Box>
       )}
+      */}
 
       {/* Liste des Figures */}
       {figuresToDisplay.length === 0 ? (

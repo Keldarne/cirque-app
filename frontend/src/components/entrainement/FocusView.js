@@ -1,19 +1,8 @@
 import React from 'react';
-import { 
-  Box, 
-  Typography, 
-  Card, 
-  CardContent, 
-  CardMedia, 
-  Stack, 
-  Chip,
-  useMediaQuery,
-  useTheme,
-  IconButton
-} from '@mui/material';
+import { Box, Typography, Card, CardMedia, Stack, Chip, IconButton, useMediaQuery, useTheme } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import StarIcon from '@mui/icons-material/Star';
+import StarIcon from '@mui/icons-material/Star'; // Pour "Moyen"
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MotionBox = motion.create(Box);
@@ -21,169 +10,173 @@ const MotionBox = motion.create(Box);
 function FocusView({ etape, onResult, disabled, duration = null }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
   const handleRate = (quality) => {
     const scoreMap = { 'fail': 1, 'medium': 2, 'perfect': 3 };
     const score = scoreMap[quality];
-    const isSuccess = score >= 2;
-    const typeSaisie = duration ? 'evaluation_duree' : 'evaluation';
-    
-    onResult({
-      reussie: isSuccess,
-      typeSaisie,
-      score,
-      dureeSecondes: duration
-    });
+    onResult({ reussie: score >= 2, typeSaisie: duration ? 'evaluation_duree' : 'evaluation', score, dureeSecondes: duration });
   };
 
   return (
     <AnimatePresence mode="wait">
       <MotionBox
         key={etape.id}
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 1.1, x: 100 }}
-        transition={{ duration: 0.3 }}
-        sx={{ width: '100%', maxWidth: 500, height: isMobile ? 'calc(100vh - 180px)' : 700, position: 'relative' }}
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -50 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        sx={{ 
+          width: '100%', 
+          maxWidth: isDesktop ? 1200 : 450, 
+          height: isDesktop ? 'calc(100vh - 250px)' : '100%', 
+          maxHeight: isDesktop ? 800 : 700, 
+          display: 'flex', 
+          flexDirection: 'column' 
+        }}
       >
-        <Card 
-          elevation={8} 
-          sx={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column',
-            borderRadius: 6,
+        <Box sx={{ 
+          flex: 1, 
+          borderRadius: isDesktop ? 0 : 5, 
+          overflow: 'hidden', 
+          boxShadow: isDesktop ? 'none' : '0 20px 40px rgba(0,0,0,0.08)',
+          display: 'flex', 
+          flexDirection: isDesktop ? 'row' : 'column',
+          position: 'relative',
+          bgcolor: isDesktop ? 'transparent' : 'white',
+          border: isDesktop ? 'none' : '1px solid',
+          borderColor: 'divider'
+        }}>
+          {/* MEDIA AREA */}
+          <Box sx={{ 
+            flex: isDesktop ? 1.3 : (isMobile ? 0.6 : 0.55), 
+            bgcolor: '#000', 
+            position: 'relative', 
             overflow: 'hidden',
-            bgcolor: 'background.paper',
-            border: '1px solid',
-            borderColor: 'divider'
-          }}
-        >
-          {/* MEDIA SECTION - Dynamic background */}
-          <Box sx={{ position: 'relative', flexGrow: 1, bgcolor: '#000' }}>
+            height: '100%',
+            borderRadius: isDesktop ? 4 : 0, // Coins arrondis sur le média lui-même en desktop
+            boxShadow: isDesktop ? '0 12px 40px rgba(0,0,0,0.3)' : 'none'
+          }}>
             <CardMedia
               component={etape.video_url ? 'video' : 'img'}
-              image={etape.video_url || etape.figureImage || etape.image_url || '/placeholder-figure.svg'}
+              image={etape.video_url || etape.image_url || '/placeholder-figure.svg'}
               src={etape.video_url}
-              alt={etape.titre}
-              autoPlay
-              loop
-              muted
-              playsInline
-              sx={{ 
-                height: '100%', 
-                width: '100%', 
-                objectFit: 'contain'
-              }}
+              autoPlay loop muted playsInline
+              sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
-            
-            {/* Top Overlay Info */}
-            <Box sx={{ 
-              position: 'absolute', 
-              top: 0, left: 0, right: 0, 
-              p: 2, 
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)',
-              color: 'white'
-            }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="overline" sx={{ letterSpacing: 2, fontWeight: 'bold', opacity: 0.9 }}>
-                  {etape.disciplineNom || 'Entraînement'}
-                </Typography>
-                <Chip 
-                  label={`Niveau ${etape.difficulte || 1}`} 
-                  size="small" 
-                  sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(4px)' }} 
-                />
-              </Box>
+            <Box sx={{ position: 'absolute', top: 12, left: 12 }}>
+              <Chip label={etape.disciplineNom} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.9)', fontWeight: 'bold' }} />
             </Box>
           </Box>
 
-          {/* CONTENT SECTION - Clean & Focused */}
-          <CardContent sx={{ pt: 3, pb: 4, px: 3, textAlign: 'center' }}>
-            <Typography variant="h5" fontWeight="800" gutterBottom>
+          {/* CONTENT AREA */}
+          <Box sx={{ 
+            flex: 1, 
+            minWidth: isDesktop ? 400 : 'auto', // Ensure minimum width for content
+            p: isDesktop ? 4 : 3, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: isDesktop ? 'flex-start' : 'center', 
+            textAlign: isDesktop ? 'left' : 'center', 
+            bgcolor: isDesktop ? 'transparent' : 'white',
+            justifyContent: 'center',
+            overflowY: 'auto',
+            // Hide scrollbar but keep functionality
+            '&::-webkit-scrollbar': { display: 'none' },
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}>
+            <Typography variant={isDesktop ? "h3" : "h5"} sx={{ fontWeight: 900, mb: 2, color: '#1A2027', letterSpacing: -1 }}>
               {etape.titre || etape.nom}
             </Typography>
             
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 4, px: 2, minHeight: 40 }}>
-              {etape.description || etape.descriptif}
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: 'text.secondary', 
+                mb: isDesktop ? 4 : 'auto', // Reduced from 8 to 4
+                lineHeight: 1.8,
+                fontSize: isDesktop ? '1.2rem' : '0.875rem',
+                maxWidth: isDesktop ? 500 : 'none'
+              }}
+            >
+              {etape.description}
             </Typography>
 
-            {/* ACTION BUTTONS - Tinder Style */}
-            <Stack direction="row" spacing={3} justifyContent="center" alignItems="center">
-              
-              {/* FAIL - Left */}
-              <Box sx={{ textAlign: 'center' }}>
-                <IconButton
-                  disabled={disabled}
-                  onClick={() => handleRate('fail')}
-                  sx={{ 
-                    width: 64, height: 64, 
-                    bgcolor: 'rgba(244, 67, 54, 0.1)', 
-                    color: 'error.main',
-                    border: '2px solid',
-                    borderColor: 'error.main',
-                    '&:hover': { bgcolor: 'error.main', color: 'white' },
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <CloseIcon sx={{ fontSize: 32 }} />
-                </IconButton>
-                <Typography variant="caption" display="block" sx={{ mt: 1, fontWeight: 'bold', color: 'error.main' }}>
-                  A REVOIR
-                </Typography>
-              </Box>
-
-              {/* MEDIUM - Middle */}
-              <Box sx={{ textAlign: 'center' }}>
-                <IconButton
-                  disabled={disabled}
-                  onClick={() => handleRate('medium')}
-                  sx={{ 
-                    width: 56, height: 56, 
-                    bgcolor: 'rgba(255, 152, 0, 0.1)', 
-                    color: 'warning.main',
-                    border: '2px solid',
-                    borderColor: 'warning.main',
-                    '&:hover': { bgcolor: 'warning.main', color: 'white' },
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <StarIcon sx={{ fontSize: 28 }} />
-                </IconButton>
-                <Typography variant="caption" display="block" sx={{ mt: 1, fontWeight: 'bold', color: 'warning.main' }}>
-                  MOYEN
-                </Typography>
-              </Box>
-
-              {/* PERFECT - Right */}
-              <Box sx={{ textAlign: 'center' }}>
-                <IconButton
-                  disabled={disabled}
-                  onClick={() => handleRate('perfect')}
-                  sx={{ 
-                    width: 64, height: 64, 
-                    bgcolor: 'rgba(76, 175, 80, 0.1)', 
-                    color: 'success.main',
-                    border: '2px solid',
-                    borderColor: 'success.main',
-                    '&:hover': { bgcolor: 'success.main', color: 'white' },
-                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <CheckIcon sx={{ fontSize: 32 }} />
-                </IconButton>
-                <Typography variant="caption" display="block" sx={{ mt: 1, fontWeight: 'bold', color: 'success.main' }}>
-                  PARFAIT
-                </Typography>
-              </Box>
-
+            {/* ACTION BUTTONS */}
+            {/* Flexible Stack for 1, 2, or 3 buttons */}
+            <Stack 
+              direction="row" 
+              spacing={isDesktop ? 3 : 2} 
+              useFlexGap
+              flexWrap="wrap"
+              sx={{ 
+                mt: 3, 
+                width: '100%', 
+                justifyContent: isDesktop ? 'flex-start' : 'center',
+                rowGap: 2
+              }}
+            >
+              <ActionButton 
+                icon={<CloseIcon fontSize={isDesktop ? "large" : "medium"} />} 
+                color="#FF5252" 
+                label="À revoir" 
+                onClick={() => handleRate('fail')} 
+                disabled={disabled}
+                large={isDesktop}
+              />
+              <ActionButton 
+                icon={<StarIcon fontSize={isDesktop ? "large" : "medium"} />} 
+                color="#FFB74D" 
+                label="Moyen" 
+                onClick={() => handleRate('medium')} 
+                disabled={disabled}
+                small={!isDesktop}
+                large={isDesktop}
+              />
+              <ActionButton 
+                icon={<CheckIcon fontSize={isDesktop ? "large" : "medium"} />} 
+                color="#00E676" 
+                label="Parfait" 
+                onClick={() => handleRate('perfect')} 
+                disabled={disabled}
+                large={isDesktop}
+              />
             </Stack>
-          </CardContent>
-        </Card>
+          </Box>
+        </Box>
       </MotionBox>
     </AnimatePresence>
   );
 }
+
+const ActionButton = ({ icon, color, label, onClick, disabled, small, large }) => {
+  const size = large ? 90 : (small ? 60 : 72);
+  
+  return (
+    <Box display="flex" flexDirection="column" alignItems="center" gap={1.5}>
+      <IconButton
+        onClick={onClick}
+        disabled={disabled}
+        sx={{
+          width: size,
+          height: size,
+          bgcolor: 'white',
+          border: `2px solid ${color}20`,
+          color: color,
+          boxShadow: `0 8px 20px ${color}30`,
+          transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          '&:hover': { transform: 'translateY(-4px) scale(1.05)', bgcolor: color, color: 'white', borderColor: color },
+          '&:active': { transform: 'scale(0.95)' }
+        }}
+      >
+        {icon}
+      </IconButton>
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', textTransform: 'uppercase', fontSize: large ? '0.8rem' : '0.7rem', letterSpacing: 1 }}>
+        {label}
+      </Typography>
+    </Box>
+  );
+};
 
 export default FocusView;

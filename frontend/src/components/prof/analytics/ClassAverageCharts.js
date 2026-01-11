@@ -35,7 +35,7 @@ const ClassAverageCharts = ({ data, loading }) => {
     <Grid container spacing={3} sx={{ mb: 4 }}>
       <Grid item xs={12} md={6}>
         <Paper elevation={2} sx={{ p: 2, height: 350, display: 'flex', flexDirection: 'column' }}>
-          <Typography variant="h6" align="center" gutterBottom>
+          <Typography variant="h6" gutterBottom>
             Niveau Moyen par Discipline (%)
           </Typography>
           <Box sx={{ flexGrow: 1, width: '100%', minHeight: 0 }}>
@@ -64,7 +64,7 @@ const ClassAverageCharts = ({ data, loading }) => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Paper elevation={2} sx={{ p: 2, height: 350, display: 'flex', flexDirection: 'column' }}>
-          <Typography variant="h6" align="center" gutterBottom>
+          <Typography variant="h6" gutterBottom>
             Activité Hebdomadaire (Tentatives)
           </Typography>
           <Box sx={{ flexGrow: 1, width: '100%', minHeight: 0 }}>

@@ -36,6 +36,11 @@ const Groupe = sequelize.define('Groupe', {
   timestamps: true,
   indexes: [
     {
+      unique: true,
+      name: 'unique_groupe_prof_nom',
+      fields: ['professeur_id', 'nom']
+    },
+    {
       fields: ['professeur_id']
     }
   ],

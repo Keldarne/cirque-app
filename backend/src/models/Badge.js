@@ -71,6 +71,10 @@ const Badge = sequelize.define('Badge', {
   timestamps: true,
   indexes: [
     {
+      name: 'idx_categorie_ecole',
+      fields: ['categorie', 'ecole_id']
+    },
+    {
       name: 'idx_ecole',
       fields: ['ecole_id']
     },

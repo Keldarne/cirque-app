@@ -35,6 +35,7 @@ import {
 
 import api from '../../../utils/api';
 import ResponsiveDrawer from '../../common/ResponsiveDrawer';
+import SuggestionPanel from '../SuggestionPanel';
 
 import EngagementChart from './EngagementChart';
 import VolumeChart from './VolumeChart';
@@ -334,6 +335,7 @@ const StudentAnalyticsModal = ({ open, onClose, student, onValidation }) => {
             <Tabs value={tabIndex} onChange={handleTabChange} centered sx={{ mb: 3 }} variant="fullWidth">
               <Tab label="Historique & Graphiques" />
               <Tab label="Validation Figures" />
+              <Tab label="Suggestions" />
             </Tabs>
 
             {tabIndex === 0 && (
@@ -514,6 +516,16 @@ const StudentAnalyticsModal = ({ open, onClose, student, onValidation }) => {
                     </List>
                   </>
                 )}
+              </Box>
+            )}
+
+            {tabIndex === 2 && (
+              <Box sx={{ p: 1 }}>
+                <Typography variant="h6" gutterBottom>Suggestions de Progression</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Basé sur les prérequis validés et le niveau de l'élève.
+                </Typography>
+                <SuggestionPanel eleveId={student.id} />
               </Box>
             )}
           </Box>

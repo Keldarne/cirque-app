@@ -8,6 +8,7 @@ const router = express.Router();
 const { Figure, Discipline, EtapeProgression, ProgressionEtape } = require('../../models');
 const { verifierToken, estProfesseurOuAdmin, peutModifierFigure } = require('../../middleware/auth');
 const FigureService = require('../../services/FigureService');
+const { Op } = require('sequelize');
 
 /**
  * GET /api/prof/figures
@@ -28,13 +29,16 @@ router.get('', verifierToken, estProfesseurOuAdmin, async (req, res) => {
       }
       // Pas de filtre = voit tout
     } else {
-      // Professeurs voient UNIQUEMENT les figures de leur école
+      // Professeurs voient les figures de leur école ET le catalogue public
       if (!req.user.ecole_id) {
         return res.status(400).json({
           error: 'Vous devez être rattaché à une école pour accéder au catalogue'
         });
       }
-      where.ecole_id = req.user.ecole_id;
+      where[Op.or] = [
+        { ecole_id: req.user.ecole_id },
+        { ecole_id: null }
+      ];
     }
 
     const figures = await Figure.findAll({
@@ -210,7 +214,7 @@ router.get('/:id', verifierToken, estProfesseurOuAdmin, async (req, res) => {
     }
 
     // Vérifier que le professeur a accès à cette figure
-    if (req.user.role !== 'admin' && figure.ecole_id !== req.user.ecole_id) {
+    if (req.user.role !== 'admin' && figure.ecole_id !== null && figure.ecole_id !== req.user.ecole_id) {
       return res.status(403).json({ error: 'Accès refusé à cette figure' });
     }
 

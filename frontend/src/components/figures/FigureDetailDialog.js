@@ -12,9 +12,11 @@ import {
   Tab,
   IconButton,
   useMediaQuery,
-  useTheme
+  useTheme,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
-import { Close as CloseIcon, FitnessCenter as FitnessCenterIcon } from '@mui/icons-material';
+import { Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Checklist as ChecklistIcon } from '@mui/icons-material';
 import EtapesProgressionList from './EtapesProgressionList';
 import JournalProgression from './JournalProgression';
 
@@ -45,6 +47,10 @@ function FigureDetailDialog({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabIndex, setTabIndex] = useState(0);
+  
+  // Selection mode for training specific steps
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedStepIds, setSelectedStepIds] = useState([]);
 
   if (!figure) return null;
 
@@ -70,8 +76,32 @@ function FigureDetailDialog({
     setTabIndex(newValue);
   };
 
+  const handleToggleSelection = (stepId) => {
+    if (selectedStepIds.includes(stepId)) {
+      setSelectedStepIds(selectedStepIds.filter(id => id !== stepId));
+    } else {
+      setSelectedStepIds([...selectedStepIds, stepId]);
+    }
+  };
+
+  const handleToggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedStepIds([]); // Reset selection when toggling mode
+  };
+
   const handleStartTraining = () => {
-    navigate(`/entrainement/figure/${figureId}`);
+    // Navigate to training page, passing selected step IDs if any
+    // Note: We use EntrainementPage which then redirects to EntrainementSession, 
+    // BUT EntrainementPage is just a wrapper. We should probably target EntrainementPage
+    // OR directly EntrainementSession.
+    // The previous code targeted `/entrainement/figure/${figureId}` which is EntrainementPage.
+    // Let's modify EntrainementPage to accept state or pass it through.
+    
+    navigate(`/entrainement/figure/${figureId}`, { 
+      state: { 
+        selectedStepIds: selectionMode && selectedStepIds.length > 0 ? selectedStepIds : null 
+      } 
+    });
     onClose();
   };
 
@@ -91,7 +121,14 @@ function FigureDetailDialog({
 
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={tabIndex} onChange={handleTabChange} centered>
+        <Tabs 
+          value={tabIndex} 
+          onChange={handleTabChange} 
+          centered={!isMobile} 
+          variant={isMobile ? "scrollable" : "standard"}
+          scrollButtons={isMobile ? "auto" : false}
+          allowScrollButtonsMobile
+        >
           <Tab label="Détails" />
           {showEtapesProgression && <Tab label="Étapes de Progression" />}
           {showJournal && <Tab label="Journal Progression" />}
@@ -164,13 +201,37 @@ function FigureDetailDialog({
 
         {/* Onglet Étapes de Progression */}
         {showEtapesProgression && tabIndex === 1 && (
-          <EtapesProgressionList
-            etapes={etapesTheoriques}
-            etapesUtilisateur={etapesUtilisateur}
-            editable={editable}
-            onValidateStep={onValidateStep}
-            showCheckboxes={true}
-          />
+          <Box>
+            <Box display="flex" justifyContent="flex-end" mb={1}>
+              <FormControlLabel
+                control={
+                  <Switch 
+                    checked={selectionMode} 
+                    onChange={handleToggleSelectionMode} 
+                    size="small" 
+                  />
+                }
+                label={
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <ChecklistIcon fontSize="small" color={selectionMode ? "primary" : "action"} />
+                    <Typography variant="caption" color={selectionMode ? "primary" : "textSecondary"}>
+                      Choisir les étapes
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Box>
+            <EtapesProgressionList
+              etapes={etapesTheoriques}
+              etapesUtilisateur={etapesUtilisateur}
+              editable={editable}
+              onValidateStep={onValidateStep}
+              showCheckboxes={true}
+              selectionMode={selectionMode}
+              selectedIds={selectedStepIds}
+              onToggleSelection={handleToggleSelection}
+            />
+          </Box>
         )}
 
         {/* Onglet Journal Progression */}
@@ -199,8 +260,11 @@ function FigureDetailDialog({
           variant="contained"
           color="primary"
           startIcon={<FitnessCenterIcon />}
+          disabled={selectionMode && selectedStepIds.length === 0}
         >
-          S'entraîner
+          {selectionMode && selectedStepIds.length > 0 
+            ? `S'entraîner (${selectedStepIds.length})` 
+            : "S'entraîner"}
         </Button>
       </DialogActions>
     </Dialog>
