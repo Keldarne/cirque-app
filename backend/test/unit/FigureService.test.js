@@ -1,5 +1,5 @@
 const FigureService = require('../../src/services/FigureService');
-const { Figure, EtapeProgression, ExerciceFigure, Discipline } = require('../../src/models');
+const { Figure, EtapeProgression, FigurePrerequis, Discipline } = require('../../src/models');
 
 jest.mock('../../src/models', () => ({
   Figure: {
@@ -15,7 +15,7 @@ jest.mock('../../src/models', () => ({
     bulkCreate: jest.fn(),
     destroy: jest.fn()
   },
-  ExerciceFigure: {
+  FigurePrerequis: {
     bulkCreate: jest.fn()
   },
   Discipline: jest.fn()

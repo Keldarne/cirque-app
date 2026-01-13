@@ -1,7 +1,7 @@
 const SuggestionService = require('../../src/services/SuggestionService');
 const {
   Figure,
-  ExerciceFigure,
+  FigurePrerequis,
   ProgressionEtape,
   EtapeProgression,
   ProgrammeFigure,
@@ -16,7 +16,7 @@ jest.mock('../../src/models', () => ({
     findAll: jest.fn(),
     findByPk: jest.fn()
   },
-  ExerciceFigure: {
+  FigurePrerequis: {
     findAll: jest.fn()
   },
   ProgressionEtape: {

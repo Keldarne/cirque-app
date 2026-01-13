@@ -21,6 +21,8 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../utils/api";
 
+import MetadataViewer from "../../components/figures/metadata/MetadataViewer";
+
 function FigureDetailPage() {
   const { figureId } = useParams();
   const navigate = useNavigate();
@@ -191,6 +193,9 @@ function FigureDetailPage() {
               <Typography variant="body1" paragraph>
                 {figure.descriptif || "Aucune description disponible pour cette figure."}
               </Typography>
+
+              {/* Visualisation Metadata (Siteswap, etc.) */}
+              <MetadataViewer figure={figure} />
 
               {figure.video_url && (
                 <Box sx={{ mt: 3 }}>

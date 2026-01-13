@@ -130,9 +130,21 @@ class DashboardService {
    * @returns {Promise<Object>} - { moyennes_par_discipline, activite_hebdomadaire }
    */
   static async getStatsGlobales(professeurId) {
-    // 1. Récupérer tous les élèves du prof
-    const elevesData = await ProfService.getElevesByProfId(professeurId);
-    const eleveIds = elevesData.map(e => e.id);
+    // 1. Récupérer les ID des élèves concernés
+    let eleveIds = [];
+
+    if (professeurId) {
+        // Cas Professeur: Ses élèves uniquement
+        const elevesData = await ProfService.getElevesByProfId(professeurId);
+        eleveIds = elevesData.map(e => e.id);
+    } else {
+        // Cas Admin: TOUS les élèves du système
+        const allEleves = await Utilisateur.findAll({
+            where: { role: 'eleve' },
+            attributes: ['id']
+        });
+        eleveIds = allEleves.map(e => e.id);
+    }
 
     if (eleveIds.length === 0) {
       return {

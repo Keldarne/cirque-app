@@ -71,7 +71,7 @@ router.get('', verifierToken, estProfesseurOuAdmin, async (req, res) => {
  */
 router.post('/', verifierToken, estProfesseurOuAdmin, async (req, res) => {
   try {
-    const { nom, descriptif, image_url, video_url, discipline_id, etapes, prerequis } = req.body;
+    const { nom, descriptif, image_url, video_url, discipline_id, etapes, prerequis, metadata } = req.body;
 
     if (!nom || !discipline_id) {
       return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
@@ -83,6 +83,7 @@ router.post('/', verifierToken, estProfesseurOuAdmin, async (req, res) => {
       image_url,
       video_url,
       discipline_id,
+      metadata,
       createur_id: req.user.id
     };
 
@@ -128,7 +129,7 @@ router.post('/', verifierToken, estProfesseurOuAdmin, async (req, res) => {
  */
 router.put('/:id', verifierToken, estProfesseurOuAdmin, peutModifierFigure, async (req, res) => {
   try {
-    const { nom, descriptif, image_url, video_url, discipline_id, etapes, prerequis } = req.body;
+    const { nom, descriptif, image_url, video_url, discipline_id, etapes, prerequis, metadata } = req.body;
     const figure = req.figure; // Attaché par middleware peutModifierFigure
 
     const updateData = {
@@ -136,7 +137,8 @@ router.put('/:id', verifierToken, estProfesseurOuAdmin, peutModifierFigure, asyn
       descriptif: descriptif !== undefined ? descriptif : figure.descriptif,
       image_url: image_url !== undefined ? image_url : figure.image_url,
       video_url: video_url !== undefined ? video_url : figure.video_url,
-      discipline_id: discipline_id !== undefined ? discipline_id : figure.discipline_id
+      discipline_id: discipline_id !== undefined ? discipline_id : figure.discipline_id,
+      metadata: metadata !== undefined ? metadata : figure.metadata
     };
 
     // Mise à jour via le service

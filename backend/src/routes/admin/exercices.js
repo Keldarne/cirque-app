@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifierToken, estAdmin } = require('../../middleware/auth');
-const { Figure, ExerciceFigure } = require('../../models');
+const { Figure, FigurePrerequis } = require('../../models');
 const SuggestionService = require('../../services/SuggestionService');
 const FigureService = require('../../services/FigureService');
 
@@ -84,14 +84,14 @@ router.post('/figures/:figureId/exercices', verifierToken, estAdmin, async (req,
     // Déterminer l'ordre si non fourni
     let ordreEffectif = ordre;
     if (!ordreEffectif) {
-      const maxOrdre = await ExerciceFigure.max('ordre', {
+      const maxOrdre = await FigurePrerequis.max('ordre', {
         where: { figure_id: figureId }
       }) || 0;
       ordreEffectif = maxOrdre + 1;
     }
 
     // Créer la relation
-    const exercice = await ExerciceFigure.create({
+    const exercice = await FigurePrerequis.create({
       figure_id: figureId,
       exercice_figure_id,
       ordre: ordreEffectif,
@@ -167,7 +167,7 @@ router.get('/figures/:figureId/exercices', verifierToken, estAdmin, async (req, 
       });
     }
 
-    const exercices = await ExerciceFigure.findAll({
+    const exercices = await FigurePrerequis.findAll({
       where: { figure_id: figureId },
       include: [{
         model: Figure,
@@ -228,7 +228,7 @@ router.put('/exercices/:exerciceId', verifierToken, estAdmin, async (req, res) =
       });
     }
 
-    const exercice = await ExerciceFigure.findByPk(exerciceId);
+    const exercice = await FigurePrerequis.findByPk(exerciceId);
     if (!exercice) {
       return res.status(404).json({
         error: 'Exercice non trouvé',
@@ -286,7 +286,7 @@ router.delete('/exercices/:exerciceId', verifierToken, estAdmin, async (req, res
       });
     }
 
-    const exercice = await ExerciceFigure.findByPk(exerciceId, {
+    const exercice = await FigurePrerequis.findByPk(exerciceId, {
       include: [
         { model: Figure, as: 'figure', attributes: ['nom'] },
         { model: Figure, as: 'exerciceFigure', attributes: ['nom'] }

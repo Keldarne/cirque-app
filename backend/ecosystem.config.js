@@ -16,7 +16,7 @@ module.exports = {
     script: './server.js',
 
     // Chemin absolu du backend (ADAPTER selon votre configuration Infomaniak)
-    cwd: '/home/utilisateur/sites/api.cirqueapp.ch/backend',
+    cwd: '/home/S7BS2HNYb9o_circushub/sites/api-circushub.josephgremaud.com/backend',
 
     // Mode cluster pour utiliser plusieurs CPU (optionnel)
     instances: 1,

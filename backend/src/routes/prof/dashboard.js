@@ -44,7 +44,8 @@ router.get('/matrix', verifierToken, estProfesseurOuAdmin, async (req, res) => {
  */
 router.get('/stats-globales', verifierToken, estProfesseurOuAdmin, async (req, res) => {
   try {
-    const professeurId = req.user.id;
+    // Si admin, on veut les stats de TOUS les élèves (pas de filtre prof)
+    const professeurId = req.user.role === 'admin' ? null : req.user.id;
 
     const stats = await DashboardService.getStatsGlobales(professeurId);
 

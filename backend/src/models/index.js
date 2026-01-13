@@ -15,7 +15,7 @@ const ProgrammeFigure = require('./ProgrammeFigure');
 const AssignationProgramme = require('./AssignationProgramme');
 const AssignationGroupeProgramme = require('./AssignationGroupeProgramme');
 const ProgrammePartage = require('./ProgrammePartage');
-const ExerciceFigure = require('./ExerciceFigure');
+const FigurePrerequis = require('./FigurePrerequis');
 const SuggestionFigure = require('./SuggestionFigure');
 const DisciplineAvailability = require('./DisciplineAvailability');
 const SystemLog = require('./SystemLog');
@@ -47,28 +47,28 @@ DisciplineAvailability.belongsTo(Discipline, { foreignKey: 'discipline_id', as: 
 // EXERCICES DÉCOMPOSÉS (Relations Récursives)
 // ──────────────────────────────────────────────────────────────────
 
-// Relation récursive: Figure a plusieurs exercices (qui sont des Figures)
+// Relation récursive: Figure a plusieurs prérequis (qui sont des Figures)
 Figure.belongsToMany(Figure, {
-  through: ExerciceFigure,
-  as: 'exercices',
+  through: FigurePrerequis,
+  as: 'exercices', // Conservé pour compatibilité backend
   foreignKey: 'figure_id',
   otherKey: 'exercice_figure_id'
 });
 
-// Relation inverse: Figure est exercice de plusieurs Figures parentes
+// Relation inverse: Figure est prérequis de plusieurs Figures parentes
 Figure.belongsToMany(Figure, {
-  through: ExerciceFigure,
+  through: FigurePrerequis,
   as: 'figuresParentes',
   foreignKey: 'exercice_figure_id',
   otherKey: 'figure_id'
 });
 
 // Associations directes pour inclusions avec alias
-ExerciceFigure.belongsTo(Figure, { as: 'figure', foreignKey: 'figure_id' });
-ExerciceFigure.belongsTo(Figure, { as: 'exerciceFigure', foreignKey: 'exercice_figure_id' });
+FigurePrerequis.belongsTo(Figure, { as: 'figure', foreignKey: 'figure_id' });
+FigurePrerequis.belongsTo(Figure, { as: 'exerciceFigure', foreignKey: 'exercice_figure_id' });
 
 // Relation 1:N pour accéder à la table de junction directement (fix conflit alias)
-Figure.hasMany(ExerciceFigure, { foreignKey: 'figure_id', as: 'relationsExercices' });
+Figure.hasMany(FigurePrerequis, { foreignKey: 'figure_id', as: 'relationsExercices' });
 
 // ──────────────────────────────────────────────────────────────────
 // STRUCTURE DE PROGRESSION (REFACTORISÉE)
@@ -208,7 +208,7 @@ module.exports = {
   AssignationProgramme,
   AssignationGroupeProgramme,
   ProgrammePartage,
-  ExerciceFigure,
+  FigurePrerequis,
   SuggestionFigure,
   DisciplineAvailability,
   SystemLog,

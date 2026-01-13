@@ -330,20 +330,6 @@ function ProfilPage() {
               </CardContent>
             </Card>
           )}
-
-          {/* Titres */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Titres Débloqués</Typography>
-              <Typography variant="h3" color="secondary.main">{profil.titres.total}</Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>titres obtenus</Typography>
-              {/* 
-              <Button variant="outlined" fullWidth onClick={() => navigate('/titres')}>
-                Gérer mes titres
-              </Button>
-              */}
-            </CardContent>
-          </Card>
         </Grid>
       </Grid>
     </Container>

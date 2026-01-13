@@ -28,6 +28,11 @@ const Figure = sequelize.define('Figure', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  gif_url: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'URL du GIF JugglingLab généré et caché localement (ex: /gifs/123-531.gif)'
+  },
   discipline_id: {   // <- clé étrangère vers Discipline
     type: DataTypes.INTEGER,
     allowNull: false
@@ -75,6 +80,13 @@ const Figure = sequelize.define('Figure', {
     allowNull: false,
     defaultValue: 'non_applicable',
     comment: 'Défini si la figure nécessite validation gauche/droite séparée'
+  },
+  // Métadonnées spécifiques par discipline (JSON flexible)
+  metadata: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: null,
+    comment: 'Données spécifiques à la discipline (ex: jonglage: siteswap, nb_objets; aérien: hauteur_m, rotations)'
   }
 }, {
   tableName: 'Figures',

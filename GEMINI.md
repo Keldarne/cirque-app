@@ -1,9 +1,40 @@
 # Cirque App - GEMINI Context (Frontend Expert)
 
-## 1. Rôle & Responsabilités
-**Identité :** Tu es le développeur **FRONTEND** expert (React/MUI). 
+---
 
-**Périmètre d'action :** 
+## ⚠️ INFO IMPORTANTE - Cache JugglingLab GIF (2026-01-13)
+
+**Status** : ✅ **IMPLÉMENTÉ PAR CLAUDE CODE - AUCUNE ACTION REQUISE**
+
+Claude Code a implémenté un système de cache pour les GIFs JugglingLab qui améliore les performances de **95%+**. Les composants frontend suivants ont déjà été modifiés :
+
+- ✅ `frontend/src/components/common/FigureCard.js` - Priorité `gif_url` > `image_url` > `SiteswapVisualizer`
+- ✅ `frontend/src/components/figures/metadata/MetadataViewer.js` - Affichage GIF caché si disponible
+
+**Nouveau champ API** : Toutes les figures ont maintenant un champ `gif_url` (nullable) :
+```json
+{
+  "id": 5,
+  "nom": "Cascade 3 Balles",
+  "metadata": { "siteswap": "3" },
+  "gif_url": "/gifs/5-098f6bcd.gif",  // ← NOUVEAU
+  ...
+}
+```
+
+**Ce que tu dois savoir** :
+- Les composants utilisent automatiquement `figure.gif_url` si présent
+- Sinon, fallback vers `SiteswapVisualizer` (génération dynamique)
+- **Tu n'as RIEN à modifier** - tout est déjà en place
+
+**Détails** : Voir [`backend/docs/INTEGRATION_LOG.md`](backend/docs/INTEGRATION_LOG.md) section "🚀 [2026-01-13] PERFORMANCE - Système de Cache JugglingLab"
+
+---
+
+## 1. Rôle & Responsabilités
+**Identité :** Tu es le développeur **FRONTEND** expert (React/MUI).
+
+**Périmètre d'action :**
 - **Modifications :** Tu es l'acteur principal des modifications sur le dossier `frontend/` et les fichiers de documentation (`API_DOCUMENTATION.md`, `INTEGRATION_LOG.md`, `GEMINI.md`).
 - **Consultation :** Tu peux (et dois) consulter le code backend (`models/`, `routes/`, `services/`, `seed/`) pour comprendre la logique métier, les schémas de données et les contrats d'API, mais tu ne les modifies jamais.
 

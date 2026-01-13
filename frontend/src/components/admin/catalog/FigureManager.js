@@ -23,7 +23,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  TablePagination
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -46,6 +47,10 @@ const FigureManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisciplineId, setSelectedDisciplineId] = useState('all');
   const [selectedSchoolId, setSelectedSchoolId] = useState('all');
+  
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   
   const [openWizard, setOpenWizard] = useState(false);
   const [selectedFigure, setSelectedFigure] = useState(null);
@@ -90,6 +95,7 @@ const FigureManager = () => {
     }
 
     setFilteredFigures(result);
+    setPage(0); // Reset to first page on filter change
   }, [searchQuery, selectedDisciplineId, selectedSchoolId, figures, user]);
 
   const fetchData = async () => {
@@ -213,15 +219,20 @@ const FigureManager = () => {
     setOpenWizard(false);
   };
 
-  // Group figures by discipline for display
-  const groupedFigures = filteredFigures.reduce((acc, figure) => {
-    const discName = figure.Discipline?.nom || 'Sans Discipline';
-    if (!acc[discName]) acc[discName] = [];
-    acc[discName].push(figure);
-    return acc;
-  }, {});
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
-  const sortedDisciplineNames = Object.keys(groupedFigures).sort();
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Pagination calculation
+  const paginatedFigures = filteredFigures.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   return (
     <Box>
@@ -308,6 +319,7 @@ const FigureManager = () => {
           <TableHead>
             <TableRow>
               <TableCell>Nom</TableCell>
+              <TableCell>Discipline</TableCell>
               {user?.role === 'admin' && <TableCell>École</TableCell>}
               <TableCell>Niveau</TableCell>
               <TableCell>Type</TableCell>
@@ -315,96 +327,104 @@ const FigureManager = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedDisciplineNames.map(disciplineName => (
-              <React.Fragment key={disciplineName}>
-                <TableRow sx={{ bgcolor: 'action.hover' }}>
-                  <TableCell colSpan={user?.role === 'admin' ? 5 : 4} sx={{ fontWeight: 'bold' }}>
-                    {disciplineName} ({groupedFigures[disciplineName].length})
+            {paginatedFigures.map((figure) => {
+              // Logique de permission pour l'édition/suppression
+              const isPublic = figure.ecole_id === null;
+              const isMySchool = user?.ecole_id && figure.ecole_id === user.ecole_id;
+              const isAdmin = user?.role === 'admin';
+              
+              // On peut modifier si on est Admin OU si la figure appartient à notre école
+              const canEdit = isAdmin || isMySchool;
+
+              // Find school name for admin
+              let schoolName = 'Public';
+              if (user?.role === 'admin' && figure.ecole_id) {
+                  const school = schools.find(s => s.id === figure.ecole_id);
+                  schoolName = school ? school.nom : 'École Inconnue';
+              }
+
+              return (
+                <TableRow key={figure.id} hover>
+                  <TableCell component="th" scope="row">
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">{figure.nom}</Typography>
+                      {!isAdmin && isPublic && (
+                        <Chip label="Public" size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem', mt: 0.5 }} />
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={figure.Discipline?.nom || 'Inconnue'} 
+                      size="small" 
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <Chip 
+                        label={schoolName} 
+                        size="small" 
+                        color={isPublic ? "primary" : "default"}
+                        variant={isPublic ? "filled" : "outlined"}
+                        sx={{ height: 24, fontSize: '0.75rem' }} 
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell>{figure.difficulty_level}/10</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                      {figure.type}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title={canEdit ? "Modifier" : "Lecture seule (Catalogue Public)"}>
+                      <span>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleEdit(figure)}
+                          disabled={!canEdit}
+                        >
+                          <EditIcon color={canEdit ? "action" : "disabled"} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title={canEdit ? "Supprimer" : "Impossible de supprimer une figure publique"}>
+                      <span>
+                        <IconButton 
+                          size="small" 
+                          color={canEdit ? "error" : "disabled"} 
+                          onClick={() => handleDelete(figure.id)}
+                          disabled={!canEdit}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
-                {groupedFigures[disciplineName].map((figure) => {
-                  // Logique de permission pour l'édition/suppression
-                  const isPublic = figure.ecole_id === null;
-                  const isMySchool = user?.ecole_id && figure.ecole_id === user.ecole_id;
-                  const isAdmin = user?.role === 'admin';
-                  
-                  // On peut modifier si on est Admin OU si la figure appartient à notre école
-                  const canEdit = isAdmin || isMySchool;
-
-                  // Find school name for admin
-                  let schoolName = 'Public';
-                  if (user?.role === 'admin' && figure.ecole_id) {
-                     const school = schools.find(s => s.id === figure.ecole_id);
-                     schoolName = school ? school.nom : 'École Inconnue';
-                  }
-
-                  return (
-                    <TableRow key={figure.id} hover>
-                      <TableCell component="th" scope="row" sx={{ pl: 4 }}>
-                        <Box>
-                          <Typography variant="body2">{figure.nom}</Typography>
-                          {!isAdmin && isPublic && (
-                            <Chip label="Public" size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem', ml: 1 }} />
-                          )}
-                        </Box>
-                      </TableCell>
-                      {isAdmin && (
-                        <TableCell>
-                          <Chip 
-                            label={schoolName} 
-                            size="small" 
-                            color={isPublic ? "primary" : "default"}
-                            variant={isPublic ? "filled" : "outlined"}
-                            sx={{ height: 24, fontSize: '0.75rem' }} 
-                          />
-                        </TableCell>
-                      )}
-                      <TableCell>{figure.difficulty_level}/10</TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                          {figure.type}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title={canEdit ? "Modifier" : "Lecture seule (Catalogue Public)"}>
-                          <span>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleEdit(figure)}
-                              disabled={!canEdit}
-                            >
-                              <EditIcon color={canEdit ? "action" : "disabled"} />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip title={canEdit ? "Supprimer" : "Impossible de supprimer une figure publique"}>
-                          <span>
-                            <IconButton 
-                              size="small" 
-                              color={canEdit ? "error" : "disabled"} 
-                              onClick={() => handleDelete(figure.id)}
-                              disabled={!canEdit}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </React.Fragment>
-            ))}
+              );
+            })}
             
-            {filteredFigures.length === 0 && (
+            {paginatedFigures.length === 0 && (
                <TableRow>
-                 <TableCell colSpan={user?.role === 'admin' ? 5 : 4} align="center">
-                   Aucune figure trouvée
+                 <TableCell colSpan={user?.role === 'admin' ? 6 : 5} align="center" sx={{ py: 3 }}>
+                   <Typography color="textSecondary">Aucune figure trouvée</Typography>
                  </TableCell>
                </TableRow>
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          component="div"
+          count={filteredFigures.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Lignes par page"
+        />
       </TableContainer>
 
       <Dialog 

@@ -6,6 +6,7 @@ import MemoryDecayIndicator, { getDecayBorderStyles } from './MemoryDecayIndicat
 import StateBadge from './StateBadge';
 import LateralityBadges from './LateralityBadges';
 import { calculateDecayLevel } from '../../utils/memoryDecay';
+import SiteswapVisualizer from '../figures/metadata/SiteswapVisualizer';
 
 /**
  * FigureCard - Carte figure universelle
@@ -69,6 +70,13 @@ function FigureCard({
     height = 'auto';
   }
 
+  // --- LOGIQUE MEDIA ---
+  // Si pas d'image, on vérifie si on peut générer un GIF Siteswap
+  const hasSiteswap = figure.metadata?.siteswap && variant !== 'minimal';
+  
+  // Hauteur de l'image/visuel
+  const mediaHeight = isMobile ? 'auto' : (variant === 'compact' ? 100 : 135);
+  
   return (
     <Card
       onClick={onClick}
@@ -100,20 +108,52 @@ function FigureCard({
         />
       )}
 
-      {/* Image (hauteur réduite d'un tiers) */}
-      {figure.image_url && (
+      {/* Image, GIF caché, ou Visualisation Siteswap dynamique */}
+      {figure.gif_url ? (
+        // Priorité 1: GIF caché JugglingLab (généré côté serveur)
+        <CardMedia
+          component="img"
+          image={figure.gif_url}
+          alt={`${figure.nom} - Siteswap ${figure.metadata?.siteswap}`}
+          sx={{
+            objectFit: 'contain',
+            width: isMobile ? '100px' : '100%',
+            alignSelf: 'stretch',
+            height: mediaHeight,
+            bgcolor: '#f5f5f5'
+          }}
+        />
+      ) : figure.image_url ? (
+        // Priorité 2: Image custom uploadée
         <CardMedia
           component="img"
           image={figure.image_url}
           alt={figure.nom}
-          sx={{ 
+          sx={{
             objectFit: 'cover',
             width: isMobile ? '100px' : '100%',
             alignSelf: 'stretch',
-            height: isMobile ? 'auto' : (variant === 'compact' ? '100px' : '135px')
+            height: mediaHeight
           }}
         />
-      )}
+      ) : hasSiteswap ? (
+        // Priorité 3: Génération dynamique (fallback)
+        <Box sx={{
+          width: isMobile ? '100px' : '100%',
+          height: mediaHeight,
+          bgcolor: '#f5f5f5',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden'
+        }}>
+          <SiteswapVisualizer
+             siteswap={figure.metadata.siteswap}
+             height={typeof mediaHeight === 'number' ? mediaHeight : 100}
+             options={{ redirect: 'true' }}
+          />
+        </Box>
+      ) : null}
 
       {/* Content */}
       <CardContent sx={{ 

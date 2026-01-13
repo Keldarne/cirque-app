@@ -45,6 +45,8 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./docs:/app/docs  # Montage du dossier docs pour l'import Excel
+      - gif_cache:/app/public/gifs  # Volume persistant pour GIFs JugglingLab
     depends_on:
       db:
         condition: service_healthy
@@ -100,3 +102,4 @@ networks:
 
 volumes:
   mysql_data:
+  gif_cache:  # Volume nommé pour persistance des GIFs JugglingLab

@@ -2,11 +2,13 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../../db');
 
 /**
- * Modèle ExerciceFigure
- * Représente la relation many-to-many entre Figures (exercices décomposés).
- * Permet à une figure d'avoir d'autres figures comme exercices prérequis.
+ * Modèle FigurePrerequis (anciennement ExerciceFigure)
+ * Représente la relation many-to-many entre Figures (prérequis décomposés).
+ * Permet à une figure d'avoir d'autres figures comme prérequis.
+ *
+ * Exemple: Figure "ATR mur" requiert "Gainage planche" et "Équilibre sur mains" comme prérequis.
  */
-const ExerciceFigure = sequelize.define('ExerciceFigure', {
+const FigurePrerequis = sequelize.define('FigurePrerequis', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -20,7 +22,7 @@ const ExerciceFigure = sequelize.define('ExerciceFigure', {
       key: 'id'
     },
     onDelete: 'CASCADE',
-    comment: 'La figure composite (celle qui contient les exercices)'
+    comment: 'La figure principale (celle qui a des prérequis)'
   },
   exercice_figure_id: {
     type: DataTypes.INTEGER,
@@ -30,27 +32,27 @@ const ExerciceFigure = sequelize.define('ExerciceFigure', {
       key: 'id'
     },
     onDelete: 'CASCADE',
-    comment: 'La figure qui sert d\'exercice prérequis'
+    comment: 'La figure qui sert de prérequis'
   },
   ordre: {
     type: DataTypes.INTEGER,
     defaultValue: 1,
     validate: { min: 1 },
-    comment: 'Ordre de l\'exercice dans la séquence d\'apprentissage'
+    comment: 'Ordre du prérequis dans la séquence d\'apprentissage'
   },
   est_requis: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
-    comment: 'true = obligatoire pour le score, false = optionnel'
+    comment: 'true = obligatoire pour le score de préparation, false = optionnel'
   },
   poids: {
     type: DataTypes.INTEGER,
     defaultValue: 1,
     validate: { min: 1, max: 3 },
-    comment: 'Poids de l\'exercice pour le calcul du score (1=faible, 3=élevé)'
+    comment: 'Poids du prérequis pour le calcul du score (1=faible, 3=élevé)'
   }
 }, {
-  tableName: 'ExercicesFigure',
+  tableName: 'ExercicesFigure', // Table name conservé pour compatibilité DB
   timestamps: true,
   indexes: [
     {
@@ -65,4 +67,4 @@ const ExerciceFigure = sequelize.define('ExerciceFigure', {
   ]
 });
 
-module.exports = ExerciceFigure;
+module.exports = FigurePrerequis;

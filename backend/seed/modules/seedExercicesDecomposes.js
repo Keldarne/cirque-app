@@ -6,7 +6,7 @@
  * IMPORTANT: Utilise les VRAIS noms de figures de la base de données
  */
 
-const { Figure, ExerciceFigure } = require('../../src/models');
+const { Figure, FigurePrerequis } = require('../../src/models');
 
 /**
  * Définition des relations exercices pour chaque figure
@@ -278,7 +278,7 @@ async function seedExercicesDecomposes() {
         }
 
         // Vérifier si la relation existe déjà
-        const existeDeja = await ExerciceFigure.findOne({
+        const existeDeja = await FigurePrerequis.findOne({
           where: {
             figure_id: figureParente.id,
             exercice_figure_id: figureExercice.id
@@ -292,7 +292,7 @@ async function seedExercicesDecomposes() {
 
         // Créer la relation
         try {
-          await ExerciceFigure.create({
+          await FigurePrerequis.create({
             figure_id: figureParente.id,
             exercice_figure_id: figureExercice.id,
             ordre,
@@ -319,8 +319,8 @@ async function seedExercicesDecomposes() {
     }
 
     // Afficher statistiques
-    const totalRelations = await ExerciceFigure.count();
-    const figuresAvecExercices = await ExerciceFigure.count({
+    const totalRelations = await FigurePrerequis.count();
+    const figuresAvecExercices = await FigurePrerequis.count({
       distinct: true,
       col: 'figure_id'
     });

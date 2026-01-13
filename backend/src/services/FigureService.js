@@ -1,6 +1,7 @@
-const { Figure, EtapeProgression, Discipline, ExerciceFigure } = require('../models');
+const { Figure, EtapeProgression, Discipline, FigurePrerequis } = require('../models');
 const sequelize = require('../../db');
 const { Op } = require('sequelize');
+const JugglingLabService = require('./JugglingLabService');
 
 // Validation error class
 class ValidationError extends Error {
@@ -47,7 +48,21 @@ class FigureService {
           est_requis: true,
           poids: 1
         }));
-        await ExerciceFigure.bulkCreate(prerequisToCreate, { transaction });
+        await FigurePrerequis.bulkCreate(prerequisToCreate, { transaction });
+      }
+
+      // Générer et cacher le GIF JugglingLab si siteswap présent
+      if (figureData.metadata?.siteswap) {
+        const gifUrl = await JugglingLabService.generateAndCacheGif(
+          figure.id,
+          figureData.metadata.siteswap,
+          { fps: 12, height: 200, width: 300 }
+        );
+
+        if (gifUrl) {
+          await figure.update({ gif_url: gifUrl }, { transaction });
+          figure.dataValues.gif_url = gifUrl; // Update in-memory instance
+        }
       }
 
       await transaction.commit();
@@ -78,6 +93,9 @@ class FigureService {
   static async updateFigureWithEtapes(figure, updateData, etapesData, prerequisIds = undefined) {
     const transaction = await sequelize.transaction();
     try {
+      // Sauvegarder l'ancien metadata pour détecter changement siteswap
+      const oldMetadata = figure.metadata;
+
       await figure.update(updateData, { transaction });
 
       // Mettre à jour les étapes si fournies
@@ -100,7 +118,7 @@ class FigureService {
       // Mettre à jour les prérequis si fournis (undefined = pas de changement)
       if (prerequisIds !== undefined) {
         // Supprimer toutes les relations existantes
-        await ExerciceFigure.destroy({
+        await FigurePrerequis.destroy({
           where: { figure_id: figure.id },
           transaction
         });
@@ -114,7 +132,41 @@ class FigureService {
             est_requis: true,
             poids: 1
           }));
-          await ExerciceFigure.bulkCreate(prerequisToCreate, { transaction });
+          await FigurePrerequis.bulkCreate(prerequisToCreate, { transaction });
+        }
+      }
+
+      // Gérer la régénération du GIF si le siteswap a changé
+      if (updateData.metadata !== undefined) {
+        const siteswapChanged = JugglingLabService.hasSiteswapChanged(oldMetadata, updateData.metadata);
+
+        if (siteswapChanged) {
+          // Supprimer l'ancien GIF si existant
+          if (figure.gif_url) {
+            await JugglingLabService.deleteCachedGif(figure.gif_url);
+          }
+
+          // Générer nouveau GIF si nouveau siteswap existe
+          if (updateData.metadata?.siteswap) {
+            const gifUrl = await JugglingLabService.generateAndCacheGif(
+              figure.id,
+              updateData.metadata.siteswap,
+              { fps: 12, height: 200, width: 300 }
+            );
+
+            if (gifUrl) {
+              await figure.update({ gif_url: gifUrl }, { transaction });
+              figure.dataValues.gif_url = gifUrl;
+            } else {
+              // Échec génération, clear gif_url
+              await figure.update({ gif_url: null }, { transaction });
+              figure.dataValues.gif_url = null;
+            }
+          } else {
+            // Siteswap supprimé, clear gif_url
+            await figure.update({ gif_url: null }, { transaction });
+            figure.dataValues.gif_url = null;
+          }
         }
       }
 
@@ -235,7 +287,7 @@ class FigureService {
       if (visited.has(currentId)) continue;
       visited.add(currentId);
 
-      const children = await ExerciceFigure.findAll({
+      const children = await FigurePrerequis.findAll({
         where: { figure_id: currentId },
         attributes: ['exercice_figure_id'],
         raw: true

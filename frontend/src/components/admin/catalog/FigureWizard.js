@@ -30,7 +30,8 @@ const FigureWizard = ({ initialData, onClose, onSaveSuccess }) => {
     video_url: '',
     etapes: [],
     prerequis: [], // IDs
-    prerequisObjects: [] // Full objects for UI
+    prerequisObjects: [], // Full objects for UI
+    metadata: {}
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});

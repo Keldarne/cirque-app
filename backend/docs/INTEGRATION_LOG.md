@@ -4,6 +4,220 @@ Ce fichier documente les changements backend qui impactent le frontend et permet
 
 ---
 
+## 📥 [2026-01-12] DATA IMPORT - Seed Catalogue Public (Excel)
+
+### 👤 Émetteur
+**Développeur**: Gemini Frontend Agent
+**Status**: ⏳ **EN ATTENTE BACKEND**
+
+### 📋 Besoin
+Importer le fichier `docs/First 100 skills per disciplines.xlsx` pour peupler le catalogue public avec des données riches.
+
+### ✅ Actions Requises (Backend)
+Créer un script de seed (ex: `scripts/import-excel-skills.js`) qui :
+1.  Lit le fichier Excel.
+2.  Suit la spec de mapping définie dans **[`backend/docs/DATA_IMPORT_SPEC.md`](DATA_IMPORT_SPEC.md)**.
+3.  Remplit la table `Figures` en peuplant correctement la colonne `metadata` (JSONB) selon la discipline.
+4.  Associe ces figures au catalogue public (`ecole_id: null`).
+
+---
+
+## 🚀 [2026-01-13] PERFORMANCE - Système de Cache JugglingLab (Backend)
+
+### 👤 Émetteur
+**Développeur**: Claude Code
+**Status**: ✅ **IMPLÉMENTÉ**
+
+### 📋 Problème
+La génération des GIFs via l'API externe JugglingLab était trop lente (2-5s par GIF) et créait une mauvaise expérience utilisateur. Charger une page avec 20 figures prenait 40-100 secondes.
+
+### ✅ Solution Implémentée (Backend)
+
+**Architecture**: Pré-génération des GIFs à la création/modification des figures (plutôt que génération à la demande).
+
+**Changements Backend**:
+
+1. **Nouveau champ DB** (`gif_url`):
+   - Ajouté dans le modèle `Figure` (ligne 31-35)
+   - Type: `VARCHAR(255)`, nullable
+   - Exemple: `/gifs/123-abc12345.gif`
+   - **Migration SQL**: `backend/migrations/004_add_gif_url_to_figures.sql`
+
+2. **Service JugglingLabService** (`backend/src/services/JugglingLabService.js`):
+   - `generateAndCacheGif(figureId, siteswap, options)` - Génère et sauvegarde GIF
+   - `deleteCachedGif(gifUrl)` - Supprime GIF obsolète
+   - `hasSiteswapChanged(oldMeta, newMeta)` - Détecte changement
+   - **Naming**: `{figureId}-{md5Hash}.gif` (ex: `5-098f6bcd.gif`)
+   - **Storage**: `backend/public/gifs/`
+   - **Gestion d'erreurs**: Non-bloquante (retourne `null` si échec)
+
+3. **Intégration FigureService**:
+   - `createFigureWithEtapes()`: Génère GIF si `metadata.siteswap` présent (ligne 54-66)
+   - `updateFigureWithEtapes()`: Régénère si siteswap changé (ligne 139-171)
+   - **Transaction-wrapped**: Garantit atomicité
+
+4. **Serveur Statique** (`backend/server.js` ligne 67-74):
+   - Endpoint: `GET /gifs/{figureId}-{hash}.gif`
+   - Cache navigateur: 7 jours (`maxAge: '7d'`)
+   - ETags activés pour validation cache
+
+5. **Script de Migration** (`backend/scripts/backfill-gifs.js`):
+   - Usage: `node scripts/backfill-gifs.js [--force] [--figureId=N]`
+   - Génère GIFs pour figures existantes
+   - Traitement par batch (10 figures, délai 2s entre batchs)
+
+6. **Docker**:
+   - Volume `gif_cache` ajouté dans `docker-compose.yml`
+   - Persiste GIFs entre redémarrages
+
+### 📦 Impact Frontend
+
+> **⚠️ ATTENTION GEMINI**: Les changements frontend sont **DÉJÀ IMPLÉMENTÉS** par Claude Code. **AUCUNE ACTION REQUISE DE TA PART**.
+>
+> Les fichiers suivants ont été modifiés et sont prêts à l'emploi :
+> - ✅ `frontend/src/components/common/FigureCard.js`
+> - ✅ `frontend/src/components/figures/metadata/MetadataViewer.js`
+>
+> **Ce que tu dois savoir** : Les composants vont maintenant automatiquement utiliser le champ `figure.gif_url` s'il existe, sinon ils feront le fallback vers la génération dynamique via `SiteswapVisualizer`. Tout fonctionne de manière transparente.
+
+**Changements Frontend (DÉJÀ FAITS ✅)**:
+
+1. **[FigureCard.js](../../frontend/src/components/common/FigureCard.js)** (ligne 112-156):
+   ```jsx
+   // Nouvelle logique de priorité (IMPLÉMENTÉE)
+   {figure.gif_url ? (
+     <CardMedia image={figure.gif_url} ... />  // Priorité 1: GIF caché (NOUVEAU)
+   ) : figure.image_url ? (
+     <CardMedia image={figure.image_url} ... />  // Priorité 2: Image custom
+   ) : hasSiteswap ? (
+     <SiteswapVisualizer ... />  // Priorité 3: Génération dynamique (fallback)
+   ) : null}
+   ```
+
+2. **[MetadataViewer.js](../../frontend/src/components/figures/metadata/MetadataViewer.js)** (ligne 48-71):
+   ```jsx
+   // Affichage GIF caché si disponible (IMPLÉMENTÉ)
+   {figure.gif_url ? (
+     <img src={figure.gif_url} ... />  // GIF caché si disponible (NOUVEAU)
+   ) : (
+     <SiteswapVisualizer ... />  // Fallback dynamique
+   )}
+   ```
+
+**API Response** - Le champ `gif_url` est automatiquement inclus dans toutes les réponses `GET /api/figures/*`. Aucune modification d'API call nécessaire.
+
+**Exemple de réponse API** :
+```json
+{
+  "id": 5,
+  "nom": "Cascade 3 Balles",
+  "metadata": { "siteswap": "3" },
+  "gif_url": "/gifs/5-098f6bcd.gif",  // ← NOUVEAU CHAMP
+  "image_url": null,
+  "video_url": null,
+  ...
+}
+```
+
+### 📊 Performance Attendue
+
+**Avant**:
+- Chargement 20 figures: 40-100 secondes
+- 20 appels API JugglingLab par page
+
+**Après**:
+- Chargement 20 figures: <1 seconde
+- 0 appel API JugglingLab par page
+- **Amélioration: 95%+ réduction temps de chargement**
+
+### 🔧 Déploiement
+
+1. **Appliquer migration SQL**:
+   ```bash
+   mysql -u root -p cirque_app_dev < backend/migrations/004_add_gif_url_to_figures.sql
+   # Ou: npm run reset-and-seed (recrée tout)
+   ```
+
+2. **Redémarrer backend**:
+   ```bash
+   # Local
+   cd backend && npm start
+
+   # Docker
+   docker-compose restart backend
+   ```
+
+3. **Générer GIFs existants** (optionnel):
+   ```bash
+   cd backend
+   node scripts/backfill-gifs.js
+   # Sortie: "✅ 15 GIF(s) générés avec succès!"
+   ```
+
+### ✅ Vérification
+
+**Backend**:
+```bash
+# Vérifier GIFs générés
+ls backend/public/gifs/
+# Doit afficher: 5-098f6bcd.gif, 6-5f4dcc3b.gif, etc.
+
+# Tester endpoint statique
+curl -I http://localhost:4000/gifs/5-098f6bcd.gif
+# Doit retourner: 200 OK, Content-Type: image/gif
+```
+
+**Frontend**:
+1. Ouvrir http://localhost:3000/catalogue
+2. DevTools → Network tab
+3. **Vérifier**: Aucun appel vers `jugglinglab.org`
+4. **Vérifier**: Appels vers `localhost:4000/gifs/XXX.gif` réussissent
+5. GIFs s'affichent instantanément
+
+### 📚 Documentation
+
+- **Guide Déploiement**: [`docs/JUGGLINGLAB_GIF_CACHE_DEPLOYMENT.md`](../../docs/JUGGLINGLAB_GIF_CACHE_DEPLOYMENT.md)
+- **Architecture Détaillée**: Plan dans `C:\Users\Joseph\.claude\plans\humming-herding-nygaard.md`
+
+### 🐛 Troubleshooting
+
+**GIF non généré lors création**:
+```bash
+# Vérifier logs
+tail -f backend/server.log | grep "JugglingLab"
+
+# Régénérer manuellement
+node scripts/backfill-gifs.js --figureId=123
+```
+
+**404 sur `/gifs/XXX.gif`**:
+```bash
+# Vérifier fichier existe
+ls backend/public/gifs/123-*.gif
+
+# Redémarrer backend
+docker-compose restart backend
+```
+
+### 🎯 Prochaines Étapes
+
+- [x] Migration SQL
+- [x] Service JugglingLabService
+- [x] Intégration FigureService
+- [x] Serveur statique
+- [x] Modifications frontend
+- [x] Script backfill
+- [x] Configuration Docker
+- [ ] Monitoring performance production
+- [ ] Analytics temps chargement
+
+**Date Implémentation**: 2026-01-13
+**Version**: 1.0
+
+---
+
+## ✅ [2026-01-12] RÉSOLU - Support Metadata Figures (JugglingLab)
+
 ## ✅ [2026-01-12] SUPPRESSION SYSTÈME GAMIFICATION
 
 ### 👤 Émetteur

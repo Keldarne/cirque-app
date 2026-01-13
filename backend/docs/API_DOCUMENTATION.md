@@ -13,9 +13,37 @@ Authorization: Bearer <token>
 
 1. [Authentification (Public)](#authentification-public)
 2. [Endpoints ÉLÈVE](#endpoints-élève)
+   - Profil Utilisateur
+   - Progressions
+   - Programmes Personnels
+   - Partages Programmes (Élève → Prof/Pairs)
+   - Figures
+   - Entraînement
+   - Disciplines
+   - Gamification (Streaks uniquement)
+   - Statistiques
 3. [Endpoints PROFESSEUR](#endpoints-professeur)
+   - Élèves
+   - Programmes (complets avec duplication, assignation, partages)
+   - Groupes (complets avec gestion membres)
+   - Dashboard (Matrix + Stats Globales)
+   - Statistiques (Vue d'ensemble, Élèves négligés, Engagement, Interactions)
+   - Validation
 4. [Endpoints ADMIN](#endpoints-admin)
-5. [Endpoints PARTAGÉS](#endpoints-partagés)
+   - Écoles
+   - Utilisateurs
+   - Figures (CRUD complet)
+   - Disciplines (CRUD complet)
+   - Discipline Availability (Per-School Configuration)
+   - Exercices Décomposés (Système de Suggestions)
+   - Système (Monitoring, Logs, Backups, Analytics)
+5. [School Management (Admin/School Admin)](#school-management-adminschool-admin)
+6. [Suggestions Intelligentes (ÉLÈVE)](#suggestions-intelligentes-élève)
+7. [Endpoints PARTAGÉS](#endpoints-partagés)
+8. [Annexes](#annexes)
+   - Tableau Récapitulatif des Permissions
+   - Codes de Statut HTTP
+   - Exemples de Requêtes
 
 ---
 
@@ -624,107 +652,76 @@ Authorization: Bearer <token>
 
 ---
 
-### Gamification
+### Gamification (Streaks uniquement)
 
-#### GET `/api/gamification/badges`
-**Accès**: Élève, Prof, Admin
-**Description**: Liste tous les badges disponibles
-
-**Réponse 200**:
-```json
-[
-  {
-    "id": 1,
-    "nom": "Premier Pas",
-    "description": "Première figure validée",
-    "icone": "trophy",
-    "couleur": "#FFC107",
-    "categorie": "progression",
-    "rarete": "commun",
-    "xp_bonus": 10
-  }
-]
-```
+**Note importante**: Le système gamification a été simplifié. Les badges, titres, défis et classements ont été supprimés. Seuls les streaks (jours consécutifs de pratique) sont conservés.
 
 ---
 
-#### GET `/api/gamification/badges/utilisateur/:utilisateurId`
-**Accès**: Élève (ses badges), Prof (badges de ses élèves), Admin
-**Description**: Badges obtenus par un utilisateur
+#### GET `/api/gamification/streaks/utilisateur`
+**Accès**: Élève, Prof, Admin (via `verifierToken`)
+**Description**: Récupère le statut de streak de l'utilisateur connecté
 
-**Réponse 200**:
+**Réponse 200** (avec streak):
 ```json
-[
-  {
-    "id": 23,
+{
+  "streak": {
+    "id": 12,
     "utilisateur_id": 4,
-    "badge_id": 1,
-    "date_obtention": "2025-12-01T14:30:00.000Z",
-    "Badge": {
-      "nom": "Premier Pas",
-      "icone": "trophy"
-    }
+    "jours_consecutifs": 7,
+    "record_personnel": 14,
+    "derniere_activite": "2026-01-12",
+    "streak_freeze_disponible": true,
+    "createdAt": "2025-12-01T00:00:00.000Z",
+    "updatedAt": "2026-01-12T18:30:00.000Z"
   }
-]
+}
+```
+
+**Réponse 200** (aucun streak):
+```json
+{
+  "streak": null
+}
+```
+
+**Réponse 500**:
+```json
+{
+  "error": "Erreur serveur",
+  "details": "message d'erreur"
+}
 ```
 
 ---
 
-#### GET `/api/gamification/titres`
-**Accès**: Élève, Prof, Admin
-**Description**: Liste tous les titres disponibles
-
----
-
-#### GET `/api/gamification/defis`
-**Accès**: Élève, Prof, Admin
-**Description**: Liste tous les défis actifs
-
----
-
-#### GET `/api/gamification/streaks/:utilisateurId`
-**Accès**: Élève (son streak), Prof (streaks de ses élèves), Admin
-**Description**: Série de jours consécutifs de pratique
-
----
-
-#### GET `/api/gamification/classements`
-**Accès**: Élève, Prof, Admin
-**Description**: Classement global par XP
-
-**Query params**:
-- `?limit=10` - Nombre de résultats (défaut: 10)
-- `?ecole_id=1` - Filtrer par école
-
----
-
-#### GET `/api/gamification/statistiques/profil-gamification/:utilisateurId`
-**Accès**: Élève (son profil), Prof (profils de ses élèves), Admin
-**Description**: Profil gamification complet d'un utilisateur
+#### GET `/api/gamification/statistiques/utilisateur/profil-gamification`
+**Accès**: Élève, Prof, Admin (via `verifierToken`)
+**Description**: Profil gamification simplifié de l'utilisateur connecté (niveau, XP total, streak)
 
 **Réponse 200**:
 ```json
 {
-  "utilisateur": {
-    "id": 4,
-    "pseudo": "lucas_moreau",
+  "profil": {
     "niveau": 3,
-    "xp": 1250,
-    "xp_prochain_niveau": 1500
-  },
-  "badges": [...],
-  "titres": [...],
-  "streak": {
-    "jours_consecutifs": 7,
-    "derniere_activite": "2025-12-25"
-  },
-  "statistiques": {
-    "figures_validees": 12,
-    "etapes_validees": 35,
-    "disciplines_pratiquees": 5
+    "xp_total": 1250,
+    "streak": {
+      "jours_consecutifs": 7,
+      "record_personnel": 14
+    }
   }
 }
 ```
+
+**Réponse 500**:
+```json
+{
+  "error": "Erreur serveur",
+  "details": "message d'erreur"
+}
+```
+
+**Note**: Si l'utilisateur n'a pas de streak, les valeurs seront à 0.
 
 ---
 
@@ -1217,9 +1214,22 @@ curl -X POST http://localhost:4000/api/prof/eleves/import \
   "difficulty_level": 3,
   "type": "artistique",
   "visibilite": "public",
-  "ecole_id": null
+  "ecole_id": null,
+  "metadata": {
+    "siteswap": "531",
+    "num_objects": 3,
+    "object_types": ["balls"]
+  }
 }
 ```
+
+**Champ `metadata` (optionnel, JSON)**:
+- Données spécifiques par discipline (jonglage, aérien, équilibre, etc.)
+- Format flexible: voir [FIGURE_METADATA_SPECIFICATION.md](FIGURE_METADATA_SPECIFICATION.md)
+- Exemples:
+  - **Jonglage**: `{ "siteswap": "531", "num_objects": 3 }`
+  - **Aérien**: `{ "apparatus": "tissu", "height_meters": 6, "rotations": 2 }`
+  - **Équilibre**: `{ "tempo_seconds": 30, "apparatus": "boule" }`
 
 ---
 
@@ -1322,6 +1332,1358 @@ curl -X POST http://localhost:4000/api/prof/eleves/import \
 
 ---
 
+### Système (Monitoring, Logs, Backups, Analytics)
+
+**Permissions**: Admin uniquement (tous les endpoints nécessitent `verifierToken` + `estAdmin`)
+
+#### GET `/api/admin/system/health`
+**Description**: Santé globale du système (serveur, base de données, ressources)
+
+**Réponse 200**:
+```json
+{
+  "server": {
+    "status": "healthy",
+    "uptime": 86400
+  },
+  "database": {
+    "status": "healthy",
+    "connection": "active"
+  },
+  "system": {
+    "memory": { "used": 512, "total": 2048 },
+    "cpu": { "usage": 35.5 }
+  }
+}
+```
+
+---
+
+#### GET `/api/admin/system/metrics`
+**Description**: Métriques temps réel (cache 1 minute)
+
+**Réponse 200**:
+```json
+{
+  "users": { "total": 150, "active_today": 42 },
+  "requests_per_minute": 120,
+  "average_response_time": 85
+}
+```
+
+---
+
+#### GET `/api/admin/system/database/stats`
+**Description**: Statistiques des tables MySQL
+
+**Réponse 200**:
+```json
+{
+  "tables": [
+    { "name": "Utilisateurs", "rows": 150, "size_mb": 2.5 },
+    { "name": "Figures", "rows": 450, "size_mb": 8.2 }
+  ]
+}
+```
+
+---
+
+#### GET `/api/admin/system/crons/status`
+**Description**: Statut des cron jobs
+
+**Réponse 200**:
+```json
+{
+  "crons": [
+    {
+      "name": "memory_decay",
+      "schedule": "0 2 * * *",
+      "last_run": "2026-01-12T02:00:00.000Z",
+      "status": "success"
+    }
+  ]
+}
+```
+
+---
+
+#### GET `/api/admin/system/logs`
+**Description**: Liste paginée des logs système avec filtres
+
+**Query params**:
+- `niveau` (optionnel): Niveau de log (info, warn, error)
+- `categorie` (optionnel): Catégorie (API, AUTH, CRON, etc.)
+- `dateDebut` (optionnel): Date début (YYYY-MM-DD)
+- `dateFin` (optionnel): Date fin (YYYY-MM-DD)
+- `search` (optionnel): Recherche textuelle
+- `limit` (défaut: 50, max: 100): Nombre de résultats
+- `offset` (défaut: 0): Décalage pagination
+
+**Réponse 200**:
+```json
+{
+  "logs": [
+    {
+      "id": 1234,
+      "niveau": "error",
+      "categorie": "API",
+      "message": "Erreur connexion DB",
+      "metadata": { "endpoint": "/api/figures", "duration_ms": 1250 },
+      "createdAt": "2026-01-12T14:30:00.000Z"
+    }
+  ],
+  "total": 450,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+#### GET `/api/admin/system/logs/stats`
+**Description**: Statistiques agrégées des logs
+
+**Query params**:
+- `hours` (défaut: 24): Période en heures
+
+**Réponse 200**:
+```json
+{
+  "total": 1542,
+  "by_niveau": { "info": 1200, "warn": 300, "error": 42 },
+  "by_categorie": { "API": 1000, "AUTH": 300, "CRON": 242 }
+}
+```
+
+---
+
+#### GET `/api/admin/system/logs/export`
+**Description**: Export CSV des logs avec filtres
+
+**Query params**: Mêmes que `/logs` (niveau, categorie, dateDebut, dateFin, search)
+
+**Réponse 200**: Fichier CSV téléchargé
+```
+Content-Type: text/csv
+Content-Disposition: attachment; filename="logs_2026-01-12.csv"
+```
+
+---
+
+#### DELETE `/api/admin/system/logs/cleanup`
+**Description**: Supprime les logs avant une date spécifique
+
+**Query params**:
+- `before` (requis): Date limite (YYYY-MM-DD)
+
+**Réponse 200**:
+```json
+{
+  "message": "Logs nettoyés",
+  "deletedCount": 1542,
+  "before": "2025-12-01"
+}
+```
+
+---
+
+#### GET `/api/admin/system/backups`
+**Description**: Liste des backups disponibles
+
+**Réponse 200**:
+```json
+{
+  "backups": [
+    {
+      "id": 42,
+      "filename": "backup_2026-01-12_manual.sql",
+      "type": "manual",
+      "status": "completed",
+      "size_mb": 125.4,
+      "created_by_id": 1,
+      "createdAt": "2026-01-12T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### POST `/api/admin/system/backups`
+**Description**: Créer un backup manuel de la base de données
+
+**Réponse 201**:
+```json
+{
+  "message": "Backup créé avec succès",
+  "backup": {
+    "id": 43,
+    "filename": "backup_2026-01-12_manual.sql",
+    "status": "completed"
+  }
+}
+```
+
+---
+
+#### GET `/api/admin/system/backups/:id/download`
+**Description**: Télécharger un fichier de backup
+
+**Réponse 200**: Fichier SQL téléchargé
+
+**Réponse 404**: Backup non trouvé
+
+**Réponse 400**: Backup non disponible (status ≠ completed)
+
+---
+
+#### DELETE `/api/admin/system/backups/:id`
+**Description**: Supprimer un backup
+
+**Réponse 200**:
+```json
+{
+  "message": "Backup supprimé avec succès"
+}
+```
+
+---
+
+#### GET `/api/admin/system/analytics/users`
+**Description**: Croissance utilisateurs et répartition par rôle (6 derniers mois)
+
+**Réponse 200**:
+```json
+{
+  "monthlyGrowth": {
+    "2025-08": { "admin": 0, "professeur": 2, "eleve": 15 },
+    "2025-09": { "admin": 0, "professeur": 1, "eleve": 22 }
+  },
+  "roleDistribution": {
+    "admin": 1,
+    "professeur": 10,
+    "eleve": 120
+  },
+  "total": 131
+}
+```
+
+---
+
+#### GET `/api/admin/system/analytics/schools`
+**Description**: Statistiques écoles (total, actives, répartition par plan)
+
+**Réponse 200**:
+```json
+{
+  "total": 12,
+  "active": 10,
+  "byPlan": { "basic": 5, "premium": 3, "trial": 2 },
+  "byStatus": { "active": 10, "suspended": 2 }
+}
+```
+
+---
+
+#### GET `/api/admin/system/analytics/activity`
+**Description**: Activité globale (tentatives par jour, 7 derniers jours)
+
+**Réponse 200**:
+```json
+{
+  "dailyActivity": {
+    "2026-01-06": 45,
+    "2026-01-07": 52,
+    "2026-01-12": 67
+  },
+  "total": 380
+}
+```
+
+---
+
+#### GET `/api/admin/system/analytics/content`
+**Description**: Stats contenu (figures, disciplines, progressions, tentatives)
+
+**Réponse 200**:
+```json
+{
+  "figures": { "total": 450, "public": 200, "schools": 250 },
+  "disciplines": 12,
+  "progressions": 3542,
+  "tentatives": 15420
+}
+```
+
+---
+
+#### GET `/api/admin/system/analytics/performance`
+**Description**: Top 10 requêtes lentes et erreurs récentes (24h)
+
+**Réponse 200**:
+```json
+{
+  "slowRequests": [
+    {
+      "endpoint": "/api/prof/dashboard/matrix",
+      "method": "GET",
+      "duration_ms": 2540,
+      "timestamp": "2026-01-12T14:00:00.000Z"
+    }
+  ],
+  "recentErrors": [
+    {
+      "endpoint": "/api/figures/999",
+      "method": "GET",
+      "statusCode": 500,
+      "message": "Figure not found",
+      "timestamp": "2026-01-12T15:30:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### Exercices Décomposés (Système de Suggestions)
+
+**Permissions**: Admin uniquement
+
+#### POST `/api/admin/figures/:figureId/exercices`
+**Description**: Ajouter un exercice décomposé (prérequis) à une figure
+
+**Body**:
+```json
+{
+  "exercice_figure_id": 42,
+  "ordre": 1,
+  "est_requis": true,
+  "poids": 2
+}
+```
+
+**Réponse 201**:
+```json
+{
+  "message": "Exercice \"Lancer 3 balles\" ajouté à la figure \"Cascade 5 balles\"",
+  "exercice": {
+    "id": 123,
+    "figure_parente": "Cascade 5 balles",
+    "exercice": "Lancer 3 balles",
+    "ordre": 1,
+    "est_requis": true,
+    "poids": 2
+  }
+}
+```
+
+**Réponse 400**: Cycle détecté (A → B → A)
+**Réponse 404**: Figure parente ou exercice non trouvé
+**Réponse 409**: Exercice déjà lié à cette figure
+
+---
+
+#### GET `/api/admin/figures/:figureId/exercices`
+**Description**: Liste les exercices d'une figure (triés par ordre)
+
+**Réponse 200**:
+```json
+{
+  "figure": { "id": 50, "nom": "Cascade 5 balles" },
+  "exercices": [
+    {
+      "id": 123,
+      "ordre": 1,
+      "est_requis": true,
+      "poids": 2,
+      "exercice": {
+        "id": 42,
+        "nom": "Lancer 3 balles",
+        "descriptif": "Maîtriser le lancer à 3 balles",
+        "difficulty_level": 2,
+        "type": "preparation"
+      }
+    }
+  ],
+  "count": 1
+}
+```
+
+---
+
+#### PUT `/api/admin/exercices/:exerciceId`
+**Description**: Modifier un exercice décomposé (ordre, poids, est_requis)
+
+**Body** (tous optionnels):
+```json
+{
+  "ordre": 2,
+  "poids": 3,
+  "est_requis": false
+}
+```
+
+**Réponse 200**:
+```json
+{
+  "message": "Exercice mis à jour",
+  "exercice": {
+    "id": 123,
+    "ordre": 2,
+    "poids": 3,
+    "est_requis": false
+  }
+}
+```
+
+---
+
+#### DELETE `/api/admin/exercices/:exerciceId`
+**Description**: Supprimer un exercice décomposé
+
+**Réponse 200**:
+```json
+{
+  "message": "Exercice \"Lancer 3 balles\" retiré de la figure \"Cascade 5 balles\"",
+  "deleted_id": 123
+}
+```
+
+---
+
+### CRUD Figures et Disciplines (Admin)
+
+#### GET `/api/admin/figures`
+**Permissions**: Admin uniquement
+**Description**: Récupérer toutes les figures (ou par école)
+
+**Query params**:
+- `ecole_id` (optionnel): Filtrer par école ou "null" pour catalogue public
+
+**Réponse 200**: Tableau de figures avec disciplines
+
+---
+
+#### PUT `/api/admin/figures/:id`
+**Permissions**: Admin ou créateur figure
+**Description**: Modifier une figure (nom, descriptif, étapes, prérequis, metadata)
+
+**Body** (même format que POST `/api/admin/figures`):
+- Tous les champs sont optionnels
+- `metadata` peut être mis à jour ou laissé null
+- Voir [FIGURE_METADATA_SPECIFICATION.md](FIGURE_METADATA_SPECIFICATION.md) pour format metadata
+
+**Note**: Personnel école ne peut modifier que les figures de son école (pas le catalogue public)
+
+---
+
+#### DELETE `/api/admin/figures/:id`
+**Permissions**: Admin ou créateur figure
+**Description**: Supprimer une figure et toutes ses données associées
+
+**Note**: Supprime aussi les étapes, progressions et tentatives associées
+
+---
+
+#### POST `/api/admin/disciplines`
+**Permissions**: Admin uniquement
+**Description**: Créer une nouvelle discipline
+
+**Body**:
+```json
+{
+  "nom": "Monocycle",
+  "description": "Arts du monocycle",
+  "icone": "bicycle"
+}
+```
+
+---
+
+#### PUT `/api/admin/disciplines/:id`
+**Permissions**: Admin uniquement
+**Description**: Modifier une discipline
+
+---
+
+#### DELETE `/api/admin/disciplines/:id`
+**Permissions**: Admin uniquement
+**Description**: Supprimer une discipline
+
+**Note**: Échoue si des figures sont liées à cette discipline
+
+---
+
+#### GET `/api/admin/ecoles`
+**Permissions**: Admin uniquement
+**Description**: Liste toutes les écoles
+
+**Réponse 200**: Tableau d'écoles triées par nom
+
+---
+
+## School Management (Admin/School Admin)
+
+**Base**: `/api/school/users`
+
+**Permissions**: Admin global OU Prof/School Admin de l'école
+
+---
+
+#### GET `/api/school/users`
+**Description**: Liste tous les utilisateurs de l'école
+
+**Query params** (admin uniquement):
+- `ecole_id` (optionnel): Filtrer par école spécifique
+
+**Réponse 200**:
+```json
+[
+  {
+    "id": 42,
+    "pseudo": "emma.martin",
+    "prenom": "Emma",
+    "nom": "Martin",
+    "email": "emma.martin@voltige.fr",
+    "role": "eleve",
+    "ecole_id": 1,
+    "niveau": 3,
+    "xp_total": 1250,
+    "actif": true,
+    "createdAt": "2025-09-01T00:00:00.000Z",
+    "Ecole": { "id": 1, "nom": "École Voltige" }
+  }
+]
+```
+
+---
+
+#### POST `/api/school/users`
+**Description**: Créer un nouvel utilisateur dans l'école
+
+**Body**:
+```json
+{
+  "prenom": "Emma",
+  "nom": "Martin",
+  "email": "emma.martin@voltige.fr",
+  "role": "eleve",
+  "password": "optionnel",
+  "pseudo": "optionnel"
+}
+```
+
+**Réponse 201**:
+```json
+{
+  "message": "Utilisateur créé avec succès",
+  "utilisateur": {
+    "id": 42,
+    "pseudo": "emma.martin",
+    "prenom": "Emma",
+    "nom": "Martin",
+    "email": "emma.martin@voltige.fr",
+    "role": "eleve",
+    "ecole_id": 1
+  },
+  "defaultPassword": "Voltige2026!"
+}
+```
+
+**Notes**:
+- Email optionnel (peut être null)
+- Pseudo auto-généré si non fourni: `[ecole]-[prenom].[nom]`
+- Mot de passe par défaut: `[NomÉcole][Année]!`
+- Admin peut spécifier `ecole_id`, sinon forcé à celle du créateur
+
+---
+
+#### PUT `/api/school/users/:id`
+**Description**: Modifier un utilisateur
+
+**Body** (tous optionnels):
+```json
+{
+  "prenom": "Emma",
+  "nom": "Martin",
+  "email": "emma.new@voltige.fr",
+  "role": "professeur"
+}
+```
+
+**Restrictions**:
+- Ne peut modifier que les utilisateurs de sa propre école
+- Professeur ne peut pas modifier admin/school_admin
+- Seul admin peut créer des admins/school_admins
+
+---
+
+#### DELETE `/api/school/users/:id`
+**Description**: Supprimer un utilisateur
+
+**Restrictions**:
+- Ne peut pas se supprimer soi-même
+- Mêmes restrictions que PUT
+
+---
+
+#### POST `/api/school/users/:id/archive`
+**Description**: Archiver un utilisateur (désactivation soft delete)
+
+**Réponse 200**:
+```json
+{
+  "message": "Utilisateur archivé avec succès",
+  "utilisateur": {
+    "id": 42,
+    "pseudo": "emma.martin",
+    "actif": false
+  }
+}
+```
+
+---
+
+## Suggestions Intelligentes (ÉLÈVE)
+
+**Base**: `/api/suggestions`
+
+**Permissions**: Élève, Prof, Admin (via `verifierToken`)
+
+**Fonctionnalité**: Recommandations personnalisées basées sur les exercices validés
+
+---
+
+#### GET `/api/suggestions`
+**Description**: Récupère les top 5 suggestions personnalisées pour l'élève connecté
+
+**Réponse 200**:
+```json
+{
+  "suggestions": [
+    {
+      "figure_id": 50,
+      "nom": "Cascade 5 balles",
+      "score_preparation": 85,
+      "exercices_valides": 8,
+      "exercices_total": 10,
+      "badge": "prêt",
+      "discipline": "Jonglage"
+    }
+  ],
+  "count": 5,
+  "message": "5 suggestions disponibles"
+}
+```
+
+**Notes**:
+- Exclut les figures déjà assignées, dans programme personnel, ou validées
+- Score ≥ 80% = badge "prêt"
+- Score 60-79% = badge "bientôt prêt"
+- Basé sur le pourcentage d'exercices prérequis validés
+
+---
+
+#### GET `/api/suggestions/:figureId/details`
+**Description**: Détails de préparation pour une figure spécifique
+
+**Réponse 200**:
+```json
+{
+  "figure_id": 50,
+  "score_preparation": 85,
+  "exercices_valides": 8,
+  "exercices_total": 10,
+  "details": [
+    {
+      "exercice_id": 42,
+      "nom": "Lancer 3 balles",
+      "valide": true
+    },
+    {
+      "exercice_id": 43,
+      "nom": "Échange 4 balles",
+      "valide": false
+    }
+  ],
+  "message": "Tu es prêt pour cette figure !"
+}
+```
+
+---
+
+#### POST `/api/suggestions/:figureId/accepter`
+**Description**: Accepter une suggestion = ajouter la figure au programme personnel
+
+**Réponse 201**:
+```json
+{
+  "message": "Figure ajoutée à ton programme personnel",
+  "programme": {
+    "id": 12,
+    "nom": "Programme Personnel"
+  }
+}
+```
+
+**Note**: Crée automatiquement un programme "Programme Personnel" si inexistant
+
+---
+
+#### POST `/api/suggestions/:figureId/dismisser`
+**Description**: Rejeter une suggestion (masquer)
+
+**Réponse 200**:
+```json
+{
+  "message": "Suggestion masquée",
+  "updated": true
+}
+```
+
+**Note**: Sera recalculée lors du prochain rafraîchissement nocturne
+
+---
+
+## Endpoints PROFESSEUR (Compléments)
+
+### Programmes (Compléments)
+
+#### POST `/api/prof/programmes/:id/dupliquer`
+**Description**: Dupliquer un programme (utile pour créer des variantes)
+
+**Body**:
+```json
+{
+  "nouveau_nom": "Programme Aérien - Niveau 2"
+}
+```
+
+**Réponse 201**:
+```json
+{
+  "message": "Programme dupliqué avec succès",
+  "programme": {
+    "id": 45,
+    "nom": "Programme Aérien - Niveau 2",
+    "figures": [...]
+  }
+}
+```
+
+---
+
+#### POST `/api/prof/programmes/:id/assigner`
+**Description**: Assigner un programme à des élèves ET/OU groupes (endpoint unifié)
+
+**Body**:
+```json
+{
+  "eleve_ids": [4, 5, 6],
+  "groupe_ids": [1, 2],
+  "source_partage_id": 42
+}
+```
+
+**Réponse 200**:
+```json
+{
+  "success": true,
+  "results": {
+    "assignations_creees": 5,
+    "deja_assignes": 1
+  }
+}
+```
+
+**Notes**:
+- Au moins `eleve_ids` OU `groupe_ids` requis
+- `source_partage_id` optionnel (si programme reçu d'un élève)
+- Les élèves des groupes reçoivent aussi des assignations individuelles
+
+---
+
+#### GET `/api/prof/programmes/:id/assignations`
+**Description**: Résumé des assignations d'un programme
+
+**Réponse 200**:
+```json
+{
+  "programme_id": 10,
+  "groupes": [
+    { "id": 1, "nom": "Débutants", "membres_count": 12 }
+  ],
+  "eleves_individuels": [
+    { "id": 4, "nom": "Martin", "prenom": "Emma" }
+  ],
+  "total_eleves": 13
+}
+```
+
+---
+
+#### DELETE `/api/prof/programmes/:id/groupes/:groupeId`
+**Description**: Retirer l'assignation de groupe
+
+**Réponse 200**:
+```json
+{
+  "message": "Assignation de groupe retirée avec succès",
+  "note": "Les élèves gardent leurs assignations individuelles"
+}
+```
+
+---
+
+#### DELETE `/api/prof/programmes/:id/eleves/:eleveId`
+**Description**: Retirer l'assignation individuelle d'un élève
+
+**Réponse 200**:
+```json
+{
+  "message": "Assignation retirée avec succès"
+}
+```
+
+---
+
+#### DELETE `/api/prof/programmes/:id`
+**Description**: Supprimer un programme
+
+**Note**: Supprime le programme ET toutes ses assignations
+
+---
+
+#### GET `/api/prof/programmes/partages`
+**Description**: Liste des programmes partagés avec le prof (par des élèves)
+
+**Réponse 200**:
+```json
+{
+  "programmes": [
+    {
+      "id": 12,
+      "nom": "Mon Programme Perso",
+      "professeur_id": 4,
+      "partage_id": 42,
+      "date_partage": "2026-01-10T10:00:00.000Z",
+      "note": "Besoin de feedback sur ce programme",
+      "partage_par": {
+        "id": 4,
+        "pseudo": "emma.martin",
+        "email": "emma.martin@voltige.fr",
+        "nom": "Martin",
+        "prenom": "Emma"
+      },
+      "ProgrammesFigures": [...]
+    }
+  ],
+  "total": 1
+}
+```
+
+**Note**: Utilise le nouveau modèle polymorphique `ProgrammePartage`
+
+---
+
+### Groupes (Compléments)
+
+#### GET `/api/prof/groupes/:id`
+**Description**: Détails d'un groupe avec membres et leurs streaks
+
+**Réponse 200**:
+```json
+{
+  "groupe": {
+    "id": 1,
+    "nom": "Débutants",
+    "description": "Groupe niveau 1-2",
+    "couleur": "#1976d2",
+    "membres": [
+      {
+        "eleve": {
+          "id": 4,
+          "nom": "Martin",
+          "prenom": "Emma",
+          "niveau": 2,
+          "xp_total": 450,
+          "streak": {
+            "jours_consecutifs": 5,
+            "record_personnel": 12
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### PUT `/api/prof/groupes/:id`
+**Description**: Modifier un groupe (nom, description, couleur)
+
+**Body**:
+```json
+{
+  "nom": "Débutants Niveau 1",
+  "description": "Groupe mis à jour",
+  "couleur": "#FF5722"
+}
+```
+
+---
+
+#### DELETE `/api/prof/groupes/:id`
+**Description**: Supprimer un groupe (soft delete: actif = false)
+
+**Note**: Supprime aussi tous les membres du groupe
+
+---
+
+#### POST `/api/prof/groupes/:id/membres`
+**Description**: Ajouter un élève à un groupe + propagation automatique des programmes
+
+**Body**:
+```json
+{
+  "eleve_id": 42
+}
+```
+
+**Réponse 201**:
+```json
+{
+  "message": "Élève ajouté au groupe avec succès",
+  "propagation": {
+    "programmes_assignes": 3,
+    "programmes_deja_assignes": 1
+  }
+}
+```
+
+**Note**: Les programmes du groupe sont automatiquement assignés au nouvel élève
+
+---
+
+#### DELETE `/api/prof/groupes/:id/membres/:eleveId`
+**Description**: Retirer un élève d'un groupe
+
+**Note**: Ne supprime PAS les assignations de programmes
+
+---
+
+### Statistiques (Compléments)
+
+#### GET `/api/prof/statistiques`
+**Description**: Vue d'ensemble des statistiques prof
+
+**Réponse 200**:
+```json
+{
+  "statistiques": {
+    "total_eleves": 45,
+    "total_groupes": 5,
+    "eleves_actifs_semaine": 32,
+    "xp_total_eleves": 56250,
+    "moyenne_xp_par_eleve": 1250
+  }
+}
+```
+
+---
+
+#### GET `/api/prof/statistiques/eleves-negliges`
+**Description**: Élèves sans interaction depuis X jours
+
+**Query params**:
+- `seuil_jours` (défaut: 30): Nombre de jours sans interaction
+- `limit` (défaut: 10): Nombre max de résultats
+
+**Réponse 200**:
+```json
+{
+  "total_eleves": 45,
+  "negliges_count": 8,
+  "taux_neglige": 17.8,
+  "seuil_jours": 30,
+  "eleves": [
+    {
+      "id": 42,
+      "nom": "Martin",
+      "prenom": "Emma",
+      "jours_sans_interaction": 45,
+      "derniere_interaction": "2025-11-28T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+#### GET `/api/prof/statistiques/engagement`
+**Description**: Statistiques d'engagement du professeur
+
+**Réponse 200**:
+```json
+{
+  "statistiques_engagement": {
+    "interactions_totales": 450,
+    "interactions_semaine": 42,
+    "moyenne_par_eleve": 10,
+    "taux_reponse_24h": 85.5
+  }
+}
+```
+
+---
+
+#### GET `/api/prof/statistiques/interactions/:eleveId`
+**Description**: Historique des interactions avec un élève
+
+**Query params**:
+- `limit` (défaut: 20): Nombre max de résultats
+
+**Réponse 200**:
+```json
+{
+  "eleve_id": 42,
+  "total_interactions": 15,
+  "interactions": [
+    {
+      "id": 123,
+      "type": "validation",
+      "description": "Étape validée: Roue libre",
+      "date": "2026-01-10T14:30:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### Dashboard (NOUVEAU)
+
+**Base**: `/api/prof/dashboard`
+
+---
+
+#### GET `/api/prof/dashboard/matrix`
+**Description**: Matrice de progression bulk (tous les élèves du prof)
+
+**Query params**:
+- `groupe_id` (optionnel): Filtrer par groupe spécifique
+
+**Réponse 200**:
+```json
+{
+  "matrix": {
+    "eleves": [
+      {
+        "id": 4,
+        "nom": "Martin",
+        "prenom": "Emma",
+        "progressions": [
+          { "figure_id": 10, "statut": "valide", "pourcentage": 100 },
+          { "figure_id": 12, "statut": "en_cours", "pourcentage": 60 }
+        ]
+      }
+    ],
+    "figures": [
+      { "id": 10, "nom": "Roue", "discipline": "Monocycle" },
+      { "id": 12, "nom": "Cascade 3 balles", "discipline": "Jonglage" }
+    ]
+  }
+}
+```
+
+**Note**: Optimisé pour performances (1 seule requête SQL bulk au lieu de N requêtes)
+
+---
+
+#### GET `/api/prof/dashboard/stats-globales`
+**Description**: Statistiques globales pour graphiques dashboard
+
+**Réponse 200**:
+```json
+{
+  "moyennes_par_discipline": {
+    "Jonglage": 75.5,
+    "Aérien": 62.3,
+    "Monocycle": 80.0
+  },
+  "activite_hebdomadaire": {
+    "2026-01-06": 45,
+    "2026-01-07": 52,
+    "2026-01-12": 67
+  }
+}
+```
+
+**Note**: Si admin, retourne stats de TOUS les élèves (pas filtré par prof)
+
+---
+
+## Endpoints ÉLÈVE (Compléments)
+
+### Programmes Personnels
+
+**Base**: `/api/progression/programmes`
+
+---
+
+#### GET `/api/progression/programmes`
+**Description**: Liste des programmes assignés ET programmes personnels créés
+
+**Réponse 200**:
+```json
+{
+  "programmes_assignes": [
+    {
+      "id": 10,
+      "nom": "Programme Débutants",
+      "professeur_id": 1,
+      "assignation_id": 42,
+      "date_assignation": "2026-01-01T00:00:00.000Z",
+      "figures": [...]
+    }
+  ],
+  "programmes_personnels": [
+    {
+      "id": 12,
+      "nom": "Mon Programme Perso",
+      "professeur_id": 4,
+      "figures": [...]
+    }
+  ]
+}
+```
+
+---
+
+#### POST `/api/progression/programmes`
+**Description**: Créer un nouveau programme personnel
+
+**Body**:
+```json
+{
+  "nom": "Mon Programme Aérien",
+  "description": "Progression tissu aérien",
+  "figureIds": [10, 12, 15]
+}
+```
+
+**Réponse 201**:
+```json
+{
+  "programme": {
+    "id": 13,
+    "nom": "Mon Programme Aérien",
+    "professeur_id": 4,
+    "est_modele": false,
+    "figures": [...]
+  }
+}
+```
+
+**Note**: `est_modele` toujours false pour les élèves
+
+---
+
+#### PUT `/api/progression/programmes/:id`
+**Description**: Modifier un programme personnel (nom, description)
+
+**Restrictions**: Seulement ses propres programmes
+
+---
+
+#### DELETE `/api/progression/programmes/:id`
+**Description**: Supprimer un programme personnel
+
+**Restrictions**:
+- Bloque si partages actifs existent
+- Bloque si assignations actives existent
+- L'utilisateur doit d'abord annuler tous les partages
+
+**Réponse 409** (si dépendances):
+```json
+{
+  "error": "Impossible de supprimer ce programme",
+  "raison": "Il est actuellement partagé ou assigné à des élèves",
+  "partages_actifs": 2,
+  "assignations_actives": 0,
+  "suggestion": "Annulez d'abord tous les partages (DELETE /programmes/:id/partages)"
+}
+```
+
+---
+
+#### POST `/api/progression/programmes/:id/figures`
+**Description**: Ajouter des figures au programme
+
+**Body**:
+```json
+{
+  "figureIds": [20, 21, 22]
+}
+```
+
+**Réponse 201**:
+```json
+{
+  "ajouts": [
+    { "id": 45, "programme_id": 12, "figure_id": 20, "ordre": 4 },
+    { "id": 46, "programme_id": 12, "figure_id": 21, "ordre": 5 }
+  ]
+}
+```
+
+**Note**: Ordre auto-calculé (max existant + 1)
+
+---
+
+#### DELETE `/api/progression/programmes/:id/figures/:figureId`
+**Description**: Retirer une figure du programme
+
+---
+
+#### PUT `/api/progression/programmes/:id/reorder`
+**Description**: Réordonner les figures du programme
+
+**Body**:
+```json
+{
+  "figureOrders": [
+    { "figureId": 20, "ordre": 1 },
+    { "figureId": 21, "ordre": 2 },
+    { "figureId": 22, "ordre": 3 }
+  ]
+}
+```
+
+---
+
+### Partages Programmes (Élève → Prof/Pairs)
+
+#### POST `/api/progression/programmes/:id/partager/profs`
+**Description**: Partager un programme personnel avec un ou plusieurs professeurs
+
+**Body**:
+```json
+{
+  "professeurIds": [1, 2],
+  "note": "Besoin de feedback sur ce programme"
+}
+```
+
+**Réponse 200**:
+```json
+{
+  "message": "Programme partagé avec 2 professeur(s)",
+  "partagesCreated": [
+    { "professeurId": 1, "pseudo": "prof.martin" },
+    { "professeurId": 2, "pseudo": "prof.durand" }
+  ],
+  "partagesSkipped": []
+}
+```
+
+**Validations**:
+- Vérifie que l'utilisateur a une `RelationProfEleve` acceptée avec chaque prof
+- Ignorer les partages déjà existants
+
+---
+
+#### POST `/api/progression/programmes/:id/partager/peers`
+**Description**: Partager un programme personnel avec des élèves (peer-to-peer)
+
+**Body**:
+```json
+{
+  "eleveIds": [5, 6],
+  "note": "Programme sympa pour débutants"
+}
+```
+
+**Validations**:
+- Impossible de partager avec soi-même
+- Vérifie que les élèves sont dans la même école
+- Utilise type = 'peer' dans `ProgrammePartage`
+
+---
+
+#### DELETE `/api/progression/programmes/:id/partages/:partageId`
+**Description**: Annuler UN partage spécifique (soft delete + détachement assignations)
+
+**Réponse 200**:
+```json
+{
+  "message": "Partage annulé avec succès",
+  "partage_avec": "prof.martin",
+  "assignations_detachees": 5,
+  "details": "5 assignation(s) détachée(s) mais restent actives"
+}
+```
+
+**Comportement**:
+- Soft delete du partage (`actif = false`)
+- Détache les assignations dépendantes (`source_detachee = true`)
+- Les assignations RESTENT actives pour ne pas perturber les élèves
+
+---
+
+#### DELETE `/api/progression/programmes/:id/partages`
+**Description**: Annuler TOUS les partages d'un programme (bulk)
+
+**Query params**:
+- `type` (optionnel): 'prof' ou 'peer' pour filtrer
+
+**Réponse 200**:
+```json
+{
+  "message": "3 partage(s) annulé(s)",
+  "count": 3,
+  "type_filtre": "tous",
+  "assignations_detachees": 12
+}
+```
+
+---
+
+#### GET `/api/progression/programmes/:id/partages`
+**Description**: Lister tous les utilisateurs avec qui un programme est partagé
+
+**Query params**:
+- `type` (optionnel): 'prof' ou 'peer' pour filtrer
+
+**Réponse 200**:
+```json
+[
+  {
+    "id": 42,
+    "shared_with_id": 1,
+    "pseudo": "prof.martin",
+    "email": "prof.martin@voltige.fr",
+    "role": "professeur",
+    "type": "prof",
+    "note": "Besoin de feedback",
+    "date_partage": "2026-01-10T10:00:00.000Z"
+  },
+  {
+    "id": 43,
+    "shared_with_id": 5,
+    "pseudo": "emma.durand",
+    "email": null,
+    "role": "eleve",
+    "type": "peer",
+    "note": null,
+    "date_partage": "2026-01-11T14:00:00.000Z"
+  }
+]
+```
+
+---
+
 ## Endpoints PARTAGÉS
 
 ### Tous les utilisateurs authentifiés
@@ -1332,6 +2694,48 @@ curl -X POST http://localhost:4000/api/prof/eleves/import \
 - GET `/api/figures/:id/etapes` - Étapes d'une figure
 - GET `/api/disciplines` - Liste des disciplines
 - GET `/api/gamification/*` - Tous les endpoints gamification
+
+---
+
+## Annexes
+
+### Tableau Récapitulatif des Permissions
+
+Ce tableau liste tous les middlewares de sécurité utilisés dans l'API et leurs fonctions.
+
+| Middleware | Rôles Autorisés | Fonction | Fichier |
+|------------|-----------------|----------|---------|
+| `verifierToken` | Tous utilisateurs authentifiés | Valide le JWT et attache `req.user` | `backend/src/middleware/auth.js` |
+| `estAdmin` | Admin uniquement | Vérifie `role === 'admin'` | `backend/src/middleware/auth.js` |
+| `estAdminOuSchoolAdmin` | Admin ou school_admin | Vérifie `role in ['admin', 'school_admin']` | `backend/src/middleware/auth.js` |
+| `estProfesseurOuAdmin` | Professeur ou admin | Vérifie `role in ['professeur', 'admin']` | `backend/src/middleware/auth.js` |
+| `estPersonnelAutorise` | Admin, school_admin, ou professeur | Personnel école uniquement | `backend/src/middleware/auth.js` |
+| `peutModifierFigure` | Créateur de figure ou admin | Vérifie ownership via `createur_id` | `backend/src/middleware/permissions.js` |
+| `verifierRelationProfEleve` | Prof avec relation élève | Vérifie `RelationProfEleve` active | `backend/src/middleware/permissions.js` |
+| `authorize(Model, field)` | Propriétaire ressource ou admin | Generic ownership check (ex: ProgrammeProf) | `backend/src/middleware/permissions.js` |
+| `contexteEcole` | Tous (automatique) | Filtre multi-tenant par `ecole_id` | `backend/src/middleware/contexteEcole.js` |
+
+**Règles de Sécurité Clés**:
+- ✅ **Double Protection**: Frontend filtre UI + Backend valide permissions
+- ✅ **Multi-tenant**: `contexteEcole` filtre automatiquement par école (utilisateurs voient public + leur école)
+- ✅ **Ownership**: Teachers/admins peuvent seulement modifier leur contenu (sauf admin master)
+- ✅ **Relations**: Profs accèdent seulement aux données de leurs élèves (via `RelationProfEleve` ou même école)
+- ✅ **Isolation École**: Personnel école (school_admin/professeur) ne peut PAS modifier le catalogue public
+
+**Exemples d'Usage**:
+```javascript
+// Middleware simple
+router.get('/admin/figures', verifierToken, estAdmin, async (req, res) => { ... });
+
+// Middleware avec ownership
+router.put('/admin/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigure, async (req, res) => { ... });
+
+// Middleware générique authorize
+router.put('/prof/programmes/:id', verifierToken, estProfesseurOuAdmin,
+  authorize(ProgrammeProf, 'professeur_id', { actif: true }),
+  async (req, res) => { ... }
+);
+```
 
 ---
 
@@ -1394,6 +2798,52 @@ const response = await fetch(
 ---
 
 ## Notes Importantes
+
+### Metadata JSON (Évolutivité Discipline-Spécifique)
+
+**Migration 003** - 2026-01-12
+
+Les figures supportent désormais un champ `metadata` (type JSON) pour stocker des données spécifiques par discipline sans modifier le schéma DB.
+
+**Avantages**:
+- ✅ **Flexibilité**: Chaque discipline a ses propres besoins
+- ✅ **Évolutivité**: Ajouter champs sans migration DB
+- ✅ **Rétrocompatibilité**: `null` pour figures existantes
+
+**Exemples par discipline**:
+
+**Jonglage**:
+```json
+{
+  "siteswap": "531",
+  "num_objects": 3,
+  "object_types": ["balls", "clubs"],
+  "juggling_lab_compatible": true
+}
+```
+
+**Aérien**:
+```json
+{
+  "apparatus": "tissu",
+  "height_meters": 6,
+  "rotations": 2,
+  "safety_mat_required": true
+}
+```
+
+**Équilibre**:
+```json
+{
+  "tempo_seconds": 30,
+  "apparatus": "boule",
+  "surface_type": "unstable"
+}
+```
+
+**Documentation complète**: [FIGURE_METADATA_SPECIFICATION.md](FIGURE_METADATA_SPECIFICATION.md)
+
+---
 
 ### Multi-Tenant
 - Les figures sont filtrées automatiquement selon l'école de l'utilisateur

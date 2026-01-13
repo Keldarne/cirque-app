@@ -66,7 +66,7 @@ router.get('/figures', verifierToken, estAdmin, async (req, res) => {
  */
 router.post('/figures', verifierToken, estPersonnelAutorise, async (req, res) => {
   try {
-    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis } = req.body;
+    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis, metadata } = req.body;
 
     if (!nom || !discipline_id) {
       return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
@@ -74,6 +74,7 @@ router.post('/figures', verifierToken, estPersonnelAutorise, async (req, res) =>
 
     const figureData = {
       nom, descriptif, image_url, video_url, discipline_id,
+      metadata,
       createur_id: req.user.id
     };
 
@@ -115,8 +116,8 @@ router.post('/figures', verifierToken, estPersonnelAutorise, async (req, res) =>
 router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigure, async (req, res) => {
   try {
     // Le middleware peutModifierFigure a déjà vérifié les droits et attaché la figure
-    const figure = req.figure; 
-    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis } = req.body;
+    const figure = req.figure;
+    const { nom, descriptif, image_url, video_url, discipline_id, etapes, ecole_id, prerequis, metadata } = req.body;
 
     // Renforcement Sécurité Multi-Tenant (Double Check)
     if (req.user.role !== 'admin') {
@@ -134,7 +135,7 @@ router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigu
       return res.status(400).json({ error: 'Le nom et la discipline sont requis' });
     }
 
-    const updateData = { nom, descriptif, image_url, video_url, discipline_id };
+    const updateData = { nom, descriptif, image_url, video_url, discipline_id, metadata };
 
     // Gérer l'ecole_id : non-admin ne peut pas changer l'école (reste la sienne)
     if (req.user.role === 'admin') {
@@ -161,7 +162,7 @@ router.put('/figures/:id', verifierToken, estPersonnelAutorise, peutModifierFigu
 router.get('/figures/:id/exercices', verifierToken, async (req, res) => {
   try {
     const figureId = parseInt(req.params.id);
-    const { ExerciceFigure } = require('../models');
+    const { FigurePrerequis } = require('../models');
 
     if (isNaN(figureId)) {
       return res.status(400).json({ error: 'ID de figure invalide' });
@@ -174,7 +175,7 @@ router.get('/figures/:id/exercices', verifierToken, async (req, res) => {
     }
 
     // Récupérer les exercices avec les détails des figures prérequises
-    const exercices = await ExerciceFigure.findAll({
+    const exercices = await FigurePrerequis.findAll({
       where: { figure_id: figureId },
       include: [{
         model: Figure,

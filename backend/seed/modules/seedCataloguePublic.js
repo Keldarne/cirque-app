@@ -170,7 +170,16 @@ async function seedCataloguePublic() {
 async function createSchoolSpecificFigures(ecoles, disciplineMap) {
   logger.info('\n🏫 Création figures école-spécifiques...');
 
+  const { Discipline } = require('../../src/models');
   const schoolFigures = { voltige: [], academie: [] };
+
+  const getDisciplineId = async (name) => {
+    if (disciplineMap[name]) return disciplineMap[name].id;
+    // Fallback: search or create
+    const [d] = await Discipline.findOrCreate({ where: { nom: name } });
+    disciplineMap[name] = d;
+    return d.id;
+  };
 
   try {
     // École Voltige: 2 figures
@@ -192,12 +201,13 @@ async function createSchoolSpecificFigures(ecoles, disciplineMap) {
     ];
 
     for (const spec of voltigeSpecs) {
+      const disciplineId = await getDisciplineId(spec.discipline);
       const figure = await Figure.create({
         nom: spec.nom,
         descriptif: spec.descriptif,
         difficulty_level: spec.difficulty_level,
         type: spec.type,
-        discipline_id: disciplineMap[spec.discipline].id,
+        discipline_id: disciplineId,
         ecole_id: ecoles.voltige.id,
         visibilite: 'ecole',
         createur_id: null  // Catalogue école
@@ -250,12 +260,13 @@ async function createSchoolSpecificFigures(ecoles, disciplineMap) {
     ];
 
     for (const spec of academieSpecs) {
+      const disciplineId = await getDisciplineId(spec.discipline);
       const figure = await Figure.create({
         nom: spec.nom,
         descriptif: spec.descriptif,
         difficulty_level: spec.difficulty_level,
         type: spec.type,
-        discipline_id: disciplineMap[spec.discipline].id,
+        discipline_id: disciplineId,
         ecole_id: ecoles.academie.id,
         visibilite: 'ecole',
         createur_id: null  // Catalogue école

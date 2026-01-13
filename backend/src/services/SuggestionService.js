@@ -1,6 +1,6 @@
 const {
   Figure,
-  ExerciceFigure,
+  FigurePrerequis,
   ProgressionEtape,
   EtapeProgression,
   SuggestionFigure,
@@ -37,7 +37,7 @@ class SuggestionService {
       // 1. Récupérer toutes les figures qui ont des exercices définis
       const figuresAvecExercices = await Figure.findAll({
         include: [{
-          model: ExerciceFigure,
+          model: FigurePrerequis,
           as: 'relationsExercices', // FIX: utiliser le nouvel alias (pas 'exercices' qui est réservé pour belongsToMany)
           where: { est_requis: true }, // Seulement les exercices obligatoires
           required: true // Inner join: seulement figures avec exercices
@@ -168,7 +168,7 @@ class SuggestionService {
   static async calculerScorePreparation(utilisateurId, figureId) {
     try {
       // 1. Récupérer exercices REQUIS de la figure avec poids
-      const exercices = await ExerciceFigure.findAll({
+      const exercices = await FigurePrerequis.findAll({
         where: {
           figure_id: figureId,
           est_requis: true
@@ -471,7 +471,7 @@ class SuggestionService {
       visites.add(currentId);
 
       // Récupérer les exercices de cette figure
-      const exercices = await ExerciceFigure.findAll({
+      const exercices = await FigurePrerequis.findAll({
         where: { figure_id: currentId },
         attributes: ['exercice_figure_id']
       });

@@ -9,9 +9,12 @@ import {
   Typography,
   Box,
   Rating,
-  FormHelperText
+  FormHelperText,
+  Divider,
+  Paper
 } from '@mui/material';
 import { api } from '../../../utils/api';
+import SiteswapVisualizer from '../../figures/metadata/SiteswapVisualizer';
 
 const FigureInfoStep = ({ data, onChange, errors = {} }) => {
   const [disciplines, setDisciplines] = useState([]);
@@ -37,6 +40,42 @@ const FigureInfoStep = ({ data, onChange, errors = {} }) => {
     const value = event.target ? event.target.value : event;
     onChange({ ...data, [field]: value });
   };
+
+  // Gestion spécifique des métadonnées (JSON)
+  const handleMetadataChange = (key, value) => {
+    const currentMetadata = data.metadata || {};
+    onChange({
+      ...data,
+      metadata: {
+        ...currentMetadata,
+        [key]: value
+      }
+    });
+  };
+
+  // Détection de la discipline Jonglage
+  const selectedDiscipline = disciplines.find(d => d.id === data.discipline_id);
+  const isJuggling = selectedDiscipline?.nom?.toLowerCase().includes('jonglage') ||
+                     selectedDiscipline?.nom?.toLowerCase().includes('diabolo') ||
+                     selectedDiscipline?.nom?.toLowerCase().includes('massues');
+
+  // Détection automatique du siteswap à partir du nom (UX)
+  useEffect(() => {
+    if (isJuggling && data.nom && !data.metadata?.siteswap) {
+      const name = data.nom.trim();
+      // Cas 1: Le nom est un chiffre pur (ex: 441)
+      if (/^\d+$/.test(name)) {
+        handleMetadataChange('siteswap', name);
+      } 
+      // Cas 2: Patterns avec parenthèses (ex: Cascade (3 Balles))
+      else {
+        const match = name.match(/\((\d+)\s+(Balles|Massues|Diabolos|Clubs|Objects)\)/i);
+        if (match && match[1]) {
+          handleMetadataChange('siteswap', match[1]);
+        }
+      }
+    }
+  }, [data.nom, isJuggling]); // Se déclenche quand le nom change
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -73,6 +112,40 @@ const FigureInfoStep = ({ data, onChange, errors = {} }) => {
           </FormControl>
         </Grid>
         
+        {/* SECTION METADONNÉES DYNAMIQUES */}
+        {isJuggling && (
+          <Grid item xs={12}>
+            <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
+              <Typography variant="subtitle2" gutterBottom color="primary">
+                Paramètres Jonglerie
+              </Typography>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Code Siteswap"
+                    placeholder="Ex: 531"
+                    value={data.metadata?.siteswap || ''}
+                    onChange={(e) => handleMetadataChange('siteswap', e.target.value)}
+                    helperText="Notation standard (chiffres, lettres, [] pour multiplex)"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', bgcolor: 'white', p: 1, borderRadius: 1, border: '1px dashed grey' }}>
+                    {data.metadata?.siteswap ? (
+                      <SiteswapVisualizer siteswap={data.metadata.siteswap} height={100} />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        Aperçu de l'animation
+                      </Typography>
+                    )}
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        )}
+
         <Grid item xs={12}>
           <TextField
             fullWidth

@@ -19,6 +19,8 @@ import {
 import { Close as CloseIcon, FitnessCenter as FitnessCenterIcon, Checklist as ChecklistIcon } from '@mui/icons-material';
 import EtapesProgressionList from './EtapesProgressionList';
 import JournalProgression from './JournalProgression';
+import MetadataViewer from './metadata/MetadataViewer';
+import { isValidUrl } from '../../utils/validators';
 
 /**
  * FigureDetailDialog - Modal détails d'une figure avec onglets
@@ -90,16 +92,15 @@ function FigureDetailDialog({
   };
 
   const handleStartTraining = () => {
-    // Navigate to training page, passing selected step IDs if any
+    // Navigate to training page
     // Note: We use EntrainementPage which then redirects to EntrainementSession, 
     // BUT EntrainementPage is just a wrapper. We should probably target EntrainementPage
     // OR directly EntrainementSession.
     // The previous code targeted `/entrainement/figure/${figureId}` which is EntrainementPage.
-    // Let's modify EntrainementPage to accept state or pass it through.
     
     navigate(`/entrainement/figure/${figureId}`, { 
       state: { 
-        selectedStepIds: selectionMode && selectedStepIds.length > 0 ? selectedStepIds : null 
+        selectedStepIds: null // No pre-selection from this dialog
       } 
     });
     onClose();
@@ -157,7 +158,7 @@ function FigureDetailDialog({
             )}
 
             {/* Vidéo */}
-            {figure.video_url && (
+            {isValidUrl(figure.video_url) && (
               <Box sx={{ mb: 2 }}>
                 <video
                   src={figure.video_url}
@@ -169,6 +170,9 @@ function FigureDetailDialog({
                 />
               </Box>
             )}
+
+            {/* Visualisation Metadata (Siteswap, etc.) */}
+            <MetadataViewer figure={figure} />
 
             {/* Description complète */}
             <Typography variant="h6" gutterBottom>
@@ -202,34 +206,15 @@ function FigureDetailDialog({
         {/* Onglet Étapes de Progression */}
         {showEtapesProgression && tabIndex === 1 && (
           <Box>
-            <Box display="flex" justifyContent="flex-end" mb={1}>
-              <FormControlLabel
-                control={
-                  <Switch 
-                    checked={selectionMode} 
-                    onChange={handleToggleSelectionMode} 
-                    size="small" 
-                  />
-                }
-                label={
-                  <Box display="flex" alignItems="center" gap={0.5}>
-                    <ChecklistIcon fontSize="small" color={selectionMode ? "primary" : "action"} />
-                    <Typography variant="caption" color={selectionMode ? "primary" : "textSecondary"}>
-                      Choisir les étapes
-                    </Typography>
-                  </Box>
-                }
-              />
-            </Box>
             <EtapesProgressionList
               etapes={etapesTheoriques}
               etapesUtilisateur={etapesUtilisateur}
               editable={editable}
               onValidateStep={onValidateStep}
-              showCheckboxes={true}
-              selectionMode={selectionMode}
-              selectedIds={selectedStepIds}
-              onToggleSelection={handleToggleSelection}
+              showCheckboxes={false} // Checkboxes removed in view mode
+              selectionMode={false}
+              selectedIds={[]}
+              onToggleSelection={() => {}}
             />
           </Box>
         )}
@@ -260,11 +245,8 @@ function FigureDetailDialog({
           variant="contained"
           color="primary"
           startIcon={<FitnessCenterIcon />}
-          disabled={selectionMode && selectedStepIds.length === 0}
         >
-          {selectionMode && selectedStepIds.length > 0 
-            ? `S'entraîner (${selectedStepIds.length})` 
-            : "S'entraîner"}
+          S'entraîner
         </Button>
       </DialogActions>
     </Dialog>
