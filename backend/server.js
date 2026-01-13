@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const cron = require('node-cron'); // Import node-cron
@@ -8,7 +9,7 @@ const SuggestionService = require('./src/services/SuggestionService'); // Import
 const BackupService = require('./src/services/BackupService'); // Import BackupService
 const LoggingService = require('./src/services/LoggingService'); // Import LoggingService
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 // Security Headers - Helmet.js
 app.use(helmet({
@@ -37,6 +38,7 @@ app.use(cors({
 
     // Liste des patterns autorisés
     const allowedPatterns = [
+      // Développement local
       /^http:\/\/localhost:3000$/,
       /^http:\/\/127\.0\.0\.1:3000$/,
       /^http:\/\/backend:4000$/,  // Requêtes internes Docker
@@ -45,7 +47,12 @@ app.use(cors({
       /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/,  // Réseau local 10.x.x.x
       /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:4000$/,  // API backend 10.x.x.x
       /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/,  // Réseau local 172.16-31.x.x
-      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:4000$/  // API backend 172.16-31.x.x
+      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:4000$/,  // API backend 172.16-31.x.x
+
+      // 🚀 PRODUCTION - CircusHub
+      /^https:\/\/circushub\.josephgremaud\.com$/,
+      /^https:\/\/www\.circushub\.josephgremaud\.com$/,
+      /^https:\/\/api-circushub\.josephgremaud\.com$/,
     ];
 
     // Vérifier si l'origin correspond à un des patterns
@@ -63,6 +70,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Static file serving for cached JugglingLab GIFs and other uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: '1y',        // Cache agressif (1 an)
+  immutable: true,     // Les fichiers ne changent jamais
+  etag: true,          // Enable ETag for cache validation
+  lastModified: true   // Include Last-Modified header
+}));
+console.log('📁 Static file serving configured at /uploads');
 
 // Middleware de logging des requêtes (avant les routes)
 const requestLogger = require('./src/middleware/requestLogger');

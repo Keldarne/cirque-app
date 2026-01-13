@@ -14,7 +14,19 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || 'localhost',
     dialect: 'mysql',
     port: parseInt(process.env.DB_PORT) || 3306,
-    logging: process.env.NODE_ENV === 'development' ? console.log : false
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    // Configuration du pool de connexions pour production
+    pool: process.env.NODE_ENV === 'production' ? {
+      max: 10,        // Maximum de connexions
+      min: 2,         // Minimum de connexions
+      acquire: 30000, // Timeout acquisition (30s)
+      idle: 10000     // Timeout idle (10s)
+    } : {
+      max: 5,         // Moins de connexions en dev
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
   }
 );
 
