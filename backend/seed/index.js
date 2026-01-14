@@ -10,9 +10,7 @@
  */
 
 const seedEcoles = require('./modules/seedEcoles');
-// const { seedCataloguePublic, createSchoolSpecificFigures } = require('./modules/seedCataloguePublic');
-const { createSchoolSpecificFigures } = require('./modules/seedCataloguePublic');
-const seedFromExcel = require('./modules/seedFromExcel');
+const { seedCataloguePublic, createSchoolSpecificFigures } = require('./modules/seedCataloguePublic');
 const seedUtilisateurs = require('./modules/seedUtilisateurs');
 const seedRelations = require('./modules/seedRelations');
 const seedProgressions = require('./modules/seedProgressions');
@@ -36,7 +34,7 @@ async function displaySummary(ecoles, catalogue, users, schoolFigures) {
   console.log(`  - ${ecoles.academie.nom} (${ecoles.academie.plan} - ${ecoles.academie.statut_abonnement})`);
   console.log(`    Trial expire dans: ${ecoles.academie.joursRestantsTrial()} jours\n`);
 
-  console.log('📚 CATALOGUE PUBLIC (Source: Excel):');
+  console.log('📚 CATALOGUE PUBLIC (Source: figures.js):');
   console.log(`  - ${catalogue.disciplines.length} disciplines`);
   console.log(`  - ${catalogue.figures.length} figures publiques`);
 
@@ -71,26 +69,8 @@ async function runSeed() {
     // Step 1: Créer les écoles
     const ecoles = await seedEcoles();
 
-    // Step 2: Créer le catalogue public depuis Excel
-    // const catalogue = await seedCataloguePublic();
-    const excelResult = await seedFromExcel();
-    
-    // Reconstruction de l'objet catalogue pour compatibilité
-    const allFigures = await Figure.findAll({ where: { ecole_id: null } });
-    const disciplineMap = {};
-    const figuresByDiscipline = {};
-    
-    excelResult.disciplines.forEach(d => {
-      disciplineMap[d.nom] = d;
-      figuresByDiscipline[d.nom] = allFigures.filter(f => f.discipline_id === d.id);
-    });
-
-    const catalogue = {
-      disciplines: excelResult.disciplines,
-      figures: allFigures,
-      disciplineMap,
-      figuresByDiscipline
-    };
+    // Step 2: Créer le catalogue public depuis figures.js
+    const catalogue = await seedCataloguePublic();
 
     // Step 2.1: Créer figures école-spécifiques (NOUVEAU)
     const schoolFigures = await createSchoolSpecificFigures(ecoles, catalogue.disciplineMap);
