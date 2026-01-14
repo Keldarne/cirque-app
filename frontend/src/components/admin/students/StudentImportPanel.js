@@ -39,7 +39,8 @@ function StudentImportPanel() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/prof/eleves/import', {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${API_BASE_URL}/api/prof/eleves/import`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

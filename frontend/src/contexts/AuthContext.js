@@ -55,7 +55,8 @@ export const AuthProvider = ({ children }) => {
       // Détecter si l'entrée est un email ou un pseudo
       const isEmail = pseudoOrEmail.includes('@');
 
-      const response = await fetch('/api/utilisateurs/login', {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${API_BASE_URL}/api/utilisateurs/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +89,8 @@ export const AuthProvider = ({ children }) => {
   // Fonction d'inscription (enregistre puis connecte l'utilisateur)
   const register = async (pseudo, email, motDePasse) => {
     try {
-      const response = await fetch('/api/utilisateurs/register', {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${API_BASE_URL}/api/utilisateurs/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
