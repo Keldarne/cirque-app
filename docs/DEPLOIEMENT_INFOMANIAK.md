@@ -1,54 +1,378 @@
-# Guide de Déploiement Infomaniak - Cirque App v1.0
+# Guide de Déploiement Infomaniak - CircusHub v1.0
 
-Ce document décrit le processus complet de déploiement de l'application Cirque App sur l'hébergement Infomaniak.
+Ce document décrit le processus **réel** de déploiement de CircusHub sur Infomaniak, basé sur notre expérience de janvier 2026.
 
 ---
 
 ## 📋 Table des Matières
 
-1. [Prérequis](#prérequis)
+1. [Informations de Connexion (Production)](#informations-de-connexion-production)
 2. [Architecture de Déploiement](#architecture-de-déploiement)
-3. [Configuration Infomaniak](#configuration-infomaniak)
-4. [Préparation du Code](#préparation-du-code)
-5. [Déploiement Backend](#déploiement-backend)
-6. [Déploiement Frontend](#déploiement-frontend)
-7. [Configuration Base de Données](#configuration-base-de-données)
-8. [Variables d'Environnement](#variables-denvironnement)
-9. [Sécurité & SSL](#sécurité--ssl)
-10. [Tests Post-Déploiement](#tests-post-déploiement)
-11. [Maintenance & Mises à Jour](#maintenance--mises-à-jour)
-12. [Troubleshooting](#troubleshooting)
+3. [Déploiement Backend (Étapes réelles)](#déploiement-backend-étapes-réelles)
+4. [Déploiement Frontend (Étapes réelles)](#déploiement-frontend-étapes-réelles)
+5. [Configuration Base de Données](#configuration-base-de-données)
+6. [Troubleshooting (Problèmes rencontrés)](#troubleshooting-problèmes-rencontrés)
+7. [Mise à jour du déploiement](#mise-à-jour-du-déploiement)
+8. [Comptes de test](#comptes-de-test)
 
 ---
 
-## 📦 Prérequis
+## 🔐 Informations de Connexion (Production)
 
-### Compte Infomaniak
+### URLs de production
+| Service | URL |
+|---------|-----|
+| **Frontend** | https://circushub.josephgremaud.com |
+| **Backend API** | https://api-circushub.josephgremaud.com |
+| **Panneau Infomaniak** | https://manager.infomaniak.com |
 
-- **Type de compte requis** : Cloud Server ou hébergement avec Node.js
-  - ⚠️ **L'hébergement partagé standard ne supporte PAS Node.js**
-  - Recommandé : **Managed Cloud Server** (à partir de 5.75€/mois)
-  - Alternative : **Jelastic Cloud** pour auto-scaling avancé
+### Accès SSH
+| Paramètre | Valeur |
+|-----------|--------|
+| Host | `57-106543.ssh.hosting-ik.com` |
+| User | `S7BS2HNYb9o_circushub` |
+| Port | 22 |
 
-### Accès Nécessaires
+**Commande de connexion:**
+```bash
+ssh S7BS2HNYb9o_circushub@57-106543.ssh.hosting-ik.com
+```
 
-- [ ] Accès à Infomaniak Manager (https://manager.infomaniak.com)
-- [ ] Accès SSH au serveur
-- [ ] Accès à phpMyAdmin ou outil de gestion MySQL
-- [ ] Nom de domaine configuré (ex: `cirqueapp.ch` ou sous-domaine)
-- [ ] Git installé localement pour pousser le code
+### Accès FTP (FileZilla)
+| Paramètre | Valeur |
+|-----------|--------|
+| Host | `ftp://773fc2.ftp.infomaniak.com` |
+| User | `773fc2_circushub` |
+| Port | 21 |
 
-### Versions Requises
+### Base de données MariaDB
+| Paramètre | Valeur |
+|-----------|--------|
+| Host | `773fc2.myd.infomaniak.com` |
+| Database | `773fc2_circushub` |
+| User | `773fc2_circushub` |
+| Port | 3306 |
 
-- Node.js : **18.x** (LTS)
-- MySQL/MariaDB : **8.0+** ou **10.6+**
-- npm : **9.x+**
+**IMPORTANT:** L'hôte n'est PAS `localhost` mais `773fc2.myd.infomaniak.com`
 
 ---
 
 ## 🏗️ Architecture de Déploiement
 
-### Option A : Déploiement Séparé (Recommandé pour v1.0)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     INFOMANIAK                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌─────────────────────┐    ┌─────────────────────┐         │
+│  │   Frontend (React)  │    │   Backend (Node.js) │         │
+│  │   Apache + Static   │    │   Node.js Runtime   │         │
+│  │                     │    │   (Géré par Infomaniak)       │
+│  │ circushub.          │    │ api-circushub.      │         │
+│  │ josephgremaud.com   │───▶│ josephgremaud.com   │         │
+│  │                     │    │                     │         │
+│  └─────────────────────┘    └──────────┬──────────┘         │
+│                                        │                     │
+│                              ┌─────────▼─────────┐          │
+│                              │   MariaDB 10.6    │          │
+│                              │ 773fc2.myd.       │          │
+│                              │ infomaniak.com    │          │
+│                              └───────────────────┘          │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Note importante:** Sur l'hébergement Node.js Infomaniak, PM2 n'est pas nécessaire. Infomaniak gère le processus Node.js automatiquement via son panneau de contrôle.
+
+---
+
+## 🚀 Déploiement Backend (Étapes réelles)
+
+### Étape 1: Connexion SSH
+
+```bash
+ssh S7BS2HNYb9o_circushub@57-106543.ssh.hosting-ik.com
+cd ~/sites/api-circushub.josephgremaud.com/
+```
+
+### Étape 2: Nettoyage (si redéploiement)
+
+```bash
+rm -rf *
+rm -rf .* 2>/dev/null
+```
+
+### Étape 3: Cloner et organiser les fichiers
+
+**IMPORTANT:** Le backend doit être à la RACINE du dossier Node.js (pas dans un sous-dossier).
+
+```bash
+# Cloner dans un dossier temporaire
+git clone https://github.com/Keldarne/cirque-app.git temp-clone
+
+# Copier UNIQUEMENT le backend vers la racine
+cp -r temp-clone/backend/* .
+cp temp-clone/backend/.* . 2>/dev/null
+
+# Supprimer le clone temporaire
+rm -rf temp-clone
+
+# Vérifier la structure (doit montrer server.js, package.json, etc.)
+ls -la
+```
+
+### Étape 4: Créer le fichier `.env`
+
+```bash
+nano .env
+```
+
+Contenu:
+```env
+DB_NAME=773fc2_circushub
+DB_USER=773fc2_circushub
+DB_PASSWORD=VotreMotDePasse
+DB_HOST=773fc2.myd.infomaniak.com
+DB_PORT=3306
+NODE_ENV=production
+JWT_SECRET=VotreSecretJWT64CaracteresMinimum
+FRONTEND_URL=https://circushub.josephgremaud.com
+LOG_LEVEL=info
+```
+
+Sauvegarder: Ctrl+X, Y, Entrée
+
+### Étape 5: Installer les dépendances
+
+```bash
+npm ci --production
+```
+
+### Étape 6: Créer les dossiers requis
+
+```bash
+mkdir -p uploads/siteswaps logs
+```
+
+### Étape 7: Initialiser la base de données
+
+```bash
+npm run reset-and-seed
+```
+
+Résultat attendu:
+```
+📚 CATALOGUE PUBLIC (Source: figures.js):
+  - X disciplines
+  - 58 figures publiques
+✅ DATABASE READY TO USE!
+```
+
+### Étape 8: Démarrer via le panneau Infomaniak
+
+1. Ouvrir le panneau Infomaniak
+2. Section Node.js
+3. Cliquer sur **"Démarrer"** ou **"Redémarrer"**
+4. Vérifier les logs dans **"Ouvrir la console"**
+
+### Étape 9: Tester
+
+```bash
+curl https://api-circushub.josephgremaud.com/api/disciplines
+```
+
+---
+
+## 🎨 Déploiement Frontend (Étapes réelles)
+
+### Étape 1: Build en local (Windows CMD, pas PowerShell!)
+
+```cmd
+cd C:\Users\Joseph\CIRQUE-APP\cirque-app\frontend
+set REACT_APP_API_URL=https://api-circushub.josephgremaud.com
+npm run build
+```
+
+### Étape 2: Vérifier que l'URL API est incluse
+
+```cmd
+findstr /M "api-circushub" build\static\js\main.*.js
+```
+
+Si un fichier est affiché, c'est bon ! Sinon, recommencez le build.
+
+### Étape 3: Transférer via FTP (FileZilla)
+
+**Connexion:**
+- Host: `ftp://773fc2.ftp.infomaniak.com`
+- User: `773fc2_circushub`
+- Port: 21
+
+**Actions:**
+1. Naviguer vers `/sites/circushub.josephgremaud.com/`
+2. Supprimer tous les fichiers existants
+3. Transférer tout le contenu de `frontend/build/`
+
+### Étape 4: Créer `.htaccess` pour React Router
+
+Créer le fichier `.htaccess` dans le dossier frontend:
+
+```apache
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+```
+
+### Étape 5: Tester
+
+Ouvrir https://circushub.josephgremaud.com et se connecter.
+
+---
+
+## 🐛 Troubleshooting (Problèmes rencontrés)
+
+### Erreur "ECONNREFUSED" lors du seed
+
+**Cause:** `DB_HOST=localhost` au lieu de `DB_HOST=773fc2.myd.infomaniak.com`
+
+**Solution:** Vérifier le fichier `.env` et s'assurer que DB_HOST pointe vers le bon serveur MySQL Infomaniak.
+
+### Erreur "Access Denied" MySQL
+
+**Cause:** Mot de passe incorrect ou DB_NAME incorrect.
+
+**Solution:**
+1. Vérifier le mot de passe dans le panneau Infomaniak > Base de données
+2. Le réinitialiser si nécessaire
+3. Tester: `mysql -h 773fc2.myd.infomaniak.com -u 773fc2_circushub -p`
+
+### Erreur "Table doesn't exist"
+
+**Cause:** Le seed n'a pas été exécuté ou a échoué.
+
+**Solution:** Relancer `npm run reset-and-seed`
+
+### Erreur "not a git repository"
+
+**Cause:** Les fichiers ont été copiés sans le dossier `.git`.
+
+**Solution:**
+```bash
+git init
+git remote add origin https://github.com/Keldarne/cirque-app.git
+git fetch
+git checkout -f main
+```
+
+### Frontend appelle localhost au lieu de l'API
+
+**Cause:** Le build n'a pas pris en compte `REACT_APP_API_URL`.
+
+**Solution (Windows CMD, pas PowerShell!):**
+```cmd
+rmdir /s /q build
+set REACT_APP_API_URL=https://api-circushub.josephgremaud.com
+npm run build
+findstr /M "api-circushub" build\static\js\main.*.js
+```
+
+### Erreur npm sur PowerShell
+
+**Cause:** Politique d'exécution PowerShell bloque les scripts.
+
+**Solution:** Utiliser CMD au lieu de PowerShell, ou modifier la politique:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+### Le seed ne trouve pas les figures (0 figures)
+
+**Cause:** Le fichier Excel n'existe pas sur le serveur.
+
+**Solution:** Le seed a été modifié pour utiliser `figures.js` au lieu d'Excel. Assurez-vous d'avoir la dernière version du code.
+
+---
+
+## 🔄 Mise à jour du déploiement
+
+### Backend
+
+```bash
+ssh S7BS2HNYb9o_circushub@57-106543.ssh.hosting-ik.com
+cd ~/sites/api-circushub.josephgremaud.com/
+
+# Si git est configuré
+git pull
+
+# Redémarrer via le panneau Infomaniak (Arrêter puis Démarrer)
+```
+
+### Frontend
+
+```cmd
+cd C:\Users\Joseph\CIRQUE-APP\cirque-app\frontend
+set REACT_APP_API_URL=https://api-circushub.josephgremaud.com
+npm run build
+```
+
+Puis transférer `build/` via FTP (FileZilla).
+
+---
+
+## 👥 Comptes de test
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Admin global | admin@cirqueapp.com | Admin123! |
+| School Admin | admin.voltige@voltige.fr | Password123! |
+| Prof (Voltige) | jean.martin@voltige.fr | Password123! |
+| Prof (Voltige) | sophie.dubois@voltige.fr | Password123! |
+| Élève | lucas.moreau@email.com | Password123! |
+
+---
+
+*Document mis à jour le 14 janvier 2026 suite au déploiement initial.*
+
+---
+
+## 📚 Documentation complémentaire (Ancienne version)
+
+Les sections ci-dessous sont conservées pour référence mais ne reflètent pas nécessairement le processus réel utilisé.
+
+---
+
+## 📦 Prérequis (Référence)
+
+### Compte Infomaniak
+
+- **Type de compte requis** : Hébergement avec Node.js
+- Node.js version 24 (configuré dans le panneau Infomaniak)
+- MariaDB 10.6.17
+
+---
+
+## 🏗️ Architecture de Déploiement (Ancienne documentation)
+
+### Option A : Déploiement Séparé
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
